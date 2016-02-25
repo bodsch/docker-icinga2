@@ -1,0 +1,7 @@
+#
+
+TYPE="icinga2"
+
+TAG_NAME="${USER}-docker-${TYPE}"
+CONTAINER_NAME="${USER}-${TYPE}"
+
