@@ -1,8 +1,5 @@
 #!/bin/bash
 
-set -x
-
-
 initfile=/opt/run.init
 
 MYSQL_HOST=${MYSQL_HOST:-""}
@@ -15,13 +12,12 @@ env | grep HOST_     >> /etc/env.vars
 
 chmod 1777 /tmp
 
-chown -R nagios:root /etc/icinga2
-chown nagios:nagios /etc/icinga2/features-available/ido-mysql.conf
+chown -R nagios:root   /etc/icinga2
 chown -R nagios:nagios /var/lib/icinga2
 
 if [ -z ${MYSQL_HOST} ]
 then
-  echo "no '${MYSQL_HOST}' ..."
+  echo " [E] no '${MYSQL_HOST}' ..."
   exit 1
 fi
 
@@ -32,19 +28,20 @@ then
   # Passwords...
 
   ICINGA_PASSWORD=${ICINGA_PASSWORD:-$(pwgen -s 15 1)}
-  IDO_PASSWORD=${IDO_PASSWORD:-$(pwgen -s 15 1)}
 
-  # disable ssh-checks
+  # disable ssh-checks 
   sed -i -e "s,^.*\ vars.os\ \=\ .*,  //\ vars.os = \"Linux\",g" /etc/icinga2/conf.d/hosts.conf
 
   # enable icinga2 features if not already there
-  echo " => Enabling icinga2 features."
+  echo " [i] Enabling icinga2 features."
   icinga2 feature enable ido-mysql command livestatus compatlog
+
+  chown nagios:nagios /etc/icinga2/features-available/ido-mysql.conf
 
   #icinga2 API cert - regenerate new private key and certificate when running in a new container
   if [ ! -f /etc/icinga2/pki/${HOSTNAME}.key ]
   then
-    echo " => Generating new private key and certificate for this container ${HOSTNAME} ..."
+    echo " [i] Generating new private key and certificate for this container ${HOSTNAME} ..."
 
     PKI_KEY="/etc/icinga2/pki/${HOSTNAME}.key"
     PKI_CSR="/etc/icinga2/pki/${HOSTNAME}.csr"
@@ -63,27 +60,31 @@ then
   ICINGAADMIN_PASSWORD=$(openssl passwd -1 "icinga")
 
   (
-    echo "CREATE DATABASE IF NOT EXISTS icinga;"
-    echo "CREATE DATABASE IF NOT EXISTS icinga2idomysql;"
-    echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON icinga.* TO 'icinga'@'localhost' IDENTIFIED BY '${ICINGA_PASSWORD}';"
-    echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON icinga2idomysql.* TO 'icinga2-ido-mysq'@'localhost' IDENTIFIED BY '${IDO_PASSWORD}';"
+    echo "create user 'icinga2'@'%' IDENTIFIED BY '${ICINGA_PASSWORD}';"
+    echo "CREATE DATABASE IF NOT EXISTS icinga2;"
+    echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON icinga2.* TO 'icinga2'@'%' IDENTIFIED BY '${ICINGA_PASSWORD}';"
   ) | mysql ${mysql_opts}
 
-  mysql ${mysql_opts} --force icinga          < /usr/share/icinga2-ido-mysql/schema/mysql.sql                   >> /opt/icinga2-ido-mysql-schema.log 2>&1
-  mysql ${mysql_opts} --force icinga2idomysql < /usr/share/dbconfig-common/data/icinga2-ido-mysql/install/mysql >> /opt/icinga2-ido-mysql-schema.log 2>&1
+  mysql ${mysql_opts} --force icinga2  < /usr/share/icinga2-ido-mysql/schema/mysql.sql                   >> /opt/icinga2-ido-mysql-schema.log 2>&1
+  mysql ${mysql_opts} --force icinga2  < /usr/share/dbconfig-common/data/icinga2-ido-mysql/install/mysql >> /opt/icinga2-ido-mysql-schema.log 2>&1
+
+  sed -i 's/host \= \".*\"/host \=\ \"'${MYSQL_HOST}'\"/g'             /etc/icinga2/features-available/ido-mysql.conf
+  sed -i 's/password \= \".*\"/password \= \"'${ICINGA_PASSWORD}'\"/g' /etc/icinga2/features-available/ido-mysql.conf
+  sed -i 's/user =\ \".*\"/user =\ \"icinga2\"/g'                      /etc/icinga2/features-available/ido-mysql.conf
+  sed -i 's/database =\ \".*\"/database =\ \"icinga2\"/g'              /etc/icinga2/features-available/ido-mysql.conf
 
   touch ${initfile}
 
-else
-  :
+  echo -e "\n"
+  echo " ==================================================================="
+  echo " MySQL user 'icinga2' password set to ${ICINGA_PASSWORD}"
+  echo " ==================================================================="
+  echo ""
 
 fi
 
+echo -e "\n Starting Supervisor.\n  You can safely CTRL-C and the container will continue to run with or without the -d (daemon) option\n\n"
 
-echo "Starting Supervisor.  You can safely CTRL-C and the container will continue to run with or without the -d (daemon) option"
 /usr/bin/supervisord -c /etc/supervisor/conf.d/icinga2.conf >> /dev/null
 
-# exec /bin/bash
-
 # EOF
-
