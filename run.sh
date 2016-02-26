@@ -17,8 +17,9 @@ docker run \
   --publish=5665:5665 \
   --volume=${PWD}/share/icinga2:/usr/local/share/icinga2 \
   --hostname=${USER}-${TYPE} \
-  --link=database:${USER}-mysql \
-  --env MYSQL_HOST=${USER}-mysql \
+  --link=${USER}-mysql:database \
+  --env MYSQL_HOST=database \
+  --env MYSQL_PORT=3306 \
   --env MYSQL_USER=root \
   --env MYSQL_PASS= \
   --name ${CONTAINER_NAME} \

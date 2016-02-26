@@ -30,6 +30,7 @@ RUN apt-get -qq update && \
     mailutils \
     nano \
     nmap \
+    mysql-client \
     icinga2 \
     icinga2-ido-mysql \
     curl \

@@ -1,10 +1,12 @@
 #!/bin/bash
 
-set -e
+set -x
+
 
 initfile=/opt/run.init
 
 MYSQL_HOST=${MYSQL_HOST:-""}
+MYSQL_PORT=${MYSQL_PORT:-""}
 MYSQL_USER=${MYSQL_USER:-"root"}
 MYSQL_PASS=${MYSQL_PASS:-""}
 
@@ -23,7 +25,7 @@ then
   exit 1
 fi
 
-mysql_opts="--host=${MYSQL_HOST} --user=${MYSQL_USER} --password=${MYSQL_PASS} --port=3306"
+mysql_opts="--host=${MYSQL_HOST} --user=${MYSQL_USER} --password=${MYSQL_PASS} --port=${MYSQL_PORT}"
 
 if [ ! -f "${initfile}" ]
 then
@@ -31,9 +33,6 @@ then
 
   ICINGA_PASSWORD=${ICINGA_PASSWORD:-$(pwgen -s 15 1)}
   IDO_PASSWORD=${IDO_PASSWORD:-$(pwgen -s 15 1)}
-
-
-
 
   # disable ssh-checks
   sed -i -e "s,^.*\ vars.os\ \=\ .*,  //\ vars.os = \"Linux\",g" /etc/icinga2/conf.d/hosts.conf
@@ -73,22 +72,7 @@ then
   mysql ${mysql_opts} --force icinga          < /usr/share/icinga2-ido-mysql/schema/mysql.sql                   >> /opt/icinga2-ido-mysql-schema.log 2>&1
   mysql ${mysql_opts} --force icinga2idomysql < /usr/share/dbconfig-common/data/icinga2-ido-mysql/install/mysql >> /opt/icinga2-ido-mysql-schema.log 2>&1
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  touch ${initfile}
 
 else
   :
@@ -96,7 +80,10 @@ else
 fi
 
 
-exec /bin/bash
+echo "Starting Supervisor.  You can safely CTRL-C and the container will continue to run with or without the -d (daemon) option"
+/usr/bin/supervisord -c /etc/supervisor/conf.d/icinga2.conf >> /dev/null
+
+# exec /bin/bash
 
 # EOF
 
