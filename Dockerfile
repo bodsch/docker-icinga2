@@ -31,6 +31,8 @@ RUN apt-get -qq update && \
     nano \
     nmap \
     mysql-client \
+    monitoring-plugins-basic \
+    monitoring-plugins-standard \
     icinga2 \
     icinga2-ido-mysql \
     curl \
