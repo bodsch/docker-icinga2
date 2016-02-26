@@ -21,7 +21,8 @@ docker run \
   --env MYSQL_HOST=database \
   --env MYSQL_PORT=3306 \
   --env MYSQL_USER=root \
-  --env MYSQL_PASS= \
+  --env MYSQL_PASS=foo.bar.Z \
+  --env ICINGA_PASSWORD=xxxxxxxxx \
   --name ${CONTAINER_NAME} \
   ${TAG_NAME}
 
