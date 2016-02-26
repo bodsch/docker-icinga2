@@ -29,6 +29,7 @@ RUN apt-get -qq update && \
     ssmtp \
     mailutils \
     nano \
+    netcat \
     nmap \
     mysql-client \
     monitoring-plugins-basic \

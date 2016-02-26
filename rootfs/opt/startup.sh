@@ -23,6 +23,15 @@ fi
 
 mysql_opts="--host=${MYSQL_HOST} --user=${MYSQL_USER} --password=${MYSQL_PASS} --port=${MYSQL_PORT}"
 
+# wait for needed database
+while ! nc -z ${MYSQL_HOST} ${MYSQL_PORT}
+do
+  sleep 3s
+done
+
+# must start initdb and do other jobs well
+sleep 10s
+
 if [ ! -f "${initfile}" ]
 then
   # Passwords...
