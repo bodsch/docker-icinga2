@@ -27,9 +27,9 @@ if [ ! -f "${initfile}" ]
 then
   # Passwords...
 
-  ICINGA_PASSWORD=${ICINGA_PASSWORD:-$(pwgen -s 15 1)}
+  IDO_PASSWORD=${IDO_PASSWORD:-$(pwgen -s 15 1)}
 
-  # disable ssh-checks 
+  # disable ssh-checks
   sed -i -e "s,^.*\ vars.os\ \=\ .*,  //\ vars.os = \"Linux\",g" /etc/icinga2/conf.d/hosts.conf
 
   # enable icinga2 features if not already there
@@ -60,16 +60,16 @@ then
   ICINGAADMIN_PASSWORD=$(openssl passwd -1 "icinga")
 
   (
-    echo "create user 'icinga2'@'%' IDENTIFIED BY '${ICINGA_PASSWORD}';"
+    echo "create user 'icinga2'@'%' IDENTIFIED BY '${IDO_PASSWORD}';"
     echo "CREATE DATABASE IF NOT EXISTS icinga2;"
-    echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON icinga2.* TO 'icinga2'@'%' IDENTIFIED BY '${ICINGA_PASSWORD}';"
+    echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON icinga2.* TO 'icinga2'@'%' IDENTIFIED BY '${IDO_PASSWORD}';"
   ) | mysql ${mysql_opts}
 
   mysql ${mysql_opts} --force icinga2  < /usr/share/icinga2-ido-mysql/schema/mysql.sql                   >> /opt/icinga2-ido-mysql-schema.log 2>&1
   mysql ${mysql_opts} --force icinga2  < /usr/share/dbconfig-common/data/icinga2-ido-mysql/install/mysql >> /opt/icinga2-ido-mysql-schema.log 2>&1
 
   sed -i 's/host \= \".*\"/host \=\ \"'${MYSQL_HOST}'\"/g'             /etc/icinga2/features-available/ido-mysql.conf
-  sed -i 's/password \= \".*\"/password \= \"'${ICINGA_PASSWORD}'\"/g' /etc/icinga2/features-available/ido-mysql.conf
+  sed -i 's/password \= \".*\"/password \= \"'${IDO_PASSWORD}'\"/g'    /etc/icinga2/features-available/ido-mysql.conf
   sed -i 's/user =\ \".*\"/user =\ \"icinga2\"/g'                      /etc/icinga2/features-available/ido-mysql.conf
   sed -i 's/database =\ \".*\"/database =\ \"icinga2\"/g'              /etc/icinga2/features-available/ido-mysql.conf
 
@@ -77,7 +77,7 @@ then
 
   echo -e "\n"
   echo " ==================================================================="
-  echo " MySQL user 'icinga2' password set to ${ICINGA_PASSWORD}"
+  echo " MySQL user 'icinga2' password set to ${IDO_PASSWORD}"
   echo " ==================================================================="
   echo ""
 
@@ -85,6 +85,11 @@ fi
 
 echo -e "\n Starting Supervisor.\n  You can safely CTRL-C and the container will continue to run with or without the -d (daemon) option\n\n"
 
-/usr/bin/supervisord -c /etc/supervisor/conf.d/icinga2.conf >> /dev/null
+if [ -f /etc/supervisor/conf.d/icinga2.conf ]
+then
+  /usr/bin/supervisord -c /etc/supervisor/conf.d/icinga2.conf >> /dev/null
+else
+  exec /bin/bash
+fi
 
 # EOF
