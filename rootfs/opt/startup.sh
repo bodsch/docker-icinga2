@@ -47,6 +47,8 @@ then
 
   chown nagios:nagios /etc/icinga2/features-available/ido-mysql.conf
 
+  # https://www.axxeo.de/blog/technisches/icinga2-livestatus-ueber-tcp.html
+
   #icinga2 API cert - regenerate new private key and certificate when running in a new container
   if [ ! -f /etc/icinga2/pki/${HOSTNAME}.key ]
   then
