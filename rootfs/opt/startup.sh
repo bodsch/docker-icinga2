@@ -7,14 +7,6 @@ MYSQL_PORT=${MYSQL_PORT:-""}
 MYSQL_USER=${MYSQL_USER:-"root"}
 MYSQL_PASS=${MYSQL_PASS:-""}
 
-env | grep BLUEPRINT  > /etc/env.vars
-env | grep HOST_     >> /etc/env.vars
-
-chmod 1777 /tmp
-
-chown -R nagios:root   /etc/icinga2
-chown -R nagios:nagios /var/lib/icinga2
-
 if [ -z ${MYSQL_HOST} ]
 then
   echo " [E] no '${MYSQL_HOST}' ..."
@@ -31,6 +23,16 @@ done
 
 # must start initdb and do other jobs well
 sleep 10s
+
+# -------------------------------------------------------------------------------------------------
+
+env | grep BLUEPRINT  > /etc/env.vars
+env | grep HOST_     >> /etc/env.vars
+
+chmod 1777 /tmp
+
+chown -R nagios:root   /etc/icinga2
+chown -R nagios:nagios /var/lib/icinga2
 
 if [ ! -f "${initfile}" ]
 then
