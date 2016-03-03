@@ -47,7 +47,7 @@ ADD rootfs/ /
 
 RUN chmod u+x /opt/supervisor/*_supervisor
 
-VOLUME  ["/etc/icinga2", "/var/lib/icinga2" ]
+VOLUME  ["/etc/icinga2", "/var/lib/icinga2", "/var/run/icinga2/cmd" ]
 
 # Initialize and run Supervisor
 CMD [ "/opt/startup.sh" ]
