@@ -7,7 +7,7 @@ LABEL version="0.9.2"
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm
 
-EXPOSE 5665
+EXPOSE 5665 6666
 
 # ---------------------------------------------------------------------------------------
 
@@ -50,6 +50,6 @@ RUN chmod u+x /opt/supervisor/*_supervisor
 VOLUME  ["/etc/icinga2", "/var/lib/icinga2" ]
 
 # Initialize and run Supervisor
-ENTRYPOINT [ "/opt/startup.sh" ]
+CMD [ "/opt/startup.sh" ]
 
 # ---------------------------------------------------------------------------------------

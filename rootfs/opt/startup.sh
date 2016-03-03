@@ -98,9 +98,9 @@ fi
 
 echo -e "\n Starting Supervisor.\n  You can safely CTRL-C and the container will continue to run with or without the -d (daemon) option\n\n"
 
-if [ -f /etc/supervisor/conf.d/icinga2.conf ]
+if [ -f /etc/supervisor.d/icinga2.ini ]
 then
-  /usr/bin/supervisord -c /etc/supervisor/conf.d/icinga2.conf >> /dev/null
+    /usr/bin/supervisord >> /dev/null
 else
   exec /bin/bash
 fi
