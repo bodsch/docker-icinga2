@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 initfile=/opt/run.init
 
@@ -9,7 +9,7 @@ MYSQL_PASS=${MYSQL_PASS:-""}
 
 if [ -z ${MYSQL_HOST} ]
 then
-  echo " [E] no '${MYSQL_HOST}' ..."
+  echo " [E] no MYSQL_HOST var set ..."
   exit 1
 fi
 
@@ -31,23 +31,51 @@ env | grep HOST_     >> /etc/env.vars
 
 chmod 1777 /tmp
 
-chown -R nagios:root   /etc/icinga2
-chown -R nagios:nagios /var/lib/icinga2
+USER=
+GROUP=
+
+for u in nagios icinga
+do
+  if [ "$(getent passwd ${u})" ]
+  then
+    USER="${u}"
+    break
+  fi
+done
+
+for g in nagios icinga
+do
+  if [ "$(getent group ${g})" ]
+  then
+    GROUP="${g}"
+    break
+  fi
+done
+
+if ( [ -z ${USER} ] || [ -z ${GROUP} ] )
+then
+  echo "No User/Group nagios/icinga found!"
+else
+  chown -R ${USER}:root     /etc/icinga2
+  chown -R ${USER}:${GROUP} /var/lib/icinga2
+fi
 
 if [ ! -f "${initfile}" ]
 then
   # Passwords...
-
   IDO_PASSWORD=${IDO_PASSWORD:-$(pwgen -s 15 1)}
 
-  # disable ssh-checks
-  sed -i -e "s,^.*\ vars.os\ \=\ .*,  //\ vars.os = \"Linux\",g" /etc/icinga2/conf.d/hosts.conf
+  # remove var.os to disable ssh-checks
+  if [ -f /etc/icinga2/conf.d/hosts.conf ]
+  then
+    sed -i -e "s,^.*\ vars.os\ \=\ .*,  //\ vars.os = \"Linux\",g" /etc/icinga2/conf.d/hosts.conf
+  fi
 
   # enable icinga2 features if not already there
   echo " [i] Enabling icinga2 features."
   icinga2 feature enable ido-mysql command livestatus compatlog
 
-  chown nagios:nagios /etc/icinga2/features-available/ido-mysql.conf
+  chown ${USER}:${GROUP} /etc/icinga2/features-available/ido-mysql.conf
 
   # https://www.axxeo.de/blog/technisches/icinga2-livestatus-ueber-tcp.html
 
@@ -73,13 +101,12 @@ then
   ICINGAADMIN_PASSWORD=$(openssl passwd -1 "icinga")
 
   (
-    echo "create user 'icinga2'@'%' IDENTIFIED BY '${IDO_PASSWORD}';"
+    echo "--- create user 'icinga2'@'%' IDENTIFIED BY '${IDO_PASSWORD}';"
     echo "CREATE DATABASE IF NOT EXISTS icinga2;"
     echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON icinga2.* TO 'icinga2'@'%' IDENTIFIED BY '${IDO_PASSWORD}';"
   ) | mysql ${mysql_opts}
 
   mysql ${mysql_opts} --force icinga2  < /usr/share/icinga2-ido-mysql/schema/mysql.sql                   >> /opt/icinga2-ido-mysql-schema.log 2>&1
-  mysql ${mysql_opts} --force icinga2  < /usr/share/dbconfig-common/data/icinga2-ido-mysql/install/mysql >> /opt/icinga2-ido-mysql-schema.log 2>&1
 
   sed -i 's/host \= \".*\"/host \=\ \"'${MYSQL_HOST}'\"/g'             /etc/icinga2/features-available/ido-mysql.conf
   sed -i 's/password \= \".*\"/password \= \"'${IDO_PASSWORD}'\"/g'    /etc/icinga2/features-available/ido-mysql.conf
