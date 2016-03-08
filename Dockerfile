@@ -30,18 +30,22 @@ RUN \
     ssmtp \
     mailx \
     mysql-client \
-    icinga2@testing && \
+    icinga2@testing \
+    monitoring-plugins@testing && \
   rm -rf /var/cache/apk/*
 
 RUN \
-  cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/
+  rm -Rf /var/run && \
+  ln -s /run /var/run && \
+  cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
+  mkdir -p /run/icinga2 /run/icinga2/cmd
 
+RUN \
+  chmod u+s /bin/busybox
 
 ADD rootfs/ /
 
-# CMD ['/bin/sh']
-
-RUN chmod u+x /opt/supervisor/*_supervisor
+# RUN chmod u+x /opt/supervisor/*_supervisor
 
 VOLUME  ["/etc/icinga2", "/var/lib/icinga2", "/var/run/icinga2/cmd" ]
 

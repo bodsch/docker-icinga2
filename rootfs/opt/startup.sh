@@ -7,6 +7,9 @@ MYSQL_PORT=${MYSQL_PORT:-""}
 MYSQL_USER=${MYSQL_USER:-"root"}
 MYSQL_PASS=${MYSQL_PASS:-""}
 
+CARBON_HOST=${CARBON_HOST:-""}
+CARBON_PORT=${CARBON_PORT:-2003}
+
 if [ -z ${MYSQL_HOST} ]
 then
   echo " [E] no MYSQL_HOST var set ..."
@@ -26,8 +29,8 @@ sleep 10s
 
 # -------------------------------------------------------------------------------------------------
 
-env | grep BLUEPRINT  > /etc/env.vars
-env | grep HOST_     >> /etc/env.vars
+#env | grep BLUEPRINT  > /etc/env.vars
+#env | grep HOST_     >> /etc/env.vars
 
 chmod 1777 /tmp
 
@@ -60,6 +63,20 @@ else
   chown -R ${USER}:${GROUP} /var/lib/icinga2
 fi
 
+if [ -f /etc/icinga2/icinga2.sysconfig ]
+then
+  . /etc/icinga2/icinga2.sysconfig
+
+#  ICINGA2_RUNasUSER=${ICINGA2_USER}
+#  ICINGA2_RUNasGROUP=${ICINGA2_GROUP}
+else
+  ICINGA2_RUN_DIR=$(/usr/sbin/icinga2 variable get RunDir)
+#  ICINGA2_RUNasUSER=$(/usr/sbin/icinga2 variable get RunAsUser)
+#  ICINGA2_RUNasGROUP=$(/usr/sbin/icinga2 variable get RunAsGroup)
+fi
+
+chown -R ${USER}:${GROUP} ${ICINGA2_RUN_DIR}/icinga2
+
 if [ ! -f "${initfile}" ]
 then
   # Passwords...
@@ -73,7 +90,18 @@ then
 
   # enable icinga2 features if not already there
   echo " [i] Enabling icinga2 features."
-  icinga2 feature enable ido-mysql command livestatus compatlog
+  icinga2 feature enable ido-mysql command livestatus compatlog checker mainlog icingastatus
+
+  if [ ! -z ${CARBON_HOST} ]
+  then
+    icinga2 feature enable graphite
+
+    if [ -e /etc/icinga2/features-enabled/graphite.conf ]
+    then
+      sed -i "s,^.*\ //host\ =\ .*,  host\ =\ \"${CARBON_HOST}\",g" /etc/icinga2/features-enabled/graphite.conf
+      sed -i "s,^.*\ //port\ =\ .*,  port\ =\ \"${CARBON_PORT}\",g" /etc/icinga2/features-enabled/graphite.conf
+    fi
+  fi
 
   chown ${USER}:${GROUP} /etc/icinga2/features-available/ido-mysql.conf
 
@@ -108,10 +136,10 @@ then
 
   mysql ${mysql_opts} --force icinga2  < /usr/share/icinga2-ido-mysql/schema/mysql.sql                   >> /opt/icinga2-ido-mysql-schema.log 2>&1
 
-  sed -i 's/host \= \".*\"/host \=\ \"'${MYSQL_HOST}'\"/g'             /etc/icinga2/features-available/ido-mysql.conf
-  sed -i 's/password \= \".*\"/password \= \"'${IDO_PASSWORD}'\"/g'    /etc/icinga2/features-available/ido-mysql.conf
-  sed -i 's/user =\ \".*\"/user =\ \"icinga2\"/g'                      /etc/icinga2/features-available/ido-mysql.conf
-  sed -i 's/database =\ \".*\"/database =\ \"icinga2\"/g'              /etc/icinga2/features-available/ido-mysql.conf
+  sed -i 's|//host \= \".*\"|host \=\ \"'${MYSQL_HOST}'\"|g'             /etc/icinga2/features-available/ido-mysql.conf
+  sed -i 's|//password \= \".*\"|password \= \"'${IDO_PASSWORD}'\"|g'    /etc/icinga2/features-available/ido-mysql.conf
+  sed -i 's|//user =\ \".*\"|user =\ \"icinga2\"|g'                      /etc/icinga2/features-available/ido-mysql.conf
+  sed -i 's|//database =\ \".*\"|database =\ \"icinga2\"|g'              /etc/icinga2/features-available/ido-mysql.conf
 
   touch ${initfile}
 
