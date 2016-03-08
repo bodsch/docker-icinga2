@@ -2,10 +2,9 @@ FROM alpine:edge
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="0.10.0"
+LABEL version="1.0.0"
 
-#ENV DEBIAN_FRONTEND noninteractive
-# ENV TERM xterm
+ENV TERM xterm
 
 EXPOSE 5665 6666
 
@@ -44,8 +43,6 @@ RUN \
   chmod u+s /bin/busybox
 
 ADD rootfs/ /
-
-# RUN chmod u+x /opt/supervisor/*_supervisor
 
 VOLUME  ["/etc/icinga2", "/var/lib/icinga2", "/var/run/icinga2/cmd" ]
 
