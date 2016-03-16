@@ -1,3 +1,4 @@
+
 FROM alpine:edge
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
@@ -11,9 +12,17 @@ EXPOSE 5665 6666
 # ---------------------------------------------------------------------------------------
 
 RUN \
-  echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >>  /etc/apk/repositories && \
+  echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >>  /etc/apk/repositories
+
+RUN \
   apk --quiet update && \
-  apk --quiet upgrade && \
+  apk --quiet upgrade
+
+RUN \
+  rm -Rf /var/run && \
+  ln -s /run /var/run
+
+RUN \
   apk --quiet add \
     bash \
     pwgen \
@@ -30,17 +39,17 @@ RUN \
     mailx \
     mysql-client \
     icinga2@testing \
-    monitoring-plugins@testing && \
-  rm -rf /var/cache/apk/*
+    monitoring-plugins@testing
 
 RUN \
-  rm -Rf /var/run && \
-  ln -s /run /var/run && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   mkdir -p /run/icinga2 /run/icinga2/cmd
 
 RUN \
   chmod u+s /bin/busybox
+
+RUN \
+  rm -rf /var/cache/apk/*
 
 ADD rootfs/ /
 
