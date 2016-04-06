@@ -1,5 +1,5 @@
 
-FROM alpine:edge
+FROM docker-alpine-base:latest
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
@@ -12,15 +12,7 @@ EXPOSE 5665 6666
 # ---------------------------------------------------------------------------------------
 
 RUN \
-  echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >>  /etc/apk/repositories
-
-RUN \
-  apk --quiet update && \
-  apk --quiet upgrade
-
-RUN \
-  rm -Rf /var/run && \
-  ln -s /run /var/run
+  apk --quiet update
 
 RUN \
   apk --quiet add \
@@ -31,7 +23,6 @@ RUN \
     unzip \
     netcat-openbsd \
     nmap \
-    curl \
     bc \
     jq \
     yajl-tools \
