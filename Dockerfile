@@ -29,8 +29,8 @@ RUN \
     ssmtp \
     mailx \
     mysql-client \
-    icinga2@testing \
-    monitoring-plugins@testing
+    icinga2 \
+    monitoring-plugins
 
 RUN \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
