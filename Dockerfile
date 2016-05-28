@@ -18,6 +18,7 @@ RUN \
   apk --quiet add \
     bash \
     pwgen \
+    openssl \
     supervisor \
     fping \
     unzip \
