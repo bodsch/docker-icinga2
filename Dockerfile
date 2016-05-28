@@ -3,7 +3,7 @@ FROM docker-alpine-base:latest
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.0.0"
+LABEL version="1.1.0"
 
 ENV TERM xterm
 
@@ -48,7 +48,5 @@ VOLUME  ["/etc/icinga2", "/var/lib/icinga2", "/var/run/icinga2/cmd" ]
 
 # Initialize and run Supervisor
 CMD [ "/opt/startup.sh" ]
-
-
 
 # ---------------------------------------------------------------------------------------

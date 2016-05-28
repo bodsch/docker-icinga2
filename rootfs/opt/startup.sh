@@ -29,9 +29,6 @@ sleep 10s
 
 # -------------------------------------------------------------------------------------------------
 
-#env | grep BLUEPRINT  > /etc/env.vars
-#env | grep HOST_     >> /etc/env.vars
-
 chmod 1777 /tmp
 
 USER=
