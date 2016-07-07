@@ -1,9 +1,8 @@
-
-FROM docker-alpine-base:latest
+FROM bodsch/docker-alpine-base:latest
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.1.0"
+LABEL version="1.2.0"
 
 ENV TERM xterm
 
@@ -12,14 +11,10 @@ EXPOSE 5665 6666
 # ---------------------------------------------------------------------------------------
 
 RUN \
-  apk --quiet update
-
-RUN \
-  apk --quiet add \
+  apk --quiet --no-cache update && \
+  apk --quiet --no-cache add \
     bash \
     pwgen \
-    openssl \
-    supervisor \
     fping \
     unzip \
     netcat-openbsd \
@@ -31,16 +26,12 @@ RUN \
     mailx \
     mysql-client \
     icinga2 \
-    monitoring-plugins
-
-RUN \
+    openssl \
+    monitoring-plugins && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
-  mkdir -p /run/icinga2 /run/icinga2/cmd
-
-RUN \
-  chmod u+s /bin/busybox
-
-RUN \
+  /usr/sbin/icinga2 feature enable ido-mysql command livestatus compatlog checker mainlog icingastatus && \
+  mkdir -p /run/icinga2 /run/icinga2/cmd && \
+  chmod u+s /bin/busybox && \
   rm -rf /var/cache/apk/*
 
 ADD rootfs/ /

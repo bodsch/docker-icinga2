@@ -86,8 +86,8 @@ then
   fi
 
   # enable icinga2 features if not already there
-  echo " [i] Enabling icinga2 features."
-  icinga2 feature enable ido-mysql command livestatus compatlog checker mainlog icingastatus
+#  echo " [i] Enabling icinga2 features."
+#  icinga2 feature enable ido-mysql command livestatus compatlog checker mainlog icingastatus
 
   if [ ! -z ${CARBON_HOST} ]
   then
@@ -104,6 +104,16 @@ then
 
   # https://www.axxeo.de/blog/technisches/icinga2-livestatus-ueber-tcp.html
 
+  # icinga2 API cert - regenerate new private key and certificate when running in a new container
+  if [ -d /app/pki ]
+  then
+    cp -arv /app/pki /etc/icinga2/
+
+    icinga2 feature enable api
+  fi
+
+  sed -i "s,^.*\ NodeName\ \=\ .*,const\ NodeName\ \=\ \"${HOSTNAME}\",g" /etc/icinga2/constants.conf
+
   #icinga2 API cert - regenerate new private key and certificate when running in a new container
   if [ ! -f /etc/icinga2/pki/${HOSTNAME}.key ]
   then
@@ -114,9 +124,11 @@ then
     PKI_CRT="/etc/icinga2/pki/${HOSTNAME}.crt"
 
     icinga2 api setup
-    sed -i "s,^.*\ NodeName\ \=\ .*,const\ NodeName\ \=\ \"${HOSTNAME}\",g" /etc/icinga2/constants.conf
     icinga2 pki new-cert --cn ${HOSTNAME} --key ${PKI_KEY} --csr ${PKI_CSR}
     icinga2 pki sign-csr --csr ${PKI_CSR} --cert ${PKI_CRT}
+
+    cp -arv /etc/icinga2/pki /app
+
     echo " => Finished cert generation"
   fi
 
@@ -152,7 +164,7 @@ echo -e "\n Starting Supervisor.\n\n"
 
 if [ -f /etc/supervisor.d/icinga2.ini ]
 then
-    /usr/bin/supervisord >> /dev/null
+    /usr/bin/supervisord -c /etc/supervisord.conf >> /dev/null
 else
   exec /bin/bash
 fi
