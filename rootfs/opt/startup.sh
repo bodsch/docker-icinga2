@@ -2,15 +2,19 @@
 #
 #
 
+# Version 2
 
 set -x
+
+WORK_DIR=${WORK_DIR:-/srv}
+WORK_DIR=${WORK_DIR}/icinga2
 
 initfile=/opt/run.init
 
 MYSQL_HOST=${MYSQL_HOST:-""}
 MYSQL_PORT=${MYSQL_PORT:-"3306"}
-MYSQL_USER=${MYSQL_USER:-"root"}
-MYSQL_PASS=${MYSQL_PASS:-""}
+MYSQL_ROOT_USER=${MYSQL_ROOT_USER:-"root"}
+MYSQL_ROOT_PASS=${MYSQL_ROOT_PASS:-""}
 
 CARBON_HOST=${CARBON_HOST:-""}
 CARBON_PORT=${CARBON_PORT:-2003}
@@ -20,13 +24,14 @@ IDO_PASSWORD=${IDO_PASSWORD:-$(pwgen -s 15 1)}
 USER=
 GROUP=
 
+
 if [ -z ${MYSQL_HOST} ]
 then
   echo " [E] no MYSQL_HOST var set ..."
   exit 1
 fi
 
-mysql_opts="--host=${MYSQL_HOST} --user=${MYSQL_USER} --password=${MYSQL_PASS} --port=${MYSQL_PORT}"
+mysql_opts="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_ROOT_PASS} --port=${MYSQL_PORT}"
 
 
 waitForDatabase() {
@@ -74,6 +79,8 @@ prepare() {
   #  ICINGA2_RUNasUSER=$(/usr/sbin/icinga2 variable get RunAsUser)
   #  ICINGA2_RUNasGROUP=$(/usr/sbin/icinga2 variable get RunAsGroup)
   fi
+
+  [ -d ${WORK_DIR} ] || mkdir -p ${WORK_DIR}
 }
 
 
@@ -124,17 +131,17 @@ configureGraphite() {
 configureAPICert() {
 
   # icinga2 API cert - regenerate new private key and certificate when running in a new container
-  if [ -d /srv/pki ]
+  if [ -d ${WORK_DIR}/pki ]
   then
     echo " [i] restore older PKI settings"
-    cp -arv /srv/pki /etc/icinga2/
+    cp -arv ${WORK_DIR}/pki /etc/icinga2/
 
     icinga2 feature enable api
   fi
 
   sed -i "s,^.*\ NodeName\ \=\ .*,const\ NodeName\ \=\ \"${HOSTNAME}\",g" /etc/icinga2/constants.conf
 
-  #icinga2 API cert - regenerate new private key and certificate when running in a new container
+  # icinga2 API cert - regenerate new private key and certificate when running in a new container
   if [ ! -f /etc/icinga2/pki/${HOSTNAME}.key ]
   then
     echo " [i] Generating new private key and certificate for this container ${HOSTNAME} ..."
@@ -147,7 +154,7 @@ configureAPICert() {
     icinga2 pki new-cert --cn ${HOSTNAME} --key ${PKI_KEY} --csr ${PKI_CSR}
     icinga2 pki sign-csr --csr ${PKI_CSR} --cert ${PKI_CRT}
 
-    cp -arv /etc/icinga2/pki /srv
+    cp -arv /etc/icinga2/pki ${WORK_DIR}/
 
     echo " [i] Finished cert generation"
   fi
@@ -157,9 +164,10 @@ configureAPICert() {
 
 configureDatabase() {
 
-  local logfile="/srv/icinga2-ido-mysql-schema.log"
+  local logfile="${WORK_DIR}/icinga2-ido-mysql-schema.log"
+  local status="${WORK_DIR}/mysql-schema.import"
 
-  if [ ! -f ${logfile} ]
+  if [ ! -f ${status} ]
   then
     echo " [i] Initializing databases and icinga2 configurations."
     echo " [i] This may take a few minutes"
@@ -174,6 +182,14 @@ configureDatabase() {
     ) | mysql ${mysql_opts}
 
     mysql ${mysql_opts} --force icinga2  < /usr/share/icinga2-ido-mysql/schema/mysql.sql  >> ${logfile} 2>&1
+
+    if [ $? -eq 0 ]
+    then
+      touch ${status}
+    else
+      echo " [E] can't insert the icinga2 Database Schema"
+      exit 1
+    fi
 
     sed -i 's|//host \= \".*\"|host \=\ \"'${MYSQL_HOST}'\"|g'             /etc/icinga2/features-available/ido-mysql.conf
     sed -i 's|//password \= \".*\"|password \= \"'${IDO_PASSWORD}'\"|g'    /etc/icinga2/features-available/ido-mysql.conf
@@ -207,6 +223,12 @@ EOF
 
 startSupervisor() {
 
+  if [ ${ERROR} -gt 0 ]
+  then
+    echo " [E] an error was accured"
+    exit 2
+  fi
+
   echo -e "\n Starting Supervisor.\n\n"
 
   if [ -f /etc/supervisord.conf ]
@@ -226,8 +248,10 @@ run() {
     prepare
     configureGraphite
     configureAPICert
-    configureDatabase
     configureAPIUser
+
+    configureDatabase
+
     correctRights
 
     echo -e "\n"
