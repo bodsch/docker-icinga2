@@ -2,7 +2,10 @@
 #
 #
 
-# set -x
+if [ ${DEBUG} ]
+then
+  set -x
+fi
 
 WORK_DIR=${WORK_DIR:-/srv}
 WORK_DIR=${WORK_DIR}/icinga2
