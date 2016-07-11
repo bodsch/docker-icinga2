@@ -1,0 +1,12 @@
+sudo: required
+
+services:
+  - docker
+
+install:
+  - docker build --tag bodsch/docker-icinga2 .
+  - docker run --detach --name icinga2 bodsch/docker-icinga2
+
+script:
+  - docker ps | grep -q icinga2
+
