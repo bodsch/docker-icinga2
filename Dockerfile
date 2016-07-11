@@ -2,7 +2,7 @@ FROM bodsch/docker-alpine-base:latest
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.2.1"
+LABEL version="1.2.2"
 
 ENV TERM xterm
 
