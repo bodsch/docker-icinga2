@@ -2,14 +2,12 @@
 #
 #
 
-# Version 2
-
-set -x
+# set -x
 
 WORK_DIR=${WORK_DIR:-/srv}
 WORK_DIR=${WORK_DIR}/icinga2
 
-initfile=/opt/run.init
+initfile=${WORK_DIR}/run.init
 
 MYSQL_HOST=${MYSQL_HOST:-""}
 MYSQL_PORT=${MYSQL_PORT:-"3306"}
@@ -134,7 +132,7 @@ configureAPICert() {
   if [ -d ${WORK_DIR}/pki ]
   then
     echo " [i] restore older PKI settings"
-    cp -arv ${WORK_DIR}/pki /etc/icinga2/
+    cp -ar ${WORK_DIR}/pki /etc/icinga2/
 
     icinga2 feature enable api
   fi
@@ -154,7 +152,7 @@ configureAPICert() {
     icinga2 pki new-cert --cn ${HOSTNAME} --key ${PKI_KEY} --csr ${PKI_CSR}
     icinga2 pki sign-csr --csr ${PKI_CSR} --cert ${PKI_CRT}
 
-    cp -arv /etc/icinga2/pki ${WORK_DIR}/
+    cp -ar /etc/icinga2/pki ${WORK_DIR}/
 
     echo " [i] Finished cert generation"
   fi
@@ -222,12 +220,6 @@ EOF
 
 
 startSupervisor() {
-
-  if [ ${ERROR} -gt 0 ]
-  then
-    echo " [E] an error was accured"
-    exit 2
-  fi
 
   echo -e "\n Starting Supervisor.\n\n"
 
