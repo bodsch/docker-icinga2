@@ -39,6 +39,8 @@ ADD rootfs/ /
 VOLUME  ["/etc/icinga2", "/var/lib/icinga2", "/var/run/icinga2/cmd" ]
 
 # Initialize and run Supervisor
-CMD [ "/opt/startup.sh" ]
+# CMD [ "/opt/startup.sh" ]
+
+CMD [ '/bin/bash' ]
 
 # ---------------------------------------------------------------------------------------
