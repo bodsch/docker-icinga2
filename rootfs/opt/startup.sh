@@ -137,7 +137,10 @@ configureAPICert() {
     echo " [i] restore older PKI settings"
     cp -ar ${WORK_DIR}/pki /etc/icinga2/
 
-    icinga2 feature enable api
+    if [ $(icinga2 feature list | grep Enabled | grep api | wc -l) -eq 0 ]
+    then
+      icinga2 feature enable api
+    fi
   fi
 
   sed -i "s,^.*\ NodeName\ \=\ .*,const\ NodeName\ \=\ \"${HOSTNAME}\",g" /etc/icinga2/constants.conf
@@ -171,9 +174,6 @@ configureDatabase() {
   if [ ! -f ${status} ]
   then
     echo " [i] Initializing databases and icinga2 configurations."
-    echo " [i] This may take a few minutes"
-
-#    ICINGAADMIN_PASSWORD=$(openssl passwd -1 "icinga")
 
     (
       echo "--- create user 'icinga2'@'%' IDENTIFIED BY '${IDO_PASSWORD}';"
@@ -191,12 +191,15 @@ configureDatabase() {
       echo " [E] can't insert the icinga2 Database Schema"
       exit 1
     fi
-
-    sed -i 's|//host \= \".*\"|host \=\ \"'${MYSQL_HOST}'\"|g'             /etc/icinga2/features-available/ido-mysql.conf
-    sed -i 's|//password \= \".*\"|password \= \"'${IDO_PASSWORD}'\"|g'    /etc/icinga2/features-available/ido-mysql.conf
-    sed -i 's|//user =\ \".*\"|user =\ \"icinga2\"|g'                      /etc/icinga2/features-available/ido-mysql.conf
-    sed -i 's|//database =\ \".*\"|database =\ \"icinga2\"|g'              /etc/icinga2/features-available/ido-mysql.conf
   fi
+
+  sed -i \
+    -e 's|//host \= \".*\"|host \=\ \"'${MYSQL_HOST}'\"|g' \
+    -e 's|//password \= \".*\"|password \= \"'${IDO_PASSWORD}'\"|g' \
+    -e 's|//user =\ \".*\"|user =\ \"icinga2\"|g' \
+    -e 's|//database =\ \".*\"|database =\ \"icinga2\"|g' \
+    /etc/icinga2/features-available/ido-mysql.conf
+
 }
 
 
@@ -204,11 +207,22 @@ configureAPIUser() {
 
   local api_file="/etc/icinga2/conf.d/api-users.conf"
 
+  cat << EOF > ${api_file}
+
+object ApiUser "root" {
+  password    = "icinga"
+  client_cn   = NodeName
+  permissions = [ "*" ]
+}
+
+EOF
+
   if ( [ ! -z ${DASHING_API_USER} ] && [ ! -z ${DASHING_API_PASS} ] )
   then
     echo " [i] enable API User '${DASHING_API_USER}'"
 
     cat << EOF >> ${api_file}
+
 object ApiUser "${DASHING_API_USER}" {
   password    = "${DASHING_API_PASS}"
   client_cn   = NodeName
