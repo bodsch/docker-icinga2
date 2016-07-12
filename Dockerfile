@@ -2,7 +2,7 @@ FROM bodsch/docker-alpine-base:latest
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.2.2"
+LABEL version="1.2.3"
 
 ENV TERM xterm
 
@@ -36,9 +36,8 @@ RUN \
 
 ADD rootfs/ /
 
-# VOLUME  ["/etc/icinga2", "/var/lib/icinga2", "/var/run/icinga2/cmd" ]
+VOLUME [ "/etc/icinga2", "/var/lib/icinga2", "/var/run/icinga2/cmd" ]
 
-# Initialize and run Supervisor
 CMD [ "/opt/startup.sh" ]
 
 # ---------------------------------------------------------------------------------------
