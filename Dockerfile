@@ -30,13 +30,13 @@ RUN \
     monitoring-plugins && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   /usr/sbin/icinga2 feature enable ido-mysql command livestatus compatlog checker mainlog icingastatus && \
-  mkdir -p /run/icinga2 /run/icinga2/cmd && \
+  mkdir -p /run/icinga2/cmd && \
   chmod u+s /bin/busybox && \
   rm -rf /var/cache/apk/*
 
 ADD rootfs/ /
 
-VOLUME [ "/etc/icinga2", "/var/lib/icinga2", "/var/run/icinga2/cmd" ]
+VOLUME [ "/etc/icinga2", "/var/lib/icinga2", "/run/icinga2/cmd" ]
 
 CMD [ "/opt/startup.sh" ]
 
