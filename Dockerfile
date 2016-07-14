@@ -28,11 +28,11 @@ RUN \
     icinga2 \
     openssl \
     monitoring-plugins && \
+  rm -rf /var/cache/apk/* && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   /usr/sbin/icinga2 feature enable ido-mysql command livestatus compatlog checker mainlog icingastatus && \
   mkdir -p /run/icinga2/cmd && \
-  chmod u+s /bin/busybox && \
-  rm -rf /var/cache/apk/*
+  chmod u+s /bin/busybox
 
 ADD rootfs/ /
 
