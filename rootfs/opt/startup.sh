@@ -14,6 +14,8 @@ initfile=${WORK_DIR}/run.init
 
 MYSQL_HOST=${MYSQL_HOST:-""}
 MYSQL_PORT=${MYSQL_PORT:-"3306"}
+MYSQL_NAME=${MYSQL_NAME:-"icinga2"}
+
 MYSQL_ROOT_USER=${MYSQL_ROOT_USER:-"root"}
 MYSQL_ROOT_PASS=${MYSQL_ROOT_PASS:-""}
 
@@ -176,9 +178,9 @@ configureDatabase() {
     echo " [i] Initializing databases and icinga2 configurations."
 
     (
-      echo "--- create user 'icinga2'@'%' IDENTIFIED BY '${IDO_PASSWORD}';"
-      echo "CREATE DATABASE IF NOT EXISTS icinga2;"
-      echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON icinga2.* TO 'icinga2'@'%' IDENTIFIED BY '${IDO_PASSWORD}';"
+      echo "--- create user '${MYSQL_NAME}'@'%' IDENTIFIED BY '${IDO_PASSWORD}';"
+      echo "CREATE DATABASE IF NOT EXISTS ${MYSQL_NAME};"
+      echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON ${MYSQL_NAME}.* TO 'icinga2'@'%' IDENTIFIED BY '${IDO_PASSWORD}';"
       echo "FLUSH PRIVILEGES;"
     ) | mysql ${mysql_opts}
 
@@ -197,7 +199,7 @@ configureDatabase() {
     -e 's|//host \= \".*\"|host \=\ \"'${MYSQL_HOST}'\"|g' \
     -e 's|//password \= \".*\"|password \= \"'${IDO_PASSWORD}'\"|g' \
     -e 's|//user =\ \".*\"|user =\ \"icinga2\"|g' \
-    -e 's|//database =\ \".*\"|database =\ \"icinga2\"|g' \
+    -e 's|//database =\ \".*\"|database =\ \"'${MYSQL_NAME}'\"|g' \
     /etc/icinga2/features-available/ido-mysql.conf
 
 }
@@ -265,7 +267,8 @@ run() {
 
     echo -e "\n"
     echo " ==================================================================="
-    echo " MySQL user 'icinga2' password set to ${IDO_PASSWORD}"
+    echo " MySQL user 'icinga2' password set to '${IDO_PASSWORD}'"
+    echo "   and use database '${MYSQL_NAME}'"
     echo " ==================================================================="
     echo ""
   fi
