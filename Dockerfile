@@ -1,8 +1,8 @@
-FROM bodsch/docker-alpine-base:latest
+FROM bodsch/docker-alpine-base:3.4
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.2.3"
+LABEL version="1.3.0"
 
 ENV TERM xterm
 
@@ -30,7 +30,7 @@ RUN \
     monitoring-plugins && \
   rm -rf /var/cache/apk/* && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
-  /usr/sbin/icinga2 feature enable ido-mysql command livestatus compatlog checker mainlog icingastatus && \
+  /usr/sbin/icinga2 feature enable command livestatus compatlog checker mainlog icingastatus && \
   mkdir -p /run/icinga2/cmd && \
   chmod u+s /bin/busybox
 

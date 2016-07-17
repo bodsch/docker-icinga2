@@ -14,10 +14,15 @@ initfile=${WORK_DIR}/run.init
 
 MYSQL_HOST=${MYSQL_HOST:-""}
 MYSQL_PORT=${MYSQL_PORT:-"3306"}
-MYSQL_NAME=${MYSQL_NAME:-"icinga2"}
+MYSQL_NAME=${MYSQL_NAME:-"icinga2core"}
 
 MYSQL_ROOT_USER=${MYSQL_ROOT_USER:-"root"}
 MYSQL_ROOT_PASS=${MYSQL_ROOT_PASS:-""}
+MYSQL_OPTS=
+
+ICINGA_CLUSTER=${ICINGA_CLUSTER:-false}
+ICINGA_MASTER=${ICINGA_MASTER:-""}
+ICINGA_SATELLITES=${ICINGA_SATELLITES:-""}
 
 CARBON_HOST=${CARBON_HOST:-""}
 CARBON_PORT=${CARBON_PORT:-2003}
@@ -27,17 +32,24 @@ IDO_PASSWORD=${IDO_PASSWORD:-$(pwgen -s 15 1)}
 USER=
 GROUP=
 
+HOSTNAME=$(hostname -s)
 
 if [ -z ${MYSQL_HOST} ]
 then
-  echo " [E] no MYSQL_HOST var set ..."
-  exit 1
+  echo " [i] no MYSQL_HOST set ..."
+else
+  MYSQL_OPTS="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_ROOT_PASS} --port=${MYSQL_PORT}"
 fi
 
-mysql_opts="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_ROOT_PASS} --port=${MYSQL_PORT}"
+
 
 
 waitForDatabase() {
+
+  if [ -z "${MYSQL_OPTS}" ]
+  then
+    return
+  fi
 
   # wait for needed database
   while ! nc -z ${MYSQL_HOST} ${MYSQL_PORT}
@@ -49,6 +61,25 @@ waitForDatabase() {
   echo " [i] wait for database for there initdb and do other jobs well"
   sleep 10s
 }
+
+waitForIcingaMaster() {
+
+  if [ ${ICINGA_CLUSTER} == false ]
+  then
+    return
+  fi
+
+  # wait for needed database
+  while ! nc -z ${ICINGA_MASTER} 5665
+  do
+    sleep 3s
+  done
+
+  # must start initdb and do other jobs well
+  echo " [i] wait for icinga2 Core"
+  sleep 20s
+}
+
 
 
 prepare() {
@@ -133,42 +164,97 @@ configureGraphite() {
 
 configureAPICert() {
 
-  # icinga2 API cert - regenerate new private key and certificate when running in a new container
-  if [ -d ${WORK_DIR}/pki ]
-  then
-    echo " [i] restore older PKI settings"
-    cp -ar ${WORK_DIR}/pki /etc/icinga2/
+  echo " [i] - master: ${ICINGA_MASTER}"
+  echo " [i] - host  : ${HOSTNAME}"
 
-    if [ $(icinga2 feature list | grep Enabled | grep api | wc -l) -eq 0 ]
+  if [ ${ICINGA_MASTER} == ${HOSTNAME} ]
+  then
+
+    # icinga2 API cert - regenerate new private key and certificate when running in a new container
+    if [ -f ${WORK_DIR}/pki/${HOSTNAME}.key ]
     then
-      icinga2 feature enable api
+      echo " [i] restore older PKI settings for host '${HOSTNAME}'"
+      cp -ar ${WORK_DIR}/pki/${HOSTNAME}* /etc/icinga2/pki/
+
+      if [ $(icinga2 feature list | grep Enabled | grep api | wc -l) -eq 0 ]
+      then
+        icinga2 feature enable api
+      fi
     fi
-  fi
 
-  sed -i "s,^.*\ NodeName\ \=\ .*,const\ NodeName\ \=\ \"${HOSTNAME}\",g" /etc/icinga2/constants.conf
+    sed -i "s,^.*\ NodeName\ \=\ .*,const\ NodeName\ \=\ \"${HOSTNAME}\",g" /etc/icinga2/constants.conf
 
-  # icinga2 API cert - regenerate new private key and certificate when running in a new container
-  if [ ! -f /etc/icinga2/pki/${HOSTNAME}.key ]
-  then
-    echo " [i] Generating new private key and certificate for this container ${HOSTNAME} ..."
+    # icinga2 API cert - regenerate new private key and certificate when running in a new container
+    if [ ! -f /etc/icinga2/pki/${HOSTNAME}.key ]
+    then
 
-    PKI_KEY="/etc/icinga2/pki/${HOSTNAME}.key"
-    PKI_CSR="/etc/icinga2/pki/${HOSTNAME}.csr"
-    PKI_CRT="/etc/icinga2/pki/${HOSTNAME}.crt"
+      [ -d ${WORK_DIR}/pki ] || mkdir ${WORK_DIR}/pki
 
-    icinga2 api setup
-    icinga2 pki new-cert --cn ${HOSTNAME} --key ${PKI_KEY} --csr ${PKI_CSR}
-    icinga2 pki sign-csr --csr ${PKI_CSR} --cert ${PKI_CRT}
+      PKI_CMD="icinga2 pki"
+
+      PKI_KEY="/etc/icinga2/pki/${HOSTNAME}.key"
+      PKI_CSR="/etc/icinga2/pki/${HOSTNAME}.csr"
+      PKI_CRT="/etc/icinga2/pki/${HOSTNAME}.crt"
+
+      icinga2 api setup
+
+      ${PKI_CMD} new-cert --cn ${HOSTNAME} --key ${PKI_KEY} --csr ${PKI_CSR}
+      ${PKI_CMD} sign-csr --csr ${PKI_CSR} --cert ${PKI_CRT}
+
+      supervisorctl restart icinga2
+
+      if [ ! -z "${ICINGA_SATELLITES}" ]
+      then
+
+        SATELLITES="$(echo ${ICINGA_SATELLITES} | sed 's|,| |g')"
+
+        for s in ${SATELLITES}
+        do
+          dir="/tmp/${s}"
+          salt=$(echo ${s} | sha256sum | cut -f 1 -d ' ')
+
+          mkdir ${dir}
+          chown icinga: ${dir}
+
+          ${PKI_CMD} new-cert --cn ${s} --key ${dir}/${s}.key --csr ${dir}/${s}.csr
+          ${PKI_CMD} sign-csr --csr ${dir}/${s}.csr --cert ${dir}/${s}.crt
+          ${PKI_CMD} save-cert --key ${dir}/${s}.key --cert ${dir}/${s}.crt --trustedcert ${dir}/trusted-master.crt --host ${ICINGA_MASTER}
+          # Receive Ticket from master...
+          pki_ticket=$(${PKI_CMD} ticket --cn ${HOSTNAME} --salt ${salt})
+          ${PKI_CMD} request --host ${ICINGA_MASTER} --port 5665 --ticket ${pki_ticket} --key ${dir}/${s}.key --cert ${dir}/${s}.crt --trustedcert ${dir}/trusted-master.crt --ca /etc/icinga2/pki/ca.crt
+
+          cp -arv /tmp/${s} ${WORK_DIR}/pki/
+        done
+
+      fi
+    fi
 
     cp -ar /etc/icinga2/pki ${WORK_DIR}/
 
     echo " [i] Finished cert generation"
+
+  else
+    echo "satelite system"
+
+    waitForIcingaMaster
+
+    icinga2 api setup
+
+    cp -av ${WORK_DIR}/pki/${HOSTNAME}/* /etc/icinga2/pki/
+
   fi
 
 }
 
 
 configureDatabase() {
+
+  if [ -z "${MYSQL_OPTS}" ]
+  then
+    return
+  fi
+
+  /usr/sbin/icinga2 feature enable ido-mysql
 
   local logfile="${WORK_DIR}/icinga2-ido-mysql-schema.log"
   local status="${WORK_DIR}/mysql-schema.import"
@@ -265,14 +351,16 @@ run() {
 
     correctRights
 
-    echo -e "\n"
-    echo " ==================================================================="
-    echo " MySQL user 'icinga2' password set to '${IDO_PASSWORD}'"
-    echo "   and use database '${MYSQL_NAME}'"
-    echo " ==================================================================="
-    echo ""
+    if [ ! -z "${MYSQL_OPTS}" ]
+    then
+      echo -e "\n"
+      echo " ==================================================================="
+      echo " MySQL user 'icinga2' password set to '${IDO_PASSWORD}'"
+      echo "   and use database '${MYSQL_NAME}'"
+      echo " ==================================================================="
+      echo ""
+    fi
   fi
-
   startSupervisor
 }
 
