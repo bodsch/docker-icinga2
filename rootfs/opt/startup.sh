@@ -162,10 +162,7 @@ configureGraphite() {
 }
 
 
-configureAPICert() {
-
-  echo " [i] - master: ${ICINGA_MASTER}"
-  echo " [i] - host  : ${HOSTNAME}"
+configurePKI() {
 
   if [ ${ICINGA_MASTER} == ${HOSTNAME} ]
   then
@@ -201,7 +198,9 @@ configureAPICert() {
       ${PKI_CMD} new-cert --cn ${HOSTNAME} --key ${PKI_KEY} --csr ${PKI_CSR}
       ${PKI_CMD} sign-csr --csr ${PKI_CSR} --cert ${PKI_CRT}
 
-      supervisorctl restart icinga2
+      correctRights
+
+      supervisorctl start icinga2
 
       if [ ! -z "${ICINGA_SATELLITES}" ]
       then
@@ -227,6 +226,11 @@ configureAPICert() {
         done
 
       fi
+
+      sleep 20s
+
+      supervisorctl stop icinga2
+
     fi
 
     cp -ar /etc/icinga2/pki ${WORK_DIR}/
@@ -234,11 +238,11 @@ configureAPICert() {
     echo " [i] Finished cert generation"
 
   else
-    echo "satelite system"
 
     waitForIcingaMaster
 
-    icinga2 api setup
+    icinga2 feature disable notification
+    icinga2 feature enable api
 
     cp -av ${WORK_DIR}/pki/${HOSTNAME}/* /etc/icinga2/pki/
 
@@ -344,10 +348,10 @@ run() {
     waitForDatabase
     prepare
     configureGraphite
-    configureAPICert
+    configureDatabase
     configureAPIUser
 
-    configureDatabase
+    configurePKI
 
     correctRights
 
@@ -361,6 +365,7 @@ run() {
       echo ""
     fi
   fi
+
   startSupervisor
 }
 
