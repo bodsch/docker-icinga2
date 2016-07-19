@@ -200,7 +200,9 @@ configurePKI() {
 
       correctRights
 
-      /usr/sbin/icinga2 daemon -c /etc/icinga2/icinga2.conf -e /var/log/icinga2/error.log
+      /usr/sbin/icinga2 daemon -c /etc/icinga2/icinga2.conf -e /var/log/icinga2/error.log &
+
+      sleep 5s
 
       if [ ! -z "${ICINGA_SATELLITES}" ]
       then
