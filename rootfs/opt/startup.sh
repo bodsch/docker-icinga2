@@ -200,7 +200,7 @@ configurePKI() {
 
       correctRights
 
-      supervisorctl start icinga2
+      /usr/sbin/icinga2 daemon -c /etc/icinga2/icinga2.conf -e /var/log/icinga2/error.log
 
       if [ ! -z "${ICINGA_SATELLITES}" ]
       then
@@ -227,10 +227,8 @@ configurePKI() {
 
       fi
 
+      killall icinga2
       sleep 20s
-
-      supervisorctl stop icinga2
-
     fi
 
     cp -ar /etc/icinga2/pki ${WORK_DIR}/
@@ -272,9 +270,15 @@ configureDatabase() {
       echo "CREATE DATABASE IF NOT EXISTS ${MYSQL_NAME};"
       echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON ${MYSQL_NAME}.* TO 'icinga2'@'%' IDENTIFIED BY '${IDO_PASSWORD}';"
       echo "FLUSH PRIVILEGES;"
-    ) | mysql ${mysql_opts}
+    ) | mysql ${MYSQL_OPTS}
 
-    mysql ${mysql_opts} --force icinga2  < /usr/share/icinga2-ido-mysql/schema/mysql.sql  >> ${logfile} 2>&1
+    if [ $? -eq 1 ]
+    then
+      echo " [E] can't create Database '${MYSQL_NAME}'"
+      exit 1
+    fi
+
+    mysql ${MYSQL_OPTS} --force ${MYSQL_NAME}  < /usr/share/icinga2-ido-mysql/schema/mysql.sql  >> ${logfile} 2>&1
 
     if [ $? -eq 0 ]
     then
