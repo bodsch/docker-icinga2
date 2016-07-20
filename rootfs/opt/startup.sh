@@ -14,7 +14,6 @@ initfile=${WORK_DIR}/run.init
 
 MYSQL_HOST=${MYSQL_HOST:-""}
 MYSQL_PORT=${MYSQL_PORT:-"3306"}
-MYSQL_NAME=${MYSQL_NAME:-"icinga2core"}
 
 MYSQL_ROOT_USER=${MYSQL_ROOT_USER:-"root"}
 MYSQL_ROOT_PASS=${MYSQL_ROOT_PASS:-""}
@@ -27,6 +26,7 @@ ICINGA_SATELLITES=${ICINGA_SATELLITES:-""}
 CARBON_HOST=${CARBON_HOST:-""}
 CARBON_PORT=${CARBON_PORT:-2003}
 
+IDO_DATABASE_NAME=${IDO_DATABASE_NAME:-"icinga2core"}
 IDO_PASSWORD=${IDO_PASSWORD:-$(pwgen -s 15 1)}
 
 USER=
@@ -268,19 +268,19 @@ configureDatabase() {
     echo " [i] Initializing databases and icinga2 configurations."
 
     (
-      echo "--- create user '${MYSQL_NAME}'@'%' IDENTIFIED BY '${IDO_PASSWORD}';"
-      echo "CREATE DATABASE IF NOT EXISTS ${MYSQL_NAME};"
-      echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON ${MYSQL_NAME}.* TO 'icinga2'@'%' IDENTIFIED BY '${IDO_PASSWORD}';"
+      echo "--- create user '${IDO_DATABASE_NAME}'@'%' IDENTIFIED BY '${IDO_PASSWORD}';"
+      echo "CREATE DATABASE IF NOT EXISTS ${IDO_DATABASE_NAME};"
+      echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON ${IDO_DATABASE_NAME}.* TO 'icinga2'@'%' IDENTIFIED BY '${IDO_PASSWORD}';"
       echo "FLUSH PRIVILEGES;"
     ) | mysql ${MYSQL_OPTS}
 
     if [ $? -eq 1 ]
     then
-      echo " [E] can't create Database '${MYSQL_NAME}'"
+      echo " [E] can't create Database '${IDO_DATABASE_NAME}'"
       exit 1
     fi
 
-    mysql ${MYSQL_OPTS} --force ${MYSQL_NAME}  < /usr/share/icinga2-ido-mysql/schema/mysql.sql  >> ${logfile} 2>&1
+    mysql ${MYSQL_OPTS} --force ${IDO_DATABASE_NAME}  < /usr/share/icinga2-ido-mysql/schema/mysql.sql  >> ${logfile} 2>&1
 
     if [ $? -eq 0 ]
     then
@@ -295,7 +295,7 @@ configureDatabase() {
     -e 's|//host \= \".*\"|host \=\ \"'${MYSQL_HOST}'\"|g' \
     -e 's|//password \= \".*\"|password \= \"'${IDO_PASSWORD}'\"|g' \
     -e 's|//user =\ \".*\"|user =\ \"icinga2\"|g' \
-    -e 's|//database =\ \".*\"|database =\ \"'${MYSQL_NAME}'\"|g' \
+    -e 's|//database =\ \".*\"|database =\ \"'${IDO_DATABASE_NAME}'\"|g' \
     /etc/icinga2/features-available/ido-mysql.conf
 
 }
@@ -366,7 +366,7 @@ run() {
       echo -e "\n"
       echo " ==================================================================="
       echo " MySQL user 'icinga2' password set to '${IDO_PASSWORD}'"
-      echo "   and use database '${MYSQL_NAME}'"
+      echo "   and use database '${IDO_DATABASE_NAME}'"
       echo " ==================================================================="
       echo ""
     fi

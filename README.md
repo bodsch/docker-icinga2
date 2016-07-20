@@ -17,18 +17,18 @@ You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/
 for MySQL Support:
 
   - MYSQL_HOST
-  - MYSQL_PORT
-  - MYSQL_NAME
-  - MYSQL_ROOT_USER
-  - MYSQL_ROOT_PASS
+  - MYSQL_PORT  (default: 3306)
+  - MYSQL_ROOT_USER  (default: root)
+  - MYSQL_ROOT_PASS  (default: '')
+  - IDO_DATABASE_NAME  (default: icinga2core)
   - IDO_PASSWORD
 
 for graphite Support:
 
   - CARBON_HOST
-  - CARBON_PORT
+  - CARBON_PORT  (default: 2003)
 
 for dashing Support:
 
-  - DASHING_API_USER
-  - DASHING_API_PASS
+  - DASHING_API_USER  (optional)
+  - DASHING_API_PASS  (optional)
