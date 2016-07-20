@@ -172,6 +172,7 @@ configurePKI() {
     then
       echo " [i] restore older PKI settings for host '${HOSTNAME}'"
       cp -ar ${WORK_DIR}/pki/${HOSTNAME}* /etc/icinga2/pki/
+      cp -a ${WORK_DIR}/pki/ca.crt /etc/icinga2/pki/
 
       if [ $(icinga2 feature list | grep Enabled | grep api | wc -l) -eq 0 ]
       then
