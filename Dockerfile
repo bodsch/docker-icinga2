@@ -2,7 +2,7 @@ FROM bodsch/docker-alpine-base:3.4
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.3.0"
+LABEL version="1.3.1"
 
 ENV TERM xterm
 
@@ -27,9 +27,11 @@ RUN \
     mysql-client \
     icinga2 \
     openssl \
-    monitoring-plugins && \
+    monitoring-plugins \
+    nrpe-plugin && \
   rm -rf /var/cache/apk/* && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
+  cp /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command livestatus compatlog checker mainlog icingastatus && \
   mkdir -p /run/icinga2/cmd && \
   chmod u+s /bin/busybox
