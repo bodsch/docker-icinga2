@@ -41,6 +41,8 @@ else
   MYSQL_OPTS="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_ROOT_PASS} --port=${MYSQL_PORT}"
 fi
 
+# -------------------------------------------------------------------------------------------------
+
 waitForDatabase() {
 
   if [ -z "${MYSQL_OPTS}" ]
@@ -57,7 +59,7 @@ waitForDatabase() {
   # must start initdb and do other jobs well
   echo " [i] wait for database for there initdb and do other jobs well"
 
-  until mysql ${mysql_opts} --execute="select 1 from mysql.user limit 1" > /dev/null
+  until mysql ${MYSQL_OPTS} --execute="select 1 from mysql.user limit 1" > /dev/null
   do
     echo " . "
     sleep 3s
