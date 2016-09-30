@@ -2,7 +2,7 @@ FROM bodsch/docker-alpine-base:1609-01
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.4.0"
+LABEL version="1.4.2"
 
 ENV TERM xterm
 
@@ -15,6 +15,7 @@ RUN \
   apk --quiet --no-cache upgrade && \
   apk --quiet --no-cache add \
     bash \
+    nano \
     pwgen \
     fping \
     unzip \
@@ -29,6 +30,7 @@ RUN \
     icinga2 \
     openssl \
     monitoring-plugins \
+    ruby \
     nrpe-plugin && \
   rm -rf /var/cache/apk/* && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
