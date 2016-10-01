@@ -168,13 +168,14 @@ configureGraphite() {
 
 configurePKI() {
 
-  if [ ${ICINGA_MASTER} == ${HOSTNAME} ]
+  if ( [ ! -z ${ICINGA_MASTER} ] && [ ${ICINGA_MASTER} == ${HOSTNAME} ] )
   then
 
     # icinga2 API cert - regenerate new private key and certificate when running in a new container
     if [ -f ${WORK_DIR}/pki/${HOSTNAME}.key ]
     then
       echo " [i] restore older PKI settings for host '${HOSTNAME}'"
+
       cp -ar ${WORK_DIR}/pki/${HOSTNAME}* /etc/icinga2/pki/
       cp -a ${WORK_DIR}/pki/ca.crt /etc/icinga2/pki/
 
@@ -246,10 +247,17 @@ configurePKI() {
 
     waitForIcingaMaster
 
-    icinga2 feature disable notification
+    if [ -e /etc/icinga2/features-enabled/notification.conf ]
+    then
+      icinga2 feature disable notification
+    fi
+
     icinga2 feature enable api
 
-    cp -av ${WORK_DIR}/pki/${HOSTNAME}/* /etc/icinga2/pki/
+    if [ -d ${WORK_DIR}/pki/${HOSTNAME} ]
+    then
+      cp -av ${WORK_DIR}/pki/${HOSTNAME}/* /etc/icinga2/pki/
+    fi
 
   fi
 

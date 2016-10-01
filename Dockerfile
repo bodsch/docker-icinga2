@@ -1,8 +1,9 @@
-FROM bodsch/docker-alpine-base:1609-01
+
+FROM bodsch/docker-alpine-base:1610-01
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.4.3"
+LABEL version="1.5.0"
 
 ENV TERM xterm
 
@@ -36,14 +37,16 @@ RUN \
     nrpe-plugin && \
    gem install --no-rdoc --no-ri \
      json && \
-  rm -rf /var/cache/apk/* && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
-  cp /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
+  cp /usr/lib/nagios/plugins/*     /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command livestatus compatlog checker mainlog && \
   mkdir -p /run/icinga2/cmd && \
-  chmod u+s /bin/busybox
+  chmod u+s /bin/busybox && \
+  rm -rf \
+    /tmp/* \
+    /var/cache/apk/*
 
-ADD rootfs/ /
+COPY rootfs/ /
 
 VOLUME [ "/etc/icinga2", "/var/lib/icinga2", "/run/icinga2/cmd" ]
 
