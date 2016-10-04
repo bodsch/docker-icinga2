@@ -3,7 +3,7 @@ FROM bodsch/docker-alpine-base:1610-01
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.5.0"
+LABEL version="1.5.1"
 
 ENV TERM xterm
 
@@ -36,6 +36,7 @@ RUN \
     monitoring-plugins \
     nrpe-plugin && \
    gem install --no-rdoc --no-ri \
+     dalli \
      json && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   cp /usr/lib/nagios/plugins/*     /usr/lib/monitoring-plugins/ && \
