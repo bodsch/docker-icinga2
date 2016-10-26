@@ -3,8 +3,6 @@ CONTAINER  := icinga2
 IMAGE_NAME := docker-icinga2
 
 DATA_DIR   := /tmp/docker-data
-MYSQL_ROOT_PASSWORD := $(MYSQL_ROOT_PASSWORD)
-
 
 build:
 	docker \
@@ -36,7 +34,8 @@ shell:
 		--volume=${DATA_DIR}:/srv \
 		--hostname=${CONTAINER} \
 		--name=${CONTAINER} \
-		$(IMAGE_NAME)
+		$(IMAGE_NAME) \
+		/bin/bash
 
 exec:
 	docker \

@@ -1,9 +1,9 @@
 
-FROM bodsch/docker-alpine-base:1610-01
+FROM bodsch/docker-alpine-base:1610-02
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.5.1"
+LABEL version="1.5.2"
 
 ENV TERM xterm
 
@@ -12,9 +12,9 @@ EXPOSE 5665 6666
 # ---------------------------------------------------------------------------------------
 
 RUN \
-  apk --quiet --no-cache update && \
-  apk --quiet --no-cache upgrade && \
-  apk --quiet --no-cache add \
+  apk --no-cache update && \
+  apk --no-cache upgrade && \
+  apk --no-cache add \
     build-base \
     ruby \
     ruby-dev \
@@ -53,6 +53,6 @@ COPY rootfs/ /
 
 VOLUME [ "/etc/icinga2", "/var/lib/icinga2", "/run/icinga2/cmd" ]
 
-CMD [ "/opt/startup.sh" ]
+CMD /opt/startup.sh
 
 # ---------------------------------------------------------------------------------------
