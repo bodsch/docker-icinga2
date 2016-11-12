@@ -18,8 +18,6 @@ RUN \
     build-base \
     ruby \
     ruby-dev \
-    bash \
-    nano \
     pwgen \
     fping \
     unzip \
@@ -45,6 +43,10 @@ RUN \
   /usr/sbin/icinga2 feature enable command livestatus compatlog checker mainlog && \
   mkdir -p /run/icinga2/cmd && \
   chmod u+s /bin/busybox && \
+  apk del --purge \
+    build-base \
+    ruby-dev \
+    git && \
   rm -rf \
     /tmp/* \
     /var/cache/apk/*
