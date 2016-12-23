@@ -1,8 +1,0 @@
-#
-
-TYPE="icinga2"
-
-TAG_NAME="${USER}-docker-${TYPE}"
-CONTAINER_NAME="${USER}-${TYPE}"
-
-DOCKER_DNS=${DOCKER_DNS:-172.17.0.1}

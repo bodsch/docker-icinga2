@@ -1,8 +1,9 @@
-FROM bodsch/docker-alpine-base:3.4
+
+FROM bodsch/docker-alpine-base:1612-01
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.3.1"
+LABEL version="1.5.3"
 
 ENV TERM xterm
 
@@ -11,9 +12,12 @@ EXPOSE 5665 6666
 # ---------------------------------------------------------------------------------------
 
 RUN \
-  apk --quiet --no-cache update && \
-  apk --quiet --no-cache add \
-    bash \
+  apk --no-cache update && \
+  apk --no-cache upgrade && \
+  apk --no-cache add \
+    build-base \
+    ruby \
+    ruby-dev \
     pwgen \
     fping \
     unzip \
@@ -29,17 +33,28 @@ RUN \
     openssl \
     monitoring-plugins \
     nrpe-plugin && \
-  rm -rf /var/cache/apk/* && \
+   gem install --no-rdoc --no-ri \
+     dalli \
+     json \
+     time_difference \
+     bigdecimal && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
-  cp /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
-  /usr/sbin/icinga2 feature enable command livestatus compatlog checker mainlog icingastatus && \
+  cp /usr/lib/nagios/plugins/*     /usr/lib/monitoring-plugins/ && \
+  /usr/sbin/icinga2 feature enable command livestatus compatlog checker mainlog && \
   mkdir -p /run/icinga2/cmd && \
-  chmod u+s /bin/busybox
+  chmod u+s /bin/busybox && \
+  apk del --purge \
+    build-base \
+    ruby-dev \
+    git && \
+  rm -rf \
+    /tmp/* \
+    /var/cache/apk/*
 
-ADD rootfs/ /
+COPY rootfs/ /
 
 VOLUME [ "/etc/icinga2", "/var/lib/icinga2", "/run/icinga2/cmd" ]
 
-CMD [ "/opt/startup.sh" ]
+CMD /opt/startup.sh
 
 # ---------------------------------------------------------------------------------------
