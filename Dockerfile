@@ -1,9 +1,9 @@
 
-FROM bodsch/docker-alpine-base:1612-01
+FROM bodsch/docker-alpine-base:1701-02
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.5.3"
+LABEL version="1.6.0"
 
 ENV TERM xterm
 
@@ -45,6 +45,10 @@ RUN \
   chmod u+s /bin/busybox && \
   apk del --purge \
     build-base \
+    bash \
+    curl \
+    nano \
+    tree \
     ruby-dev \
     git && \
   rm -rf \
@@ -55,6 +59,6 @@ COPY rootfs/ /
 
 VOLUME [ "/etc/icinga2", "/var/lib/icinga2", "/run/icinga2/cmd" ]
 
-CMD /opt/startup.sh
+CMD [ "/opt/startup.sh" ]
 
 # ---------------------------------------------------------------------------------------

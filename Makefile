@@ -35,7 +35,7 @@ shell:
 		--hostname=${CONTAINER} \
 		--name=${CONTAINER} \
 		$(IMAGE_NAME) \
-		/bin/bash
+		/bin/sh
 
 exec:
 	docker \
@@ -43,7 +43,7 @@ exec:
 		--interactive \
 		--tty \
 		${CONTAINER} \
-		/bin/bash
+		/bin/sh
 
 stop:
 	docker \
