@@ -33,11 +33,12 @@ RUN \
     openssl \
     monitoring-plugins \
     nrpe-plugin && \
-   gem install --no-rdoc --no-ri \
-     dalli \
-     json \
-     time_difference \
-     bigdecimal && \
+  gem install --no-rdoc --no-ri \
+    dalli \
+    sequel \
+    json \
+    time_difference \
+    bigdecimal && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   cp /usr/lib/nagios/plugins/*     /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command livestatus compatlog checker mainlog && \
