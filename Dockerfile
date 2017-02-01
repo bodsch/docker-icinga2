@@ -1,9 +1,9 @@
 
-FROM bodsch/docker-alpine-base:1701-02
+FROM bodsch/docker-alpine-base:1701-04
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.6.0"
+LABEL version="1702-01"
 
 ENV TERM xterm
 

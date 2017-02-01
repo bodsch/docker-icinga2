@@ -5,13 +5,15 @@ Installs an working icinga2 Core or Satellite based on alpine-linux
 
 # Status
 
-[![Build Status](https://travis-ci.org/bodsch/docker-icinga2.svg?branch=1701-02)](https://travis-ci.org/bodsch/docker-icinga2)
+[![Build Status](https://travis-ci.org/bodsch/docker-icinga2.svg?branch=1702-01)](https://travis-ci.org/bodsch/docker-icinga2)
 
 # Build
+
 
 # Docker Hub
 
 You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/docker-icinga2/)
+
 
 # supported Environment Vars
 
