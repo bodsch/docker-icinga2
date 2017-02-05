@@ -180,7 +180,8 @@ configurePKI() {
       echo " [i] restore older PKI settings for host '${HOSTNAME}'"
 
       cp -ar ${WORK_DIR}/pki/${HOSTNAME}* /etc/icinga2/pki/
-      cp -a ${WORK_DIR}/pki/ca.crt /etc/icinga2/pki/
+      cp -a  ${WORK_DIR}/pki/ca.crt       /etc/icinga2/pki/
+      cp -ar ${WORK_DIR}/ca               /var/lib/icinga2/
 
       if [ $(icinga2 feature list | grep Enabled | grep api | wc -l) -eq 0 ]
       then
@@ -242,7 +243,8 @@ configurePKI() {
       sleep 20s
     fi
 
-    cp -ar /etc/icinga2/pki ${WORK_DIR}/
+    cp -ar /etc/icinga2/pki    ${WORK_DIR}/
+    cp -ar /var/lib/icinga2/ca ${WORK_DIR}/
 
     echo " [i] Finished cert generation"
 
