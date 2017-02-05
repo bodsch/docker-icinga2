@@ -23,6 +23,9 @@ ICINGA_CLUSTER=${ICINGA_CLUSTER:-false}
 ICINGA_MASTER=${ICINGA_MASTER:-""}
 ICINGA_SATELLITES=${ICINGA_SATELLITES:-""}
 
+CERTSERVICE_API_USER=${CERTSERVICE_API_USER:-""}
+CERTSERVICE_API_PASS=${CERTSERVICE_API_PASS:-""}
+
 CARBON_HOST=${CARBON_HOST:-""}
 CARBON_PORT=${CARBON_PORT:-2003}
 
@@ -343,6 +346,23 @@ object ApiUser "${DASHING_API_USER}" {
 EOF
 
   fi
+
+  if ( [ ! -z ${CERTSERVICE_API_USER} ] && [ ! -z ${CERTSERVICE_API_PASS} ] )
+  then
+    echo " [i] enable API User '${CERTSERVICE_API_USER}'"
+
+    cat << EOF >> ${api_file}
+
+object ApiUser "${CERTSERVICE_API_USER}" {
+  password    = "${CERTSERVICE_API_PASS}"
+  client_cn   = NodeName
+  permissions = [ "*" ]
+}
+
+EOF
+
+  fi
+
 
 }
 
