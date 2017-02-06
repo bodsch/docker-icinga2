@@ -102,6 +102,8 @@ fi
 
     echo "we are an satellite .."
 
+    [ -f /etc/supervisor.d/cert-service.ini ] && rm -f /etc/supervisor.d/cert-service.ini
+
     waitForIcingaMaster
 
     if [ -e /etc/icinga2/features-enabled/notification.conf ]
@@ -109,7 +111,10 @@ fi
       icinga2 feature disable notification
     fi
 
-    icinga2 feature enable api
+    if [ $(icinga2 feature list | grep Enabled | grep api | wc -l) -eq 0 ]
+    then
+      icinga2 feature enable api
+    fi
 
     if [ ! -f ${WORK_DIR}/pki/${HOSTNAME}/${HOSTNAME}.key ]
     then
@@ -139,7 +144,7 @@ fi
           if ( [ $? -eq 0 ] && [ ${code} -eq 200 ] )
           then
 
-            masterName=$(jq --raw-output .masterName /tmp/request_${HOSTNAME}.json)
+#            masterName=$(jq --raw-output .masterName /tmp/request_${HOSTNAME}.json)
             checksum=$(jq --raw-output .checksum /tmp/request_${HOSTNAME}.json)
 
             rm -f /tmp/request_${HOSTNAME}.json
@@ -169,11 +174,17 @@ fi
             fi
 
             tar -xzf ${HOSTNAME}.tgz
+          fi
+        fi
+      fi
 
-            # now, we configure our satellite
-            if ( [ $(grep -c "Endpoint \"${masterName}\"" /etc/icinga2/zones.conf ) -eq 0 ] || [ $(grep -c "host = \"${masterIp}\"" /etc/icinga2/zones.conf) -eq 0 ] )
-            then
-              cat << EOF > /etc/icinga2/zones.conf
+
+      masterName="icinga2-master"
+
+      # now, we configure our satellite
+      if ( [ $(grep -c "Endpoint \"${masterName}\"" /etc/icinga2/zones.conf ) -eq 0 ] || [ $(grep -c "host = \"${ICINGA_MASTER}\"" /etc/icinga2/zones.conf) -eq 0 ] )
+      then
+        cat << EOF > /etc/icinga2/zones.conf
 
 object Endpoint "${masterName}" {
   ### Folgende Zeile legt fest, dass der Client die Verbindung zum Master aufbaut und nicht umgekehrt
@@ -198,42 +209,24 @@ object Zone "global-templates" {
 }
 
 EOF
-            fi
-
-            if [ -f /etc/icinga2/conf.d/hosts.conf ]
-            then
-              mv /etc/icinga2/conf.d/hosts.conf /etc/icinga2/conf.d/hosts.conf-SAVE
-            fi
-
-            if [ -f /etc/icinga2/conf.d/services.conf ]
-            then
-              mv /etc/icinga2/conf.d/services.conf /etc/icinga2/conf.d/services.conf-SAVE
-            fi
-
-            cp -av ${WORK_DIR}/pki/${HOSTNAME}/* /etc/icinga2/pki/
-
-            correctRights
-
-            # test the configuration
-            icinga2 daemon --validate -c /etc/icinga2/icinga2.conf
-
-          else
-            echo "  [E] can't connect the cert service"
-
-            exit 1
-
-          fi
-
-        else
-          echo " [E] - missing CERT SERVICE CREDETIALS"
-
-          return
-        fi
-
-      else
-
-        [ -f /etc/supervisor.d/cert-service.ini ] && rm -f /etc/supervisor.d/cert-service.ini
       fi
+
+      if [ -f /etc/icinga2/conf.d/hosts.conf ]
+      then
+        mv /etc/icinga2/conf.d/hosts.conf /etc/icinga2/conf.d/hosts.conf-SAVE
+      fi
+
+      if [ -f /etc/icinga2/conf.d/services.conf ]
+      then
+        mv /etc/icinga2/conf.d/services.conf /etc/icinga2/conf.d/services.conf-SAVE
+      fi
+
+      cp -av ${WORK_DIR}/pki/${HOSTNAME}/* /etc/icinga2/pki/
+
+      correctRights
+
+      # test the configuration
+      icinga2 daemon --validate -c /etc/icinga2/icinga2.conf
 
     fi
 
