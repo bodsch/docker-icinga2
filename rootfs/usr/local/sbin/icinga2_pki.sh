@@ -144,7 +144,7 @@ fi
           if ( [ $? -eq 0 ] && [ ${code} -eq 200 ] )
           then
 
-#            masterName=$(jq --raw-output .masterName /tmp/request_${HOSTNAME}.json)
+            masterName=$(jq --raw-output .masterName /tmp/request_${HOSTNAME}.json)
             checksum=$(jq --raw-output .checksum /tmp/request_${HOSTNAME}.json)
 
             rm -f /tmp/request_${HOSTNAME}.json
@@ -174,17 +174,22 @@ fi
             fi
 
             tar -xzf ${HOSTNAME}.tgz
+
+            echo "${masterName}" > ${WORK_DIR}/pki/${HOSTNAME}/master
           fi
         fi
       fi
+    fi
 
+    if [ -f ${WORK_DIR}/pki/${HOSTNAME}/master ]
+    then
+      masterName=$(cat ${WORK_DIR}/pki/${HOSTNAME}/master)
+    fi
 
-      masterName="icinga2-master"
-
-      # now, we configure our satellite
-      if ( [ $(grep -c "Endpoint \"${masterName}\"" /etc/icinga2/zones.conf ) -eq 0 ] || [ $(grep -c "host = \"${ICINGA_MASTER}\"" /etc/icinga2/zones.conf) -eq 0 ] )
-      then
-        cat << EOF > /etc/icinga2/zones.conf
+    # now, we configure our satellite
+    if ( [ $(grep -c "Endpoint \"${masterName}\"" /etc/icinga2/zones.conf ) -eq 0 ] || [ $(grep -c "host = \"${ICINGA_MASTER}\"" /etc/icinga2/zones.conf) -eq 0 ] )
+    then
+      cat << EOF > /etc/icinga2/zones.conf
 
 object Endpoint "${masterName}" {
   ### Folgende Zeile legt fest, dass der Client die Verbindung zum Master aufbaut und nicht umgekehrt
@@ -209,26 +214,24 @@ object Zone "global-templates" {
 }
 
 EOF
-      fi
-
-      if [ -f /etc/icinga2/conf.d/hosts.conf ]
-      then
-        mv /etc/icinga2/conf.d/hosts.conf /etc/icinga2/conf.d/hosts.conf-SAVE
-      fi
-
-      if [ -f /etc/icinga2/conf.d/services.conf ]
-      then
-        mv /etc/icinga2/conf.d/services.conf /etc/icinga2/conf.d/services.conf-SAVE
-      fi
-
-      cp -av ${WORK_DIR}/pki/${HOSTNAME}/* /etc/icinga2/pki/
-
-      correctRights
-
-      # test the configuration
-      icinga2 daemon --validate -c /etc/icinga2/icinga2.conf
-
     fi
+
+    if [ -f /etc/icinga2/conf.d/hosts.conf ]
+    then
+      mv /etc/icinga2/conf.d/hosts.conf /etc/icinga2/conf.d/hosts.conf-SAVE
+    fi
+
+    if [ -f /etc/icinga2/conf.d/services.conf ]
+    then
+      mv /etc/icinga2/conf.d/services.conf /etc/icinga2/conf.d/services.conf-SAVE
+    fi
+
+    cp -av ${WORK_DIR}/pki/${HOSTNAME}/* /etc/icinga2/pki/
+
+    correctRights
+
+    # test the configuration
+    icinga2 daemon --validate -c /etc/icinga2/icinga2.conf
 
   fi
 
