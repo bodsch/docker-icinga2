@@ -18,6 +18,7 @@ RUN \
     build-base \
     ruby \
     ruby-dev \
+    git \
     pwgen \
     fping \
     unzip \
@@ -31,6 +32,7 @@ RUN \
     mysql-client \
     icinga2 \
     openssl \
+    openssl-dev \
     monitoring-plugins \
     nrpe-plugin && \
   gem install --no-rdoc --no-ri \
@@ -45,6 +47,16 @@ RUN \
   mkdir -p /etc/icinga2/automatic-zones.d && \
   mkdir -p /run/icinga2/cmd && \
   chmod u+s /bin/busybox && \
+  cd /tmp && \
+  git clone https://github.com/bodsch/ruby-icinga-cert-service.git && \
+  gem install --no-rdoc --no-ri \
+    io-console \
+    thin \
+    sinatra \
+    sinatra-basic-auth \
+    openssl && \
+  cp -ar /tmp/ruby-icinga-cert-service/bin /usr/local/ && \
+  cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/ && \
   apk del --purge \
     build-base \
     bash \
