@@ -23,12 +23,13 @@ fi
 # for Master AND  Satelitte
 # icinga2 API cert - restore private key and certificate
 #
-if [ -f ${WORK_DIR}/pki/${HOSTNAME}.key ]
+if [ -d ${WORK_DIR}/pki ]
 then
+
   echo " [i] restore older PKI settings for host '${HOSTNAME}'"
 
-  cp -ar ${WORK_DIR}/pki/${HOSTNAME}* /etc/icinga2/pki/
-  cp -a  ${WORK_DIR}/pki/ca.crt       /etc/icinga2/pki/
+  find ${WORK_DIR}/pki -type f -name ${HOSTNAME}* -exec cp -av {} /etc/icinga2/pki/ \;
+  find ${WORK_DIR}/pki -type f -name ca.crt       -exec cp -av {} /etc/icinga2/pki/ \;
 
   if [ $(icinga2 feature list | grep Enabled | grep api | wc -l) -eq 0 ]
   then
