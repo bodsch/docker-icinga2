@@ -8,7 +8,33 @@ ICINGA_CERT_SERVICE_API_PASSWORD=${ICINGA_CERT_SERVICE_API_PASSWORD:-""}
 ICINGA_CERT_SERVICE_SERVER=${ICINGA_CERT_SERVICE_SERVER:-"localhost"}
 ICINGA_CERT_SERVICE_PORT=${ICINGA_CERT_SERVICE_PORT:-"80"}
 
+# ICINGA_MASTER must be an FQDN or an IP
+
 # -------------------------------------------------------------------------------------------------
+
+if [ ! ${ICINGA_CLUSTER} ]
+then
+  echo "we need no cluster config .."
+
+  return
+fi
+
+
+# for Master AND  Satelitte
+# icinga2 API cert - restore private key and certificate
+#
+if [ -f ${WORK_DIR}/pki/${HOSTNAME}.key ]
+then
+  echo " [i] restore older PKI settings for host '${HOSTNAME}'"
+
+  cp -ar ${WORK_DIR}/pki/${HOSTNAME}* /etc/icinga2/pki/
+  cp -a  ${WORK_DIR}/pki/ca.crt       /etc/icinga2/pki/
+
+  if [ $(icinga2 feature list | grep Enabled | grep api | wc -l) -eq 0 ]
+  then
+    icinga2 feature enable api
+  fi
+fi
 
   if ( [ ! -z ${ICINGA_MASTER} ] && [ ${ICINGA_MASTER} == ${HOSTNAME} ] )
   then
@@ -27,20 +53,8 @@ ICINGA_CERT_SERVICE_PORT=${ICINGA_CERT_SERVICE_PORT:-"80"}
 
         rm -f ${WORK_DIR}/pki/${HOSTNAME}*  2> /dev/null
         rm -f ${WORK_DIR}/pki/ca.crt        2> /dev/null
-      fi
-    fi
 
-    # icinga2 API cert - restore private key and certificate
-    if [ -f ${WORK_DIR}/pki/${HOSTNAME}.key ]
-    then
-      echo " [i] restore older PKI settings for host '${HOSTNAME}'"
-
-      cp -ar ${WORK_DIR}/pki/${HOSTNAME}* /etc/icinga2/pki/
-      cp -a  ${WORK_DIR}/pki/ca.crt       /etc/icinga2/pki/
-
-      if [ $(icinga2 feature list | grep Enabled | grep api | wc -l) -eq 0 ]
-      then
-        icinga2 feature enable api
+        rm -f /etc/icinga2/pki/${HOSTNAME}* 2> /dev/null
       fi
     fi
 
@@ -125,7 +139,6 @@ ICINGA_CERT_SERVICE_PORT=${ICINGA_CERT_SERVICE_PORT:-"80"}
           then
 
             masterName=$(jq --raw-output .masterName /tmp/request_${HOSTNAME}.json)
-            masterIp=$(jq --raw-output .masterIp /tmp/request_${HOSTNAME}.json)
             checksum=$(jq --raw-output .checksum /tmp/request_${HOSTNAME}.json)
 
             rm -f /tmp/request_${HOSTNAME}.json
@@ -163,7 +176,7 @@ ICINGA_CERT_SERVICE_PORT=${ICINGA_CERT_SERVICE_PORT:-"80"}
 
 object Endpoint "${masterName}" {
   ### Folgende Zeile legt fest, dass der Client die Verbindung zum Master aufbaut und nicht umgekehrt
-  host = "${masterIp}"
+  host = "${ICINGA_MASTER}"
   port = "5665"
 }
 
