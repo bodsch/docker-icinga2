@@ -5,7 +5,7 @@ Installs an working icinga2 Core or Satellite based on alpine-linux
 
 # Status
 
-[![Build Status](https://travis-ci.org/bodsch/docker-icinga2.svg?branch=1702-01)](https://travis-ci.org/bodsch/docker-icinga2)
+[![Build Status](https://travis-ci.org/bodsch/docker-icinga2.svg?branch=1702-02)](https://travis-ci.org/bodsch/docker-icinga2)
 
 # Build
 
@@ -36,10 +36,17 @@ for dashing Support:
   - DASHING_API_USER  (optional)
   - DASHING_API_PASS  (optional)
 
-
 for icinga2 Cluser:
 
   - ICINGA_CLUSTER (default: ```false```)
   - ICINGA_MASTER  (default: '')
-  - ICINGA_SATELLITES (default: '')
 
+for Icinga2 Cert-Service
+
+  - ICINGA_CERT_SERVICE (default: ```false```)
+  - ICINGA_CERT_SERVICE_BA_USER (default: ```admin```)
+  - ICINGA_CERT_SERVICE_BA_PASSWORD (default: ```admin```)
+  - ICINGA_CERT_SERVICE_API_USER (default: '')
+  - ICINGA_CERT_SERVICE_API_PASSWORD (default: '')
+  - ICINGA_CERT_SERVICE_SERVER (default: ```localhost```)
+  - ICINGA_CERT_SERVICE_PORT (default: ```80```)

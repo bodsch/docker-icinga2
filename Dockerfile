@@ -48,7 +48,6 @@ RUN \
   apk del --purge \
     build-base \
     bash \
-    curl \
     nano \
     tree \
     ruby-dev \

@@ -36,6 +36,13 @@ shell:
 		--tty \
 		--publish=5665:5665 \
 		--publish=6666:6666 \
+		--env ICINGA_CERT_SERVICE=true \
+		--env ICINGA_CERT_SERVICE_BA_USER=foo \
+		--env ICINGA_CERT_SERVICE_BA_PASSWORD=bar \
+		--env ICINGA_CERT_SERVICE_API_USER=root \
+		--env ICINGA_CERT_SERVICE_API_PASSWORD=icinga \
+		--env ICINGA_CERT_SERVICE_SERVER=192.168.252.5 \
+		--env ICINGA_CERT_SERVICE_PORT=4567 \
 		--volume=${DATA_DIR}:/srv \
 		--hostname=${CONTAINER} \
 		--name=${CONTAINER} \
