@@ -102,7 +102,7 @@ fi
 
     echo "we are an satellite .."
 
-    [ -f /etc/supervisor.d/cert-service.ini ] && rm -f /etc/supervisor.d/cert-service.ini
+    [ -f /etc/supervisor.d/icinga2-cert-service.ini ] && rm -f /etc/supervisor.d/icinga2-cert-service.ini
 
     waitForIcingaMaster
 
@@ -224,6 +224,24 @@ EOF
     if [ -f /etc/icinga2/conf.d/services.conf ]
     then
       mv /etc/icinga2/conf.d/services.conf /etc/icinga2/conf.d/services.conf-SAVE
+    fi
+
+    if [ -f /etc/icinga2/features-available/api.conf ]
+    then
+      cat << EOF > /etc/icinga2/features-available/api.conf
+
+object ApiListener "api" {
+  cert_path = SysconfDir + "/icinga2/pki/" + NodeName + ".crt"
+  key_path = SysconfDir + "/icinga2/pki/" + NodeName + ".key"
+  ca_path = SysconfDir + "/icinga2/pki/ca.crt"
+
+  accept_config = true
+  accept_commands = true
+
+  ticket_salt = TicketSalt
+}
+
+EOF
     fi
 
     cp -av ${WORK_DIR}/pki/${HOSTNAME}/* /etc/icinga2/pki/

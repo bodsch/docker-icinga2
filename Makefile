@@ -36,7 +36,7 @@ shell:
 		--tty \
 		--publish=5665:5665 \
 		--publish=6666:6666 \
-    --publish=4567:4567 \
+		--publish=4567:4567 \
 		--env ICINGA_CERT_SERVICE=true \
 		--env ICINGA_CERT_SERVICE_BA_USER=foo \
 		--env ICINGA_CERT_SERVICE_BA_PASSWORD=bar \

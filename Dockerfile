@@ -3,7 +3,8 @@ FROM bodsch/docker-alpine-base:1701-04
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1702-01"
+LABEL version="1702-02"
+LABEL date="2017-02-07"
 
 ENV TERM xterm
 
@@ -16,6 +17,7 @@ RUN \
   apk --no-cache upgrade && \
   apk --no-cache add \
     build-base \
+    bind-tools \
     ruby \
     ruby-dev \
     git \
@@ -38,9 +40,15 @@ RUN \
   gem install --no-rdoc --no-ri \
     dalli \
     sequel \
+    ipaddress \
     json \
     time_difference \
-    bigdecimal && \
+    bigdecimal \
+    io-console \
+    thin \
+    sinatra \
+    sinatra-basic-auth \
+    openssl && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   cp /usr/lib/nagios/plugins/*     /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command livestatus compatlog checker mainlog && \
@@ -49,12 +57,6 @@ RUN \
   chmod u+s /bin/busybox && \
   cd /tmp && \
   git clone https://github.com/bodsch/ruby-icinga-cert-service.git && \
-  gem install --no-rdoc --no-ri \
-    io-console \
-    thin \
-    sinatra \
-    sinatra-basic-auth \
-    openssl && \
   cp -ar /tmp/ruby-icinga-cert-service/bin /usr/local/ && \
   cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/ && \
   apk del --purge \
