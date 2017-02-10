@@ -116,7 +116,7 @@ fi
       icinga2 feature enable api
     fi
 
-    if [ ! -f ${WORK_DIR}/pki/${HOSTNAME}/${HOSTNAME}.key ]
+    if ( [ ! -d ${WORK_DIR}/pki/${HOSTNAME} ] || [ ! -f ${WORK_DIR}/pki/${HOSTNAME}/${HOSTNAME}.key ] )
     then
 
       # the CERT-Service API use an Basic-Auth as first Authentication *AND*
@@ -176,6 +176,9 @@ fi
             tar -xzf ${HOSTNAME}.tgz
 
             echo "${masterName}" > ${WORK_DIR}/pki/${HOSTNAME}/master
+          else
+            echo "${code} - ERROR"
+            exit 1
           fi
         fi
       fi
