@@ -20,10 +20,10 @@ icinga2-master:
   volumes:
     - /tmp/docker-data/icinga2-master:/srv
 
-icinga2-satellelite-1:
+icinga2-satellite-1:
   build: .
-  container_name: "icinga2-satellelite-1"
-  hostname: "icinga2-satellelite-1"
+  container_name: "icinga2-satellite-1"
+  hostname: "icinga2-satellite-1"
   #ports:
     #- "5665:5665"
   environment:
@@ -36,15 +36,15 @@ icinga2-satellelite-1:
     - ICINGA_CERT_SERVICE_SERVER=icinga2-master
     - ICINGA_CERT_SERVICE_PORT=4567
   volumes:
-    - /tmp/docker-data/icinga2-satellelite-1:/srv
+    - /tmp/docker-data/icinga2-satellite-1:/srv
   links:
     - "icinga2-master:icinga2-master"
 
 
-icinga2-satellelite-2:
+icinga2-satellite-2:
   build: .
-  container_name: "icinga2-satellelite-2"
-  hostname: "icinga2-satellelite-2"
+  container_name: "icinga2-satellite-2"
+  hostname: "icinga2-satellite-2"
   #ports:
     #- "5665:5665"
   environment:
@@ -57,7 +57,7 @@ icinga2-satellelite-2:
     - ICINGA_CERT_SERVICE_SERVER=icinga2-master
     - ICINGA_CERT_SERVICE_PORT=4567
   volumes:
-    - /tmp/docker-data/icinga2-satellelite-2:/srv
+    - /tmp/docker-data/icinga2-satellite-2:/srv
   links:
     - "icinga2-master:icinga2-master"
 

@@ -131,6 +131,15 @@ fi
         )
         then
 
+          echo " [i] wait for the cert-service"
+          while ! nc -z ${ICINGA_CERT_SERVICE_SERVER} ${ICINGA_CERT_SERVICE_PORT}
+          do
+            echo -n " ."
+            sleep 5s
+          done
+
+          echo ""
+
           echo " [i] we ask our cert-service for a certificate .."
 
           code=$(curl \
@@ -146,15 +155,15 @@ fi
           if ( [ $? -eq 0 ] && [ ${code} -eq 200 ] )
           then
 
-            echo " [i] certifiacte request are successful"
-            echo " [i] download and install it"
+            echo " [i] certifiacte request was successful"
+            echo " [i] download and install the certificate"
 
             masterName=$(jq --raw-output .masterName /tmp/request_${HOSTNAME}.json)
             checksum=$(jq --raw-output .checksum /tmp/request_${HOSTNAME}.json)
 
             rm -f /tmp/request_${HOSTNAME}.json
 
-            mkdir -vp ${WORK_DIR}/pki/${HOSTNAME}
+            mkdir -p ${WORK_DIR}/pki/${HOSTNAME}
 
             # get our created cert
             curl \
@@ -252,7 +261,7 @@ object ApiListener "api" {
 EOF
     fi
 
-    cp -av ${WORK_DIR}/pki/${HOSTNAME}/* /etc/icinga2/pki/
+    cp -a ${WORK_DIR}/pki/${HOSTNAME}/* /etc/icinga2/pki/
 
     correctRights
 

@@ -59,7 +59,7 @@ waitForDatabase() {
   done
 
   # must start initdb and do other jobs well
-  echo " [i] wait for database for there initdb and do other jobs well"
+  echo " [i] wait for the database for her initdb and all other jobs"
 
   until mysql ${MYSQL_OPTS} --execute="select 1 from mysql.user limit 1" > /dev/null
   do
