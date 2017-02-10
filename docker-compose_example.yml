@@ -1,0 +1,63 @@
+# version: '2.0'
+
+icinga2-master:
+  build: .
+  container_name: "icinga2-master"
+  hostname: "icinga2-master"
+  ports:
+    - "5665:5665"
+    - "6666:6666"
+    - "4567:4567"
+  environment:
+    - ICINGA_MASTER=icinga2-master
+    - ICINGA_CERT_SERVICE=true
+    - ICINGA_CERT_SERVICE_BA_USER=admin
+    - ICINGA_CERT_SERVICE_BA_PASSWORD=admin
+    - ICINGA_CERT_SERVICE_API_USER=root
+    - ICINGA_CERT_SERVICE_API_PASSWORD=icinga
+    - ICINGA_CERT_SERVICE_SERVER=icinga2-master
+    - ICINGA_CERT_SERVICE_PORT=4567
+  volumes:
+    - /tmp/docker-data/icinga2-master:/srv
+
+icinga2-satellelite-1:
+  build: .
+  container_name: "icinga2-satellelite-1"
+  hostname: "icinga2-satellelite-1"
+  #ports:
+    #- "5665:5665"
+  environment:
+    - ICINGA_MASTER=icinga2-master
+    - ICINGA_CERT_SERVICE=true
+    - ICINGA_CERT_SERVICE_BA_USER=admin
+    - ICINGA_CERT_SERVICE_BA_PASSWORD=admin
+    - ICINGA_CERT_SERVICE_API_USER=root
+    - ICINGA_CERT_SERVICE_API_PASSWORD=icinga
+    - ICINGA_CERT_SERVICE_SERVER=icinga2-master
+    - ICINGA_CERT_SERVICE_PORT=4567
+  volumes:
+    - /tmp/docker-data/icinga2-satellelite-1:/srv
+  links:
+    - "icinga2-master:icinga2-master"
+
+
+icinga2-satellelite-2:
+  build: .
+  container_name: "icinga2-satellelite-2"
+  hostname: "icinga2-satellelite-2"
+  #ports:
+    #- "5665:5665"
+  environment:
+    - ICINGA_MASTER=icinga2-master
+    - ICINGA_CERT_SERVICE=true
+    - ICINGA_CERT_SERVICE_BA_USER=admin
+    - ICINGA_CERT_SERVICE_BA_PASSWORD=admin
+    - ICINGA_CERT_SERVICE_API_USER=root
+    - ICINGA_CERT_SERVICE_API_PASSWORD=icinga
+    - ICINGA_CERT_SERVICE_SERVER=icinga2-master
+    - ICINGA_CERT_SERVICE_PORT=4567
+  volumes:
+    - /tmp/docker-data/icinga2-satellelite-2:/srv
+  links:
+    - "icinga2-master:icinga2-master"
+

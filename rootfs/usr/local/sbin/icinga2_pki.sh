@@ -28,10 +28,10 @@ then
 
   echo " [i] restore older PKI settings for host '${HOSTNAME}'"
 
-  find ${WORK_DIR}/pki -type f -name ${HOSTNAME}* -exec cp -av {} /etc/icinga2/pki/ \;
+  find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.key -o -name ${HOSTNAME}.crt -o -name ${HOSTNAME}.csr -exec cp -av {} /etc/icinga2/pki/ \;
   find ${WORK_DIR}/pki -type f -name ca.crt       -exec cp -av {} /etc/icinga2/pki/ \;
 
-  if [ $(icinga2 feature list | grep Enabled | grep api | wc -l) -eq 0 ]
+  if [ $(icinga2 feature list | grep Enabled | grep -c api) -eq 0 ]
   then
     icinga2 feature enable api
   fi
@@ -40,7 +40,7 @@ fi
   if ( [ ! -z ${ICINGA_MASTER} ] && [ ${ICINGA_MASTER} == ${HOSTNAME} ] )
   then
 
-    echo "we are the master .."
+    echo " [i] we are the master .."
 
     # icinga2 cert - restore CA
     if [ ! -d /var/lib/icinga2/ca ]
@@ -100,7 +100,7 @@ fi
 
   else
 
-    echo "we are an satellite .."
+    echo " [i] we are an satellite .."
 
     [ -f /etc/supervisor.d/icinga2-cert-service.ini ] && rm -f /etc/supervisor.d/icinga2-cert-service.ini
 
@@ -111,7 +111,7 @@ fi
       icinga2 feature disable notification
     fi
 
-    if [ $(icinga2 feature list | grep Enabled | grep api | wc -l) -eq 0 ]
+    if [ $(icinga2 feature list | grep Enabled | grep -c api) -eq 0 ]
     then
       icinga2 feature enable api
     fi
@@ -131,6 +131,8 @@ fi
         )
         then
 
+          echo " [i] we ask our cert-service for a certificate .."
+
           code=$(curl \
             --user ${ICINGA_CERT_SERVICE_BA_USER}:${ICINGA_CERT_SERVICE_BA_PASSWORD} \
             --silent \
@@ -143,6 +145,9 @@ fi
 
           if ( [ $? -eq 0 ] && [ ${code} -eq 200 ] )
           then
+
+            echo " [i] certifiacte request are successful"
+            echo " [i] download and install it"
 
             masterName=$(jq --raw-output .masterName /tmp/request_${HOSTNAME}.json)
             checksum=$(jq --raw-output .checksum /tmp/request_${HOSTNAME}.json)
@@ -177,7 +182,7 @@ fi
 
             echo "${masterName}" > ${WORK_DIR}/pki/${HOSTNAME}/master
           else
-            echo "${code} - ERROR"
+            echo " [E] ${code} - the cert-service has an error."
             exit 1
           fi
         fi
