@@ -15,26 +15,23 @@ This Version includes also an small Cert-Service to generate the Certificates fo
 
 Your can use the included Makefile.
 
-To build the Container:
-    make build
+To build the Container: ```make build```
 
-To remove the builded Docker Image:
-    make clean
+To remove the builded Docker Image: ```make clean```
 
-Starts the Container:
-    make run
+Starts the Container: ```make run```
 
-Starts the Container with Login Shell:
-    make shell
+Starts the Container with Login Shell: ```make shell```
 
-Entering the Container:
-    make exec
+Entering the Container: ```make exec```
 
-Stop (but **not kill**):
-    make stop
+Stop (but **not kill**): ```make stop```
 
-History
-    make history
+History ```make history```
+
+Starts a *docker-compose*: ```make compose-up```
+
+Remove the *docker-compose* images: ```make compose-down```
 
 
 # Docker Hub
@@ -56,6 +53,8 @@ The Cluster and Cert-Service are experimental.
 # certificate Service
 
 **EXPERIMENTAL**
+
+[Sourcecode](https://github.com/bodsch/ruby-icinga-cert-service)
 
 To create a certificate:
 
