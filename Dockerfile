@@ -3,8 +3,8 @@ FROM bodsch/docker-alpine-base:1701-04
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1702-02"
-LABEL date="2017-02-10"
+LABEL version="1702-03"
+LABEL date="2017-02-14"
 
 ENV TERM xterm
 
@@ -33,6 +33,7 @@ RUN \
     mailx \
     mysql-client \
     icinga2 \
+    inotify-tools \
     openssl \
     openssl-dev \
     monitoring-plugins \
