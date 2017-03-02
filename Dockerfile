@@ -52,7 +52,7 @@ RUN \
     openssl && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   cp /usr/lib/nagios/plugins/*     /usr/lib/monitoring-plugins/ && \
-  /usr/sbin/icinga2 feature enable command livestatus compatlog checker mainlog && \
+  /usr/sbin/icinga2 feature enable command livestatus checker mainlog notification && \
   mkdir -p /etc/icinga2/automatic-zones.d && \
   mkdir -p /run/icinga2/cmd && \
   chmod u+s /bin/busybox && \

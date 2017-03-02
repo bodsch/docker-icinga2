@@ -9,7 +9,7 @@ This Version includes also an small Cert-Service to generate the Certificates fo
 
 # Status
 
-[![Build Status](https://travis-ci.org/bodsch/docker-icinga2.svg?branch=1702-02)](https://travis-ci.org/bodsch/docker-icinga2)
+[![Build Status](https://travis-ci.org/bodsch/docker-icinga2.svg?branch=1703-01)](https://travis-ci.org/bodsch/docker-icinga2)
 
 # Build
 
@@ -43,11 +43,20 @@ You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/
 
 The actuall Container Supports a stable MySQL Backand to store all needed Datas into it.
 
-The graphite Support are experimental.
+The graphite Support are **experimental**.
 
 The dashing Supports create only an API User.
 
-The Cluster and Cert-Service are experimental.
+The Cluster and Cert-Service are **experimental**.
+
+## activated Features
+
+- command
+- checker
+- livestatus
+- mainlog
+- notification
+- graphite (only with API User)
 
 
 # certificate Service
