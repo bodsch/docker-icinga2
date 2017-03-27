@@ -21,7 +21,9 @@ MYSQL_OPTS=
 
 ICINGA_CLUSTER=${ICINGA_CLUSTER:-false}
 ICINGA_MASTER=${ICINGA_MASTER:-""}
-ICINGA_SATELLITES=${ICINGA_SATELLITES:-""}
+
+ICINGA_CERT_SERVICE_API_USER=${ICINGA_CERT_SERVICE_API_USER:-""}
+ICINGA_CERT_SERVICE_API_PASSWORD=${ICINGA_CERT_SERVICE_API_PASSWORD:-""}
 
 CARBON_HOST=${CARBON_HOST:-""}
 CARBON_PORT=${CARBON_PORT:-2003}
@@ -57,7 +59,7 @@ waitForDatabase() {
   done
 
   # must start initdb and do other jobs well
-  echo " [i] wait for database for there initdb and do other jobs well"
+  echo " [i] wait for the database for her initdb and all other jobs"
 
   until mysql ${MYSQL_OPTS} --execute="select 1 from mysql.user limit 1" > /dev/null
   do
@@ -79,9 +81,8 @@ waitForIcingaMaster() {
     sleep 3s
   done
 
-  # must start initdb and do other jobs well
   echo " [i] wait for icinga2 Core"
-  sleep 20s
+  sleep 10s
 }
 
 
@@ -130,6 +131,9 @@ correctRights() {
   then
     echo " [E] No User/Group nagios or icinga found!"
   else
+
+    [ -d /var/lib/icinga2/api/log/current ] || mkdir -p /var/lib/icinga2/api/log/current
+
     chown -R ${USER}:root     /etc/icinga2
     chown -R ${USER}:${GROUP} /var/lib/icinga2
     chown -R ${USER}:${GROUP} ${ICINGA2_RUN_DIR}/icinga2
@@ -168,96 +172,10 @@ configureGraphite() {
 
 configurePKI() {
 
-  if ( [ ! -z ${ICINGA_MASTER} ] && [ ${ICINGA_MASTER} == ${HOSTNAME} ] )
+  if [ -f '/usr/local/sbin/icinga2_pki.sh' ]
   then
 
-    # icinga2 API cert - regenerate new private key and certificate when running in a new container
-    if [ -f ${WORK_DIR}/pki/${HOSTNAME}.key ]
-    then
-      echo " [i] restore older PKI settings for host '${HOSTNAME}'"
-
-      cp -ar ${WORK_DIR}/pki/${HOSTNAME}* /etc/icinga2/pki/
-      cp -a ${WORK_DIR}/pki/ca.crt /etc/icinga2/pki/
-
-      if [ $(icinga2 feature list | grep Enabled | grep api | wc -l) -eq 0 ]
-      then
-        icinga2 feature enable api
-      fi
-    fi
-
-    sed -i "s,^.*\ NodeName\ \=\ .*,const\ NodeName\ \=\ \"${HOSTNAME}\",g" /etc/icinga2/constants.conf
-
-    # icinga2 API cert - regenerate new private key and certificate when running in a new container
-    if [ ! -f /etc/icinga2/pki/${HOSTNAME}.key ]
-    then
-
-      [ -d ${WORK_DIR}/pki ] || mkdir ${WORK_DIR}/pki
-
-      PKI_CMD="icinga2 pki"
-
-      PKI_KEY="/etc/icinga2/pki/${HOSTNAME}.key"
-      PKI_CSR="/etc/icinga2/pki/${HOSTNAME}.csr"
-      PKI_CRT="/etc/icinga2/pki/${HOSTNAME}.crt"
-
-      icinga2 api setup
-
-      ${PKI_CMD} new-cert --cn ${HOSTNAME} --key ${PKI_KEY} --csr ${PKI_CSR}
-      ${PKI_CMD} sign-csr --csr ${PKI_CSR} --cert ${PKI_CRT}
-
-      correctRights
-
-      /usr/sbin/icinga2 daemon -c /etc/icinga2/icinga2.conf -e /var/log/icinga2/error.log &
-
-      sleep 5s
-
-      if [ ! -z "${ICINGA_SATELLITES}" ]
-      then
-
-        SATELLITES="$(echo ${ICINGA_SATELLITES} | sed 's|,| |g')"
-
-        for s in ${SATELLITES}
-        do
-          dir="/tmp/${s}"
-          salt=$(echo ${s} | sha256sum | cut -f 1 -d ' ')
-
-          mkdir ${dir}
-          chown icinga: ${dir}
-
-          ${PKI_CMD} new-cert --cn ${s} --key ${dir}/${s}.key --csr ${dir}/${s}.csr
-          ${PKI_CMD} sign-csr --csr ${dir}/${s}.csr --cert ${dir}/${s}.crt
-          ${PKI_CMD} save-cert --key ${dir}/${s}.key --cert ${dir}/${s}.crt --trustedcert ${dir}/trusted-master.crt --host ${ICINGA_MASTER}
-          # Receive Ticket from master...
-          pki_ticket=$(${PKI_CMD} ticket --cn ${HOSTNAME} --salt ${salt})
-          ${PKI_CMD} request --host ${ICINGA_MASTER} --port 5665 --ticket ${pki_ticket} --key ${dir}/${s}.key --cert ${dir}/${s}.crt --trustedcert ${dir}/trusted-master.crt --ca /etc/icinga2/pki/ca.crt
-
-          cp -arv /tmp/${s} ${WORK_DIR}/pki/
-        done
-
-      fi
-
-      killall icinga2
-      sleep 20s
-    fi
-
-    cp -ar /etc/icinga2/pki ${WORK_DIR}/
-
-    echo " [i] Finished cert generation"
-
-  else
-
-    waitForIcingaMaster
-
-    if [ -e /etc/icinga2/features-enabled/notification.conf ]
-    then
-      icinga2 feature disable notification
-    fi
-
-    icinga2 feature enable api
-
-    if [ -d ${WORK_DIR}/pki/${HOSTNAME} ]
-    then
-      cp -av ${WORK_DIR}/pki/${HOSTNAME}/* /etc/icinga2/pki/
-    fi
+    . /usr/local/sbin/icinga2_pki.sh
 
   fi
 
@@ -332,7 +250,10 @@ EOF
   then
     echo " [i] enable API User '${DASHING_API_USER}'"
 
-    cat << EOF >> ${api_file}
+    if [ $(grep -c "object ApiUser \"${DASHING_API_USER}\"" ${api_file}) -eq 0 ]
+    then
+
+      cat << EOF >> ${api_file}
 
 object ApiUser "${DASHING_API_USER}" {
   password    = "${DASHING_API_PASS}"
@@ -341,7 +262,26 @@ object ApiUser "${DASHING_API_USER}" {
 }
 
 EOF
+    fi
+  fi
 
+  if ( [ ! -z ${ICINGA_CERT_SERVICE_API_USER} ] && [ ! -z ${ICINGA_CERT_SERVICE_API_PASSWORD} ] )
+  then
+    echo " [i] enable API User '${ICINGA_CERT_SERVICE_API_USER}'"
+
+    if [ $(grep -c "object ApiUser \"${ICINGA_CERT_SERVICE_API_USER}\"" ${api_file}) -eq 0 ]
+    then
+
+      cat << EOF >> ${api_file}
+
+object ApiUser "${ICINGA_CERT_SERVICE_API_USER}" {
+  password    = "${ICINGA_CERT_SERVICE_API_PASSWORD}"
+  client_cn   = NodeName
+  permissions = [ "*" ]
+}
+
+EOF
+    fi
   fi
 
 }
