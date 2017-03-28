@@ -220,6 +220,25 @@ configureDatabase() {
       echo " [E] can't insert the icinga2 Database Schema"
       exit 1
     fi
+  else
+    # check database version
+    # and install the update, when it needed
+    lastest_update=$(ls -1 /usr/share/icinga2-ido-mysql/schema/upgrade/*sql  | sort | tail -n1)
+    new_version=$(grep icinga_dbversion ${lastest_update} | grep idoutils | cut -d ',' -f 5 | sed -e "s| ||g" -e "s|\\'||g")
+
+    query="select name, version from icinga_dbversion"
+
+    mysql ${MYSQL_OPTS} --force ${IDO_DATABASE_NAME} --batch --execute="${query}" | \
+    tail -n +2 | \
+    tr '\t' '|' | \
+    while IFS='|' read NAME VERSION junk
+    do
+      if [ "${new_version}" != "${VERSION}" ]
+      then
+        mysql ${MYSQL_OPTS} --force ${IDO_DATABASE_NAME}  < ${lastest_update}  >> ${logfile} 2>&1
+      fi
+    done
+
   fi
 
   sed -i \
