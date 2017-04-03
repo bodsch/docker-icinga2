@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ICINGA_CERT_SERVICE=${ICINGA_CERT_SERVICE:-false}
 ICINGA_CERT_SERVICE_BA_USER=${ICINGA_CERT_SERVICE_BA_USER:-"admin"}
@@ -37,6 +37,25 @@ then
   fi
 fi
 
+  if [ -f /etc/icinga2/features-available/api.conf ]
+    then
+      cat << EOF > /etc/icinga2/features-available/api.conf
+
+object ApiListener "api" {
+  cert_path = SysconfDir + "/icinga2/pki/" + NodeName + ".crt"
+  key_path = SysconfDir + "/icinga2/pki/" + NodeName + ".key"
+  ca_path = SysconfDir + "/icinga2/pki/ca.crt"
+
+  accept_config = true
+  accept_commands = true
+
+  ticket_salt = TicketSalt
+}
+
+EOF
+  fi
+
+
   if ( [ ! -z ${ICINGA_MASTER} ] && [ ${ICINGA_MASTER} == ${HOSTNAME} ] )
   then
 
@@ -49,7 +68,7 @@ fi
       echo " [i] restore older CA"
       if [ -d ${WORK_DIR}/ca ]
       then
-        cp -ar ${WORK_DIR}/ca               /var/lib/icinga2/
+        cp -ar ${WORK_DIR}/ca               /var/lib/icinga2/ 2 > /dev/null
       else
 
         rm -f ${WORK_DIR}/pki/${HOSTNAME}*  2> /dev/null
@@ -243,30 +262,16 @@ EOF
       mv /etc/icinga2/conf.d/services.conf /etc/icinga2/conf.d/services.conf-SAVE
     fi
 
-    if [ -f /etc/icinga2/features-available/api.conf ]
-    then
-      cat << EOF > /etc/icinga2/features-available/api.conf
-
-object ApiListener "api" {
-  cert_path = SysconfDir + "/icinga2/pki/" + NodeName + ".crt"
-  key_path = SysconfDir + "/icinga2/pki/" + NodeName + ".key"
-  ca_path = SysconfDir + "/icinga2/pki/ca.crt"
-
-  accept_config = true
-  accept_commands = true
-
-  ticket_salt = TicketSalt
-}
-
-EOF
-    fi
-
     cp -a ${WORK_DIR}/pki/${HOSTNAME}/* /etc/icinga2/pki/
 
     correctRights
 
     # test the configuration
-    icinga2 daemon --validate -c /etc/icinga2/icinga2.conf
+    /usr/sbin/icinga2 \
+      daemon \
+      --validate \
+      --config /etc/icinga2/icinga2.conf \
+      --errorlog /var/log/icinga2/error.log
 
   fi
 
