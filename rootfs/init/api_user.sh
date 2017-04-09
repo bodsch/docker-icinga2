@@ -1,5 +1,8 @@
+#
+# Script to Create API USERS
 
-configureAPIUser() {
+
+createAPIUser() {
 
   local api_file="/etc/icinga2/conf.d/api-users.conf"
 
@@ -12,22 +15,14 @@ configureAPIUser() {
 
   if [ -z "${api_users}" ]
   then
+
     echo " [i] no API Users found"
-    echo " [i] but, we add root as default api user"
-    # add our default api user ..
-    cat << EOF > ${api_file}
-
-object ApiUser "root" {
-  password    = "icinga"
-  client_cn   = NodeName
-  permissions = [ "*" ]
-}
-
-EOF
   else
 
-    echo " [i] create config for API Users ... "
+    echo " [i] create configuration for API Users ..."
 
+    # DESTROY the old entrys
+    #
     [ -f ${api_file} ] && cat /dev/null > ${api_file}
 
     for u in ${api_users}
@@ -38,7 +33,7 @@ EOF
 
       [ -z ${pass} ] && pass=${user}
 
-      echo "   - '${user}'"
+      echo "      - '${user}'"
 
       if [ $(grep -c "object ApiUser \"${user}\"" ${api_file}) -eq 0 ]
       then
@@ -61,4 +56,6 @@ EOF
 }
 
 
-configureAPIUser
+createAPIUser
+
+# EOF

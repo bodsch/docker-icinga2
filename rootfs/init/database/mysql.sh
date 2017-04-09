@@ -81,10 +81,7 @@ waitForDatabase() {
 
 configureDatabase() {
 
-  if [ $(icinga2 feature list | grep Enabled | grep -c ido-mysql) -eq 0 ]
-  then
-    /usr/sbin/icinga2 feature enable ido-mysql
-  fi
+  enableIcingaFeature ido-mysql
 
   # check if database already created ...
   #
@@ -92,11 +89,11 @@ configureDatabase() {
 
   ido_status=$(mysql ${MYSQL_OPTS} --batch --execute="${query}")
 
-  echo ${ido_status}
-
   if [ $(echo "${ido_status}" | wc -w) -eq 0 ]
   then
     # Database isn't created
+    # well, i do my job ...
+    #
     echo " [i] Initializing databases and icinga2 configurations."
 
     (
@@ -112,6 +109,8 @@ configureDatabase() {
       exit 1
     fi
 
+    # create the ido schema
+    #
     mysql ${MYSQL_OPTS} --force ${IDO_DATABASE_NAME}  < /usr/share/icinga2-ido-mysql/schema/mysql.sql
 
     if [ $? -gt 0 ]
@@ -126,11 +125,11 @@ configureDatabase() {
     #
     # check database version
     # and install the update, when it needed
-
+    #
     query="select version from ${IDO_DATABASE_NAME}.icinga_dbversion"
     db_version=$(mysql ${MYSQL_OPTS} --batch --execute="${query}" | tail -n1)
 
-    echo "Database Version: ${db_version}"
+    echo " [i] Database Version: ${db_version}"
 
     for DB_UPDATE_FILE in $(ls -1 /usr/share/icinga2-ido-mysql/schema/upgrade/*.sql)
     do
@@ -144,9 +143,6 @@ configureDatabase() {
       fi
     done
 
-
-    lastest_update=$(ls -1 /usr/share/icinga2-ido-mysql/schema/upgrade/*sql  | sort | tail -n1)
-    new_version=$(grep icinga_dbversion ${lastest_update} | grep idoutils | cut -d ',' -f 5 | sed -e "s| ||g" -e "s|\\'||g")
   fi
 
 
@@ -164,5 +160,7 @@ configureDatabase() {
 
 
 waitForDatabase
+
 configureDatabase
 
+# EOF

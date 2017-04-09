@@ -1,37 +1,47 @@
 docker-icinga2
 ==============
 
-Installs an working icinga2 Core or Satellite based on alpine-linux.
+Installs an working icinga2 Master or Satellite based on alpine-linux.
 
-This Version includes also an small Cert-Service to generate the Certificates for a Satellite via REST Service.
+This Version includes also an small REST-Service to generate the Certificates for a Satellite via REST Service.
 
+It also include an docker-compose example to create a set of one Master and 2 Satellites with automatich Certificate Exchange.
+
+More then one API User can also be created over one Environment Var.
 
 
 # Status
 
-[![Build Status](https://travis-ci.org/bodsch/docker-icinga2.svg?branch=1703-01)](https://travis-ci.org/bodsch/docker-icinga2)
+[![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-icinga2.svg?branch=1704-01)][hub]
+[![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-icinga2.svg?branch=1704-01)][microbadger]
+[![Build Status](https://travis-ci.org/bodsch/docker-icinga2.svg?branch=1704-01)][travis]
+
+[hub]: https://hub.docker.com/r/bodsch/docker-icinga2/
+[microbadger]: https://microbadger.com/images/bodsch/docker-icinga2
+[travis]: https://travis-ci.org/bodsch/docker-icinga2
+
 
 # Build
 
 Your can use the included Makefile.
 
-To build the Container: ```make build```
+To build the Container: `make build`
 
-To remove the builded Docker Image: ```make clean```
+To remove the builded Docker Image: `make clean`
 
-Starts the Container: ```make run```
+Starts the Container: `make run`
 
-Starts the Container with Login Shell: ```make shell```
+Starts the Container with Login Shell: `make shell`
 
-Entering the Container: ```make exec```
+Entering the Container: `make exec`
 
-Stop (but **not kill**): ```make stop```
+Stop (but **not kill**): `make stop`
 
-History ```make history```
+History `make history`
 
-Starts a *docker-compose*: ```make compose-up```
+Starts a *docker-compose*: `make compose-up`
 
-Remove the *docker-compose* images: ```make compose-down```
+Remove the *docker-compose* images: `make compose-down`
 
 
 # Docker Hub
@@ -92,7 +102,8 @@ You need a valid and configured API User in Icinga2 and the created Checksum abo
 
 The generated Certificate has an Timeout from 10 Minutes between beginning of creation and download.
 
-You can also look into ```rootfs/usr/local/sbin/icinga2_pki.sh```
+You can also look into `rootfs/init/pki_setup.sh`
+For Examples to create a Certificate with Commandline Tools look into `rootfs/init/examples/cert-manager.sh`
 
 
 
@@ -101,16 +112,16 @@ You can also look into ```rootfs/usr/local/sbin/icinga2_pki.sh```
 for MySQL Support:
 
   - MYSQL_HOST  (default: '')
-  - MYSQL_PORT  (default: ```3306```)
-  - MYSQL_ROOT_USER  (default: ```root```)
+  - MYSQL_PORT  (default: `3306`)
+  - MYSQL_ROOT_USER  (default: `root`)
   - MYSQL_ROOT_PASS  (default: '')
-  - IDO_DATABASE_NAME  (default: ```icinga2core```)
-  - IDO_PASSWORD (default: generated with ```$(pwgen -s 15 1)```)
+  - IDO_DATABASE_NAME  (default: `icinga2core`)
+  - IDO_PASSWORD (default: generated with `$(pwgen -s 15 1)`)
 
 for graphite Support:
 
   - CARBON_HOST  (default: '')
-  - CARBON_PORT  (default: 2003)
+  - CARBON_PORT  (default: `2003`)
 
 for dashing Support:
 
@@ -119,17 +130,21 @@ for dashing Support:
 
 for icinga2 Cluser:
 
-  - ICINGA_CLUSTER (default: ```false```)
+  - ICINGA_CLUSTER (default: `false`)
   - ICINGA_MASTER  (default: '')
+
+for Icinga2 API Users:
+
+  - ICINGA_API_USERS (default: '')
 
 for Icinga2 Cert-Service
 
-  - BASIC_AUTH_USER
-  - BASIC_AUTH_PASS
-  - ICINGA_CERT_SERVICE (default: ```false```)
-  - ICINGA_CERT_SERVICE_BA_USER (default: ```admin```)
-  - ICINGA_CERT_SERVICE_BA_PASSWORD (default: ```admin```)
+  - ICINGA_CERT_SERVICE (default: `false`)
+  - ICINGA_CERT_SERVICE_BA_USER (default: `admin`)
+  - ICINGA_CERT_SERVICE_BA_PASSWORD (default: `admin`)
   - ICINGA_CERT_SERVICE_API_USER (default: '')
   - ICINGA_CERT_SERVICE_API_PASSWORD (default: '')
-  - ICINGA_CERT_SERVICE_SERVER (default: ```localhost```)
-  - ICINGA_CERT_SERVICE_PORT (default: ```80```)
+  - ICINGA_CERT_SERVICE_SERVER (default: `localhost`)
+  - ICINGA_CERT_SERVICE_PORT (default: `80`)
+  - ICINGA_CERT_SERVICE_PATH (default: `/`)
+

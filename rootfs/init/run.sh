@@ -32,9 +32,6 @@ HOSTNAME=$(hostname -f)
 
 # -------------------------------------------------------------------------------------------------
 
-
-
-
 prepare() {
 
   [ -d ${WORK_DIR} ] || mkdir -p ${WORK_DIR}
@@ -73,6 +70,19 @@ prepare() {
   if [ -f /etc/icinga2/conf.d/hosts.conf ]
   then
     sed -i -e "s,^.*\ vars.os\ \=\ .*,  //\ vars.os = \"Linux\",g" /etc/icinga2/conf.d/hosts.conf
+  fi
+}
+
+
+# enable Icinga2 Feature
+#
+enableIcingaFeature() {
+
+  local feature="${1}"
+
+  if [ $(icinga2 feature list | grep Enabled | grep -c ${feature}) -eq 0 ]
+  then
+    icinga2 feature enable ${feature}
   fi
 }
 

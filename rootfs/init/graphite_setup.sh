@@ -1,3 +1,6 @@
+#
+# Script to Configure the Graphite Support
+
 
 if ( [ -z ${CARBON_HOST} ] || [ -z ${CARBON_PORT} ] )
 then
@@ -8,10 +11,7 @@ fi
 
 configureGraphite() {
 
-  if [ $(icinga2 feature list | grep Enabled | grep -c graphite) -eq 0 ]
-  then
-    /usr/sbin/icinga2 feature enable graphite
-  fi
+  enableIcingaFeature graphite
 
   if [ -e /etc/icinga2/features-enabled/graphite.conf ]
   then
