@@ -46,6 +46,13 @@ shell:
 		--env ICINGA_CERT_SERVICE_API_PASSWORD=icinga \
 		--env ICINGA_CERT_SERVICE_SERVER=192.168.252.5 \
 		--env ICINGA_CERT_SERVICE_PORT=4567 \
+		--env ICINGA_SSMTP_RELAY_SERVER=mail.domain.tld:25 \
+		--env ICINGA_SSMTP_REWRITE_DOMAIN=domain.tld \
+		--env ICINGA_SSMTP_SENDER_EMAIL=icinga \
+		--env ICINGA_SSMTP_SMTPAUTH_USER=foo.bar@domain.tld \
+		--env ICINGA_SSMTP_SMTPAUTH_PASS=tribbleX \
+		--env ICINGA_SSMTP_RELAY_USE_STARTTLS=true \
+		--env ICINGA_SSMTP_ALIASES= \
 		--volume=${DATA_DIR}:/srv \
 		--hostname=${CONTAINER}.matrix.lan \
 		--name=${CONTAINER} \
