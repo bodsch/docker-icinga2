@@ -109,42 +109,38 @@ For Examples to create a Certificate with Commandline Tools look into `rootfs/in
 
 # supported Environment Vars
 
-for MySQL Support:
-
-  - MYSQL_HOST  (default: '')
-  - MYSQL_PORT  (default: `3306`)
-  - MYSQL_ROOT_USER  (default: `root`)
-  - MYSQL_ROOT_PASS  (default: '')
-  - IDO_DATABASE_NAME  (default: `icinga2core`)
-  - IDO_PASSWORD (default: generated with `$(pwgen -s 15 1)`)
-
-for graphite Support:
-
-  - CARBON_HOST  (default: '')
-  - CARBON_PORT  (default: `2003`)
-
-for dashing Support:
-
-  - DASHING_API_USER  (optional)
-  - DASHING_API_PASS  (optional)
-
-for icinga2 Cluser:
-
-  - ICINGA_CLUSTER (default: `false`)
-  - ICINGA_MASTER  (default: '')
-
-for Icinga2 API Users:
-
-  - ICINGA_API_USERS (default: '')
-
-for Icinga2 Cert-Service
-
-  - ICINGA_CERT_SERVICE (default: `false`)
-  - ICINGA_CERT_SERVICE_BA_USER (default: `admin`)
-  - ICINGA_CERT_SERVICE_BA_PASSWORD (default: `admin`)
-  - ICINGA_CERT_SERVICE_API_USER (default: '')
-  - ICINGA_CERT_SERVICE_API_PASSWORD (default: '')
-  - ICINGA_CERT_SERVICE_SERVER (default: `localhost`)
-  - ICINGA_CERT_SERVICE_PORT (default: `80`)
-  - ICINGA_CERT_SERVICE_PATH (default: `/`)
+| Environmental Variable             | Default Value        | Description                                                     |
+| :--------------------------------- | :-------------       | :-----------                                                    |
+| `MYSQL_HOST`                       | -                    | MySQL Host                                                      |
+| `MYSQL_PORT`                       | `3306`               | MySQL Port                                                      |
+| `MYSQL_ROOT_USER`                  | `root`               | MySQL root User                                                 |
+| `MYSQL_ROOT_PASS`                  | *randomly generated* | MySQL root password                                             |
+| `IDO_DATABASE_NAME`                | `icinga2core`        | Schema Name for IDO                                             |
+| `IDO_PASSWORD`                     | *randomly generated* | MySQL password for IDO                                          |
+|                                    |                      |                                                                 |
+| `CARBON_HOST`                      | -                    | hostname or IP address where Carbon/Graphite daemon is running  |
+| `CARBON_PORT`                      | `2003`               | Carbon port for graphite                                        |
+|                                    |                      |                                                                 |
+| `ICINGA_CLUSTER`                   | `false`              | Icinga2 Cluster Mode - enable a Master / Satellite Setup        |
+| `ICINGA_MASTER`                    | -                    | The Icinga2-Master FQDN for a Satellite Node                    |
+|                                    |                      |                                                                 |
+| `ICINGA_API_USERS`                 | -                    | comma separated List to create API Users. The Format are `username:password` (e.g. `admin:admin,dashing:dashing` and so on) |
+|                                    |                      |                                                                 |
+| `ICINGA_CERT_SERVICE`              | `false`              | enable the Icinga2 Certificate Service                          |
+| `ICINGA_CERT_SERVICE_BA_USER`      | `admin`              | The Basic Auth User for the certicate Service                   |
+| `ICINGA_CERT_SERVICE_BA_PASSWORD`  | `admin`              | The Basic Auth Password for the certicate Service               |
+| `ICINGA_CERT_SERVICE_API_USER`     |                      | The Certificate Service needs also an API Users                 |
+| `ICINGA_CERT_SERVICE_API_PASSWORD` |                      |                                                                 |
+| `ICINGA_CERT_SERVICE_SERVER`       | `localhost`          | Certificate Service Host                                        |
+| `ICINGA_CERT_SERVICE_PORT`         | `80`                 | Certificate Service Port                                        |
+| `ICINGA_CERT_SERVICE_PATH`         | `/`                  | Certificate Service Path (needful, when they run begind a Proxy |
+|                                    |                      |                                                                 |
+| `ICINGA_SSMTP_RELAY_SERVER`        | -                    | SMTP Service to send Notifications                              |
+| `ICINGA_SSMTP_REWRITE_DOMAIN`      | -                    |                                                                 |
+| `ICINGA_SSMTP_RELAY_USE_STARTTLS`  | -                    |                                                                 |
+| `ICINGA_SSMTP_SENDER_EMAIL`        | -                    |                                                                 |
+| `ICINGA_SSMTP_SMTPAUTH_USER`       | -                    |                                                                 |
+| `ICINGA_SSMTP_SMTPAUTH_PASS`       | -                    |                                                                 |
+| `ICINGA_SSMTP_ALIASES`             | -                    |                                                                 |
+|                                    |                      |                                                                 |
 
