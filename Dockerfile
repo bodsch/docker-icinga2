@@ -11,7 +11,7 @@ ENV \
   ICINGAWEB_VERSION="2.6.3" \
   APK_ADD="bind-tools build-base ca-certificates curl fping git icinga2 inotify-tools jq mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl openssl-dev pwgen ruby ruby-dev ssmtp supervisor unzip" \
   APK_DEL="build-base git nano ruby-dev" \
-  GEMS="bigdecimal dalli io-console ipaddress json openssl sequel sinatra sinatra-basic-auth thin time_difference"
+  GEMS="bigdecimal io-console ipaddress json openssl redis sinatra sinatra-basic-auth thin time_difference"
 
 EXPOSE 5665 6666
 
