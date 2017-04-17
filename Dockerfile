@@ -31,6 +31,7 @@ LABEL org.label-schema.build-date=${BUILD_DATE} \
 RUN \
   echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/main"       > /etc/apk/repositories && \
   echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/community" >> /etc/apk/repositories && \
+  echo "http://${ALPINE_MIRROR}/alpine/v3.5/community"              >> /etc/apk/repositories && \
   apk --quiet --no-cache update && \
   apk --quiet --no-cache upgrade && \
   for apk in ${APK_ADD} ; \
@@ -61,6 +62,8 @@ RUN \
     /var/cache/apk/*
 
 COPY rootfs/ /
+
+WORKDIR "/etc/icinga2"
 
 VOLUME [ "/etc/icinga2", "/var/lib/icinga2", "/run/icinga2/cmd" ]
 
