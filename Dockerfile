@@ -7,7 +7,7 @@ ENV \
   ALPINE_MIRROR="dl-cdn.alpinelinux.org" \
   ALPINE_VERSION="edge" \
   TERM=xterm \
-  BUILD_DATE="2017-04-17" \
+  BUILD_DATE="2017-05-01" \
   ICINGAWEB_VERSION="2.6.3" \
   APK_ADD="bind-tools build-base ca-certificates curl fping git icinga2 inotify-tools jq mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl openssl-dev pwgen ruby ruby-dev ssmtp supervisor unzip" \
   APK_DEL="build-base git nano ruby-dev" \
@@ -19,7 +19,7 @@ LABEL org.label-schema.build-date=${BUILD_DATE} \
       org.label-schema.name="Icinga2 Docker Image" \
       org.label-schema.description="Inofficial Icinga2 Docker Image" \
       org.label-schema.url="https://www.icinga.org/" \
-      org.label-schema.vcs-url="https://github.com/bodsch/docker-icingaweb2" \
+      org.label-schema.vcs-url="https://github.com/bodsch/docker-icinga2" \
       org.label-schema.vendor="Bodo Schulz" \
       org.label-schema.version=${ICINGA_VERSION} \
       org.label-schema.schema-version="1.0" \
