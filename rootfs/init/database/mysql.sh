@@ -131,18 +131,24 @@ configureDatabase() {
 
     echo " [i] Database Version: ${db_version}"
 
-    for DB_UPDATE_FILE in $(ls -1 /usr/share/icinga2-ido-mysql/schema/upgrade/*.sql)
-    do
-      FILE_VER=$(grep icinga_dbversion ${DB_UPDATE_FILE} | grep idoutils | cut -d ',' -f 5 | sed -e "s| ||g" -e "s|\\'||g")
+    if [ -z "${db_version}" ]
+    then
+      echo " [w] no database version found. skip database upgrade"
+    else
 
-      if [ "$(version_compare ${db_version} ${FILE_VER})" = "<" ]
-      then
-        echo " [i] apply Database Update '${FILE_VER}' from '${DB_UPDATE_FILE}'"
+      for DB_UPDATE_FILE in $(ls -1 /usr/share/icinga2-ido-mysql/schema/upgrade/*.sql)
+      do
+        FILE_VER=$(grep icinga_dbversion ${DB_UPDATE_FILE} | grep idoutils | cut -d ',' -f 5 | sed -e "s| ||g" -e "s|\\'||g")
 
-        mysql ${MYSQL_OPTS} --force ${IDO_DATABASE_NAME}  < /usr/share/icinga2-ido-mysql/schema/upgrade/${DB_UPDATE_FILE} || exit $?
-      fi
-    done
+        if [ "$(version_compare ${db_version} ${FILE_VER})" = "<" ]
+        then
+          echo " [i] apply Database Update '${FILE_VER}' from '${DB_UPDATE_FILE}'"
 
+          mysql ${MYSQL_OPTS} --force ${IDO_DATABASE_NAME}  < /usr/share/icinga2-ido-mysql/schema/upgrade/${DB_UPDATE_FILE} || exit $?
+        fi
+      done
+
+    fi
   fi
 
 
