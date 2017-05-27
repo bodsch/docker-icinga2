@@ -1,4 +1,4 @@
- PORTS = \
+PORTS = \
   --publish=5665:5665 \
   --publish=6666:6666 \
   --publish=4567:4567
