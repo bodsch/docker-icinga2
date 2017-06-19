@@ -108,7 +108,7 @@ correctRights() {
 
 startSupervisor() {
 
-  echo -e "\n Starting Supervisor.\n\n"
+#  echo -e "\n Starting Supervisor.\n\n"
 
   if [ -f /etc/supervisord.conf ]
   then

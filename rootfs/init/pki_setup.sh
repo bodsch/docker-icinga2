@@ -29,7 +29,7 @@ waitForIcingaMaster() {
     return
   fi
 
-  RETRY=30
+  RETRY=150
 
   until [ ${RETRY} -le 0 ]
   do
@@ -39,11 +39,11 @@ waitForIcingaMaster() {
 
     echo " [i] Waiting for icinga master to come up"
 
-    sleep 10s
+    sleep 5s
     RETRY=$(expr ${RETRY} - 1)
   done
 
-  sleep 10s
+  sleep 5s
 }
 
 # wait for the Certificate Service
@@ -259,8 +259,6 @@ configureIcinga2Master() {
 
   cp -ar /etc/icinga2/pki    ${WORK_DIR}/
   cp -ar /var/lib/icinga2/ca ${WORK_DIR}/
-
-
 }
 
 # configure a Icinga2 Satellite Instance
