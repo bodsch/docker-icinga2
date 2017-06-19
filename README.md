@@ -12,9 +12,9 @@ More then one API User can also be created over one Environment Var.
 
 # Status
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-icinga2.svg?branch=1704-01)][hub]
-[![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-icinga2.svg?branch=1704-01)][microbadger]
-[![Build Status](https://travis-ci.org/bodsch/docker-icinga2.svg?branch=1704-01)][travis]
+[![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-icinga2.svg?branch=1706-03)][hub]
+[![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-icinga2.svg?branch=1706-03)][microbadger]
+[![Build Status](https://travis-ci.org/bodsch/docker-icinga2.svg?branch=1706-03)][travis]
 
 [hub]: https://hub.docker.com/r/bodsch/docker-icinga2/
 [microbadger]: https://microbadger.com/images/bodsch/docker-icinga2
@@ -124,13 +124,14 @@ For Examples to create a Certificate with Commandline Tools look into `rootfs/in
 | `ICINGA_CLUSTER`                   | `false`              | Icinga2 Cluster Mode - enable a Master / Satellite Setup        |
 | `ICINGA_MASTER`                    | -                    | The Icinga2-Master FQDN for a Satellite Node                    |
 |                                    |                      |                                                                 |
-| `ICINGA_API_USERS`                 | -                    | comma separated List to create API Users. The Format are `username:password` (e.g. `admin:admin,dashing:dashing` and so on) |
+| `ICINGA_API_USERS`                 | -                    | comma separated List to create API Users. The Format are `username:password` |
+|                                    |                      | (e.g. `admin:admin,dashing:dashing` and so on)                  |
 |                                    |                      |                                                                 |
 | `ICINGA_CERT_SERVICE`              | `false`              | enable the Icinga2 Certificate Service                          |
 | `ICINGA_CERT_SERVICE_BA_USER`      | `admin`              | The Basic Auth User for the certicate Service                   |
 | `ICINGA_CERT_SERVICE_BA_PASSWORD`  | `admin`              | The Basic Auth Password for the certicate Service               |
-| `ICINGA_CERT_SERVICE_API_USER`     |                      | The Certificate Service needs also an API Users                 |
-| `ICINGA_CERT_SERVICE_API_PASSWORD` |                      |                                                                 |
+| `ICINGA_CERT_SERVICE_API_USER`     | -                    | The Certificate Service needs also an API Users                 |
+| `ICINGA_CERT_SERVICE_API_PASSWORD` | -                    |                                                                 |
 | `ICINGA_CERT_SERVICE_SERVER`       | `localhost`          | Certificate Service Host                                        |
 | `ICINGA_CERT_SERVICE_PORT`         | `80`                 | Certificate Service Port                                        |
 | `ICINGA_CERT_SERVICE_PATH`         | `/`                  | Certificate Service Path (needful, when they run begind a Proxy |

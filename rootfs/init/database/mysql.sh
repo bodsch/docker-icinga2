@@ -40,7 +40,7 @@ version_compare () {
 
 waitForDatabase() {
 
-  RETRY=15
+  RETRY=50
 
   # wait for database
   #
@@ -62,7 +62,9 @@ waitForDatabase() {
     exit 1
   fi
 
-  RETRY=10
+  sleep 3s
+
+  RETRY=30
 
   # must start initdb and do other jobs well
   #
@@ -77,6 +79,7 @@ waitForDatabase() {
     RETRY=$(expr ${RETRY} - 1)
   done
 
+  sleep 3s
 }
 
 configureDatabase() {
@@ -130,6 +133,12 @@ configureDatabase() {
     db_version=$(mysql ${MYSQL_OPTS} --batch --execute="${query}" | tail -n1)
 
     echo " [i] Database Version: ${db_version}"
+
+    if [ -z "${db_version}" ]
+    then
+      echo " [E] no version in dba found!"
+      exit 1
+    fi
 
     for DB_UPDATE_FILE in $(ls -1 /usr/share/icinga2-ido-mysql/schema/upgrade/*.sql)
     do

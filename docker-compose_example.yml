@@ -9,13 +9,13 @@ icinga2-master:
   hostname: "icinga2-master.matrix.lan"
   ports:
     - "5665:5665"
-    - "6666:6666"
     - "4567:4567"
   environment:
-    - ICINGA_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
-    - MYSQL_HOST=192.168.0.5
+    - DEBUG=true
+    - ICINGA_API_USERS=root:icinga,icingaweb:icingaweb,dashing:dashing,cert:foo-bar
+    - MYSQL_HOST=192.168.33.5
     - MYSQL_ROOT_USER=root
-    - MYSQL_ROOT_PASS=m3B.yCZB
+    - MYSQL_ROOT_PASS=database.pass
     - ICINGA_MASTER=icinga2-master.matrix.lan
     - ICINGA_CERT_SERVICE=true
     - ICINGA_CERT_SERVICE_BA_USER=admin
@@ -25,8 +25,8 @@ icinga2-master:
     - ICINGA_CERT_SERVICE_SERVER=icinga2-master
     - ICINGA_CERT_SERVICE_PORT=4567
     - ICINGA_CERT_SERVICE_PATH=/
-    - CARBON_HOST=192.168.0.5
-    - CARBON_PORT=2003
+#    - CARBON_HOST=192.168.33.5
+#    - CARBON_PORT=2003
   volumes:
     - /tmp/docker-data/icinga2-master:/srv
 

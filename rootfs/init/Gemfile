@@ -1,0 +1,11 @@
+
+source 'https://rubygems.org'
+
+gem 'bigdecimal'
+gem 'ipaddress'
+gem 'json'
+gem 'openssl'
+gem 'redis'
+gem 'sinatra'
+gem 'sinatra-basic-auth'
+gem 'time_difference'
