@@ -10,7 +10,7 @@ ENV \
   BUILD_DATE="2017-06-19" \
   ICINGA_VERSION="2.6.3-1" \
   APK_ADD="bind-tools build-base ca-certificates curl fping git icinga2 inotify-tools jq mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl openssl-dev pwgen ruby ruby-dev ruby-io-console ssmtp supervisor unzip" \
-  APK_DEL="build-base git nano ruby-dev" \
+  APK_DEL="build-base git nano ruby-dev"
 
 EXPOSE 5665 6666
 
