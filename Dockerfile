@@ -33,15 +33,15 @@ LABEL \
 RUN \
   echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/main"       > /etc/apk/repositories && \
   echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/community" >> /etc/apk/repositories && \
-  apk --quiet --no-cache update && \
-  apk --quiet --no-cache upgrade && \
+  apk --no-cache update && \
+  apk --no-cache upgrade && \
   for apk in ${APK_ADD} ; \
   do \
-    apk --quiet --no-cache add ${apk} ; \
+    apk --no-cache add ${apk} ; \
   done && \
   for gem in ${GEMS} ; \
   do \
-     gem install --quiet --no-rdoc --no-ri ${gem} ; \
+     gem install --no-rdoc --no-ri ${gem} ; \
   done && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   cp /usr/lib/nagios/plugins/*     /usr/lib/monitoring-plugins/ && \
@@ -56,7 +56,7 @@ RUN \
   cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/ && \
   for apk in ${APK_DEL} ; \
   do \
-    apk del --quiet --purge ${apk} ; \
+    apk del --purge ${apk} ; \
   done && \
   rm -rf \
     /tmp/* \
