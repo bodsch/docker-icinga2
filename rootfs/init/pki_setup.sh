@@ -29,7 +29,7 @@ waitForIcingaMaster() {
     return
   fi
 
-  RETRY=30
+  RETRY=50
 
   until [ ${RETRY} -le 0 ]
   do
@@ -43,7 +43,13 @@ waitForIcingaMaster() {
     RETRY=$(expr ${RETRY} - 1)
   done
 
-  sleep 10s
+  if [ $RETRY -le 0 ]
+  then
+    echo " [E] could not connect to the icinga2 master instance '${ICINGA_MASTER}'"
+    exit 1
+  fi
+
+  sleep 20s
 }
 
 # wait for the Certificate Service
@@ -142,10 +148,10 @@ waitForTheCertService() {
         echo " [i] certifiacte request was successful"
         echo " [i] download and install the certificate"
 
-        masterName=$(jq --raw-output .masterName /tmp/request_${HOSTNAME}.json)
+        masterName=$(jq --raw-output .master_name /tmp/request_${HOSTNAME}.json)
         checksum=$(jq --raw-output .checksum /tmp/request_${HOSTNAME}.json)
 
-        rm -f /tmp/request_${HOSTNAME}.json
+#        rm -f /tmp/request_${HOSTNAME}.json
 
         mkdir -p ${WORK_DIR}/pki/${HOSTNAME}
 
@@ -202,11 +208,13 @@ configureIcinga2Master() {
   if [ ! -d /var/lib/icinga2/ca ]
   then
 
-    echo " [i] restore older CA"
     if [ -d ${WORK_DIR}/ca ]
     then
+      echo " [i] restore older CA"
+
       cp -ar ${WORK_DIR}/ca               /var/lib/icinga2/ 2> /dev/null
     else
+      echo " [i] create new CA"
 
       rm -f ${WORK_DIR}/pki/${HOSTNAME}*  2> /dev/null
       rm -f ${WORK_DIR}/pki/ca.crt        2> /dev/null
@@ -221,7 +229,6 @@ configureIcinga2Master() {
   # icinga2 API cert - regenerate new private key and certificate when running in a new container
   if [ ! -f /etc/icinga2/pki/${HOSTNAME}.key ]
   then
-
     [ -d ${WORK_DIR}/pki ] || mkdir ${WORK_DIR}/pki
 
     PKI_CMD="icinga2 pki"
@@ -260,7 +267,7 @@ configureIcinga2Master() {
   cp -ar /etc/icinga2/pki    ${WORK_DIR}/
   cp -ar /var/lib/icinga2/ca ${WORK_DIR}/
 
-
+  restoreOldZoneConfig
 }
 
 # configure a Icinga2 Satellite Instance
@@ -286,7 +293,6 @@ configureIcinga2Satellite() {
   then
 
     waitForTheCertService
-
   fi
 
   # restore an old master name
@@ -338,8 +344,6 @@ EOF
     --validate \
     --config /etc/icinga2/icinga2.conf \
     --errorlog /var/log/icinga2/error.log
-
-
 }
 
 # for Master AND Satellite
@@ -357,7 +361,6 @@ restoreOldPKI() {
     find ${WORK_DIR}/pki -type f -name ca.crt -exec cp -a {} /etc/icinga2/pki/ \;
 
     enableIcingaFeature api
-
   fi
 
 
@@ -381,14 +384,29 @@ EOF
   fi
 }
 
+restoreOldZoneConfig() {
+
+  if [ -d ${WORK_DIR}/automatic-zones.d ]
+  then
+    echo " [i] restore older zone configurations"
+
+    [ -d /etc/icinga2/automatic-zones.d ] || mkdir -vp /etc/icinga2/automatic-zones.d
+
+    cp -a ${WORK_DIR}/automatic-zones.d/* /etc/icinga2/automatic-zones.d/
+  fi
+}
+
+
 # ----------------------------------------------------------------------
 
 restoreOldPKI
 
-if ( [ ! -z ${ICINGA_MASTER} ] && [ ${ICINGA_MASTER} == ${HOSTNAME} ] )
+if ( [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" == "${HOSTNAME}" ] )
 then
 
   configureIcinga2Master
+
+  nohup /init/inotify.sh > /tmp/inotify.log 2>&1 &
 else
 
   configureIcinga2Satellite

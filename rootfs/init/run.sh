@@ -7,7 +7,7 @@ then
   set -x
 fi
 
-WORK_DIR=/srv/icinga2
+export WORK_DIR=/srv/icinga2
 
 MYSQL_HOST=${MYSQL_HOST:-""}
 MYSQL_PORT=${MYSQL_PORT:-"3306"}

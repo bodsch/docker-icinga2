@@ -7,16 +7,16 @@ ENV \
   ALPINE_MIRROR="mirror1.hs-esslingen.de/pub/Mirrors" \
   ALPINE_VERSION="v3.6" \
   TERM=xterm \
-  BUILD_DATE="2017-05-27" \
+  BUILD_DATE="2017-07-06" \
   ICINGA_VERSION="2.6.3-r1" \
   APK_ADD="bind-tools build-base ca-certificates curl fping git icinga2 inotify-tools jq mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl openssl-dev pwgen ruby ruby-dev ssmtp supervisor unzip" \
   APK_DEL="build-base git ruby-dev" \
   GEMS="bigdecimal io-console ipaddress json openssl redis sinatra sinatra-basic-auth thin time_difference"
 
-EXPOSE 5665 6666
+EXPOSE 5665
 
 LABEL \
-  version="1705-04.1" \
+  version="1707-27.2" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Icinga2 Docker Image" \
   org.label-schema.description="Inofficial Icinga2 Docker Image" \
@@ -45,7 +45,7 @@ RUN \
   done && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   cp /usr/lib/nagios/plugins/*     /usr/lib/monitoring-plugins/ && \
-  /usr/sbin/icinga2 feature enable command livestatus checker mainlog notification && \
+  /usr/sbin/icinga2 feature enable command checker mainlog notification && \
   mkdir -p /etc/icinga2/objects.d && \
   mkdir -p /etc/icinga2/automatic-zones.d && \
   mkdir -p /run/icinga2/cmd && \
@@ -66,7 +66,7 @@ COPY rootfs/ /
 
 WORKDIR "/etc/icinga2"
 
-VOLUME [ "/etc/icinga2", "/var/lib/icinga2", "/run/icinga2/cmd" ]
+VOLUME [ "/etc/icinga2", "/var/lib/icinga2" ]
 
 CMD [ "/init/run.sh" ]
 
