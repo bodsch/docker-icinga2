@@ -79,7 +79,8 @@ waitForDatabase() {
 
 }
 
-configureDatabase() {
+
+createSchema() {
 
   enableIcingaFeature ido-mysql
 
@@ -87,9 +88,9 @@ configureDatabase() {
   #
   query="SELECT TABLE_SCHEMA FROM information_schema.tables WHERE table_schema = \"${IDO_DATABASE_NAME}\" limit 1;"
 
-  ido_status=$(mysql ${MYSQL_OPTS} --batch --execute="${query}")
+  status=$(mysql ${MYSQL_OPTS} --batch --execute="${query}")
 
-  if [ $(echo "${ido_status}" | wc -w) -eq 0 ]
+  if [ $(echo "${status}" | wc -w) -eq 0 ]
   then
     # Database isn't created
     # well, i do my job ...
@@ -109,6 +110,12 @@ configureDatabase() {
       exit 1
     fi
 
+    insertSchema
+  fi
+}
+
+insertSchema() {
+
     # create the ido schema
     #
     mysql ${MYSQL_OPTS} --force ${IDO_DATABASE_NAME}  < /usr/share/icinga2-ido-mysql/schema/mysql.sql
@@ -119,7 +126,9 @@ configureDatabase() {
       exit 1
     fi
 
-  else
+}
+
+updateSchema() {
 
     # Database already created
     #
@@ -131,20 +140,30 @@ configureDatabase() {
 
     echo " [i] Database Version: ${db_version}"
 
-    for DB_UPDATE_FILE in $(ls -1 /usr/share/icinga2-ido-mysql/schema/upgrade/*.sql)
-    do
-      FILE_VER=$(grep icinga_dbversion ${DB_UPDATE_FILE} | grep idoutils | cut -d ',' -f 5 | sed -e "s| ||g" -e "s|\\'||g")
+    if [ -z "${db_version}" ]
+    then
+      echo " [w] no database version found. skip database upgrade"
 
-      if [ "$(version_compare ${db_version} ${FILE_VER})" = "<" ]
-      then
-        echo " [i] apply Database Update '${FILE_VER}' from '${DB_UPDATE_FILE}'"
+      insertSchema
+      updateSchema
+    else
 
-        mysql ${MYSQL_OPTS} --force ${IDO_DATABASE_NAME}  < /usr/share/icinga2-ido-mysql/schema/upgrade/${DB_UPDATE_FILE} || exit $?
-      fi
-    done
+      for DB_UPDATE_FILE in $(ls -1 /usr/share/icinga2-ido-mysql/schema/upgrade/*.sql)
+      do
+        FILE_VER=$(grep icinga_dbversion ${DB_UPDATE_FILE} | grep idoutils | cut -d ',' -f 5 | sed -e "s| ||g" -e "s|\\'||g")
 
-  fi
+        if [ "$(version_compare ${db_version} ${FILE_VER})" = "<" ]
+        then
+          echo " [i] apply Database Update '${FILE_VER}' from '${DB_UPDATE_FILE}'"
 
+          mysql ${MYSQL_OPTS} --force ${IDO_DATABASE_NAME}  < /usr/share/icinga2-ido-mysql/schema/upgrade/${DB_UPDATE_FILE} || exit $?
+        fi
+      done
+
+    fi
+}
+
+createConfig() {
 
   # create the IDO configuration
   #
@@ -161,6 +180,8 @@ configureDatabase() {
 
 waitForDatabase
 
-configureDatabase
+createSchema
+updateSchema
+createConfig
 
 # EOF

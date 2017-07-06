@@ -9,7 +9,6 @@ icinga2-master:
   hostname: "icinga2-master.matrix.lan"
   ports:
     - "5665:5665"
-    - "6666:6666"
     - "4567:4567"
   environment:
     - ICINGA_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
