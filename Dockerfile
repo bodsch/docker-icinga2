@@ -11,12 +11,12 @@ ENV \
   ICINGA_VERSION="2.6.3-r1" \
   APK_ADD="bind-tools build-base ca-certificates curl fping git icinga2 inotify-tools jq mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl openssl-dev py2-pip pwgen ruby ruby-dev ssmtp supervisor unzip" \
   APK_DEL="build-base git ruby-dev" \
-  GEMS="bigdecimal io-console ipaddress json openssl redis sinatra sinatra-basic-auth thin time_difference"
+  GEMS="aws-sdk bigdecimal io-console ipaddress json openssl redis sinatra sinatra-basic-auth thin time_difference"
 
 EXPOSE 5665
 
 LABEL \
-  version="1707-28" \
+  version="1707-29" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Icinga2 Docker Image" \
   org.label-schema.description="Inofficial Icinga2 Docker Image" \
