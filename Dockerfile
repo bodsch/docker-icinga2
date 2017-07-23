@@ -7,16 +7,16 @@ ENV \
   ALPINE_MIRROR="mirror1.hs-esslingen.de/pub/Mirrors" \
   ALPINE_VERSION="v3.6" \
   TERM=xterm \
-  BUILD_DATE="2017-07-11" \
+  BUILD_DATE="2017-07-23" \
   ICINGA_VERSION="2.6.3-r1" \
-  APK_ADD="bind-tools build-base ca-certificates curl fping git icinga2 inotify-tools jq mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl openssl-dev py2-pip pwgen ruby ruby-dev ssmtp supervisor unzip" \
-  APK_DEL="build-base git ruby-dev" \
-  GEMS="aws-sdk bigdecimal io-console ipaddress json openssl redis sinatra sinatra-basic-auth thin time_difference"
+  APK_ADD="bind-tools ca-certificates curl fping g++ git icinga2 inotify-tools jq libffi-dev make mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl openssl-dev pwgen ruby ruby-dev s6 ssmtp unzip" \
+  APK_DEL="libffi-dev g++ make git openssl-dev ruby-dev" \
+  GEMS="io-console bundler"
 
 EXPOSE 5665
 
 LABEL \
-  version="1707-29" \
+  version="1707-30" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Icinga2 Docker Image" \
   org.label-schema.description="Inofficial Icinga2 Docker Image" \
@@ -37,8 +37,6 @@ RUN \
   apk upgrade --no-cache && \
   apk add --no-cache ${APK_ADD} && \
   gem install --no-rdoc --no-ri ${GEMS} && \
-  pip install \
-    --trusted-host http://d.pypi.python.org/simple --upgrade pip && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   cp /usr/lib/nagios/plugins/*     /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command checker mainlog notification && \
@@ -48,12 +46,17 @@ RUN \
   chmod u+s /bin/busybox && \
   cd /tmp && \
   git clone https://github.com/bodsch/ruby-icinga-cert-service.git && \
+  cd ruby-icinga-cert-service && \
+  cd /tmp/ruby-icinga-cert-service && \
+  bundle install && \
   cp -ar /tmp/ruby-icinga-cert-service/bin /usr/local/ && \
   cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/ && \
   apk del --purge ${APK_DEL} && \
   rm -rf \
     /tmp/* \
-    /var/cache/apk/*
+    /var/cache/apk/* \
+    /root/.gem \
+    /root/.bundle
 
 COPY rootfs/ /
 
