@@ -1,8 +1,12 @@
-sudo: false
-group: deprecated-2017Q2
+sudo: required
+
+group: edge
 
 services:
   - docker
+
+before_install:
+  - docker pull alpine:3.6
 
 install:
   - docker build --tag bodsch/docker-icinga2 .
@@ -11,3 +15,9 @@ install:
 script:
   - docker ps | grep -q icinga2
 
+notifications:
+  email: false
+
+cache:
+  directories:
+    - $HOME/docker
