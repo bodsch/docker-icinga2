@@ -84,8 +84,8 @@ correctRights() {
     echo " [E] No User/Group nagios or icinga found!"
   else
 
-    [ -f /var/lib/icinga2/api/log/current ] && rm -f /var/lib/icinga2/api/log/current
-    [ -d /var/lib/icinga2/api/log/current ] || mkdir -p /var/lib/icinga2/api/log/current
+    [ -e /var/lib/icinga2/api/log/current ] && rm -rf /var/lib/icinga2/api/log/current
+#    [ -d /var/lib/icinga2/api/log/current ] || mkdir -p /var/lib/icinga2/api/log/current
 
     chown -R ${USER}:root     /etc/icinga2
     chown -R ${USER}:${GROUP} /var/lib/icinga2
