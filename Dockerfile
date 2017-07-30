@@ -7,7 +7,7 @@ ENV \
   ALPINE_MIRROR="mirror1.hs-esslingen.de/pub/Mirrors" \
   ALPINE_VERSION="v3.6" \
   TERM=xterm \
-  BUILD_DATE="2017-07-23" \
+  BUILD_DATE="2017-07-30" \
   ICINGA_VERSION="2.6.3-r1" \
   APK_ADD="bind-tools ca-certificates curl fping g++ git icinga2 inotify-tools jq libffi-dev make mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl openssl-dev pwgen ruby ruby-dev s6 ssmtp unzip" \
   APK_DEL="libffi-dev g++ make git openssl-dev ruby-dev" \
