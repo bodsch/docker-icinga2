@@ -7,16 +7,16 @@ ENV \
   ALPINE_MIRROR="mirror1.hs-esslingen.de/pub/Mirrors" \
   ALPINE_VERSION="v3.6" \
   TERM=xterm \
-  BUILD_DATE="2017-07-19" \
+  BUILD_DATE="2017-07-30" \
   ICINGA_VERSION="2.6.3-r1" \
-  APK_ADD="bind-tools build-base ca-certificates curl fping git icinga2 inotify-tools jq mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl openssl-dev pwgen ruby ruby-dev ssmtp supervisor unzip" \
-  APK_DEL="build-base git ruby-dev" \
-  GEMS="io-console ipaddress json openssl redis sinatra sinatra-basic-auth thin time_difference"
+  APK_ADD="bind-tools ca-certificates curl fping g++ git icinga2 inotify-tools jq libffi-dev make mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl openssl-dev pwgen ruby ruby-dev s6 ssmtp unzip" \
+  APK_DEL="libffi-dev g++ make git openssl-dev ruby-dev" \
+  GEMS="io-console bundler"
 
 EXPOSE 5665
 
 LABEL \
-  version="1707-29" \
+  version="1707-30" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Icinga2 Docker Image" \
   org.label-schema.description="Inofficial Icinga2 Docker Image" \
@@ -46,12 +46,17 @@ RUN \
   chmod u+s /bin/busybox && \
   cd /tmp && \
   git clone https://github.com/bodsch/ruby-icinga-cert-service.git && \
+  cd ruby-icinga-cert-service && \
+  cd /tmp/ruby-icinga-cert-service && \
+  bundle install && \
   cp -ar /tmp/ruby-icinga-cert-service/bin /usr/local/ && \
   cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/ && \
   apk del --purge ${APK_DEL} && \
   rm -rf \
     /tmp/* \
-    /var/cache/apk/*
+    /var/cache/apk/* \
+    /root/.gem \
+    /root/.bundle
 
 COPY rootfs/ /
 

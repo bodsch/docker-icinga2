@@ -276,10 +276,6 @@ configureIcinga2Satellite() {
 
   echo " [i] we are an satellite .."
 
-  # in first, we remove the supervisor script to start our cert-service
-  # they is only needed at a master instance
-  [ -f /etc/supervisor.d/icinga2-cert-service.ini ] && rm -f /etc/supervisor.d/icinga2-cert-service.ini
-
   waitForIcingaMaster
 
   if [ -e /etc/icinga2/features-enabled/notification.conf ]

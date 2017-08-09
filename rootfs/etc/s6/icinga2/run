@@ -1,0 +1,7 @@
+#! /bin/sh
+
+PROGARGS="daemon -c /etc/icinga2/icinga2.conf -e /var/log/icinga2/error.log"
+PROGHOME="/usr/lib/icinga2"
+PROGNAME="/usr/sbin/icinga2"
+
+exec ${PROGNAME} ${PROGARGS}

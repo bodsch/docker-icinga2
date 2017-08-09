@@ -1,6 +1,9 @@
 #
 # Script to Configure the Graphite Support
 
+CARBON_HOST=${CARBON_HOST:-""}
+CARBON_PORT=${CARBON_PORT:-2003}
+
 
 if ( [ -z ${CARBON_HOST} ] || [ -z ${CARBON_PORT} ] )
 then

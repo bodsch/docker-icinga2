@@ -5,16 +5,16 @@
 # includes a certificate service to create and provide a icinga certificate
 icinga2-master:
   build: .
-  container_name: "icinga2-master"
-  hostname: "icinga2-master.matrix.lan"
+  container_name: icinga2-master
+  hostname: icinga2-master.matrix.lan
   ports:
-    - "5665:5665"
-    - "4567:4567"
+    - 5665:5665
+    - 4567:4567
   environment:
     - ICINGA_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
     - MYSQL_HOST=192.168.0.5
     - MYSQL_ROOT_USER=root
-    - MYSQL_ROOT_PASS=m3B.yCZB
+    - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
     - ICINGA_MASTER=icinga2-master.matrix.lan
     - ICINGA_CERT_SERVICE=true
     - ICINGA_CERT_SERVICE_BA_USER=admin
@@ -24,7 +24,7 @@ icinga2-master:
     - ICINGA_CERT_SERVICE_SERVER=icinga2-master
     - ICINGA_CERT_SERVICE_PORT=4567
     - ICINGA_CERT_SERVICE_PATH=/
-    - CARBON_HOST=192.168.0.5
+    - CARBON_HOST=
     - CARBON_PORT=2003
   volumes:
     - /tmp/docker-data/icinga2-master:/srv
@@ -33,9 +33,10 @@ icinga2-master:
 # ask the master above for an certificate
 icinga2-satellite-1:
   build: .
-  container_name: "icinga2-satellite-1"
-  hostname: "icinga2-satellite-1.matrix.lan"
+  container_name: icinga2-satellite-1
+  hostname: icinga2-satellite-1.matrix.lan
   environment:
+    - DEBUG=1
     - ICINGA_MASTER=icinga2-master.matrix.lan
     - ICINGA_CERT_SERVICE=true
     - ICINGA_CERT_SERVICE_BA_USER=admin
@@ -54,8 +55,8 @@ icinga2-satellite-1:
 # ask the master above for an certificate
 icinga2-satellite-2:
   build: .
-  container_name: "icinga2-satellite-2"
-  hostname: "icinga2-satellite-2.matrix.lan"
+  container_name: icinga2-satellite-2
+  hostname: icinga2-satellite-2.matrix.lan
   environment:
     - ICINGA_MASTER=icinga2-master.matrix.lan
     - ICINGA_CERT_SERVICE=true
