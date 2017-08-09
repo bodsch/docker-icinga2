@@ -9,7 +9,7 @@ before_install:
   - docker pull alpine:3.6
 
 install:
-  - docker build --tag bodsch/docker-icinga2 .
+  - travis_retry docker build --tag bodsch/docker-icinga2 .
   - docker run --detach --name icinga2 bodsch/docker-icinga2
 
 script:
