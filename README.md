@@ -144,4 +144,7 @@ For Examples to create a Certificate with Commandline Tools look into `rootfs/in
 | `ICINGA_SSMTP_SMTPAUTH_PASS`       | -                    |                                                                 |
 | `ICINGA_SSMTP_ALIASES`             | -                    |                                                                 |
 |                                    |                      |                                                                 |
+| `DEMO_DATA`                        | `false`              | copy demo data from `/init/demo-data` into `/etc/icinga2`       |
+|                                    |                      | config path                                                     |
+|                                    |                      |                                                                 |
 
