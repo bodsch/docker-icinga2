@@ -12,9 +12,9 @@ More then one API User can also be created over one Environment Var.
 
 # Status
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-icinga2.svg?branch=1705-01)][hub]
-[![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-icinga2.svg?branch=1705-01)][microbadger]
-[![Build Status](https://travis-ci.org/bodsch/docker-icinga2.svg?branch=1705-01)][travis]
+[![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-icinga2.svg?branch)][hub]
+[![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-icinga2.svg?branch)][microbadger]
+[![Build Status](https://travis-ci.org/bodsch/docker-icinga2.svg?branch)][travis]
 
 [hub]: https://hub.docker.com/r/bodsch/docker-icinga2/
 [microbadger]: https://microbadger.com/images/bodsch/docker-icinga2
