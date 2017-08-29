@@ -7,8 +7,8 @@ ENV \
   ALPINE_MIRROR="mirror1.hs-esslingen.de/pub/Mirrors" \
   ALPINE_VERSION="v3.6" \
   TERM=xterm \
-  BUILD_DATE="2017-07-30" \
-  ICINGA_VERSION="2.6.3-r1" \
+  BUILD_DATE="2017-08-29" \
+  ICINGA_VERSION="2.7.0-r1" \
   APK_ADD="bind-tools ca-certificates curl fping g++ git icinga2 inotify-tools jq libffi-dev make mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl openssl-dev pwgen ruby ruby-dev s6 ssmtp unzip" \
   APK_DEL="libffi-dev g++ make git openssl-dev ruby-dev" \
   GEMS="io-console bundler"
@@ -16,7 +16,7 @@ ENV \
 EXPOSE 5665
 
 LABEL \
-  version="1707-30" \
+  version="1708-35" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Icinga2 Docker Image" \
   org.label-schema.description="Inofficial Icinga2 Docker Image" \
