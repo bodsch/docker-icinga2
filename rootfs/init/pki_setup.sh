@@ -208,7 +208,7 @@ configureIcinga2Master() {
   if [ ! -d /var/lib/icinga2/ca ]
   then
 
-    if [ -d ${WORK_DIR}/ca ]
+    if ( [ -d ${WORK_DIR}/icinga2/pki/${HOSTNAME} ] && [ -d ${WORK_DIR}/ca ] )
     then
       echo " [i] restore older CA"
 

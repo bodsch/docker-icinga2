@@ -1,6 +1,6 @@
 #
 
-
+DEMO_DATA=${DEMO_DATA:-false}
 USER=
 GROUP=
 
@@ -59,6 +59,15 @@ prepare() {
     # in first, we remove the startup script to start our cert-service
     # they is only needed at a master instance
     [ -d /etc/s6/icinga2-cert-service ] && rm -rf /etc/s6/icinga2-cert-service
+  fi
+
+  if [ ${DEMO_DATA} = true ]
+  then
+    cp -fua /init/demo /etc/icinga2/
+
+    sed -i \
+      -e 's|// include_recursive "demo"|include_recursive "demo"|g' \
+      /etc/icinga2/icinga2.conf
   fi
 }
 
