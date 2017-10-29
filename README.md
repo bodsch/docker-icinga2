@@ -134,7 +134,7 @@ For Examples to create a Certificate with Commandline Tools look into `rootfs/in
 | `ICINGA_CERT_SERVICE_API_PASSWORD` | -                    |                                                                 |
 | `ICINGA_CERT_SERVICE_SERVER`       | `localhost`          | Certificate Service Host                                        |
 | `ICINGA_CERT_SERVICE_PORT`         | `80`                 | Certificate Service Port                                        |
-| `ICINGA_CERT_SERVICE_PATH`         | `/`                  | Certificate Service Path (needful, when they run begind a Proxy |
+| `ICINGA_CERT_SERVICE_PATH`         | `/`                  | Certificate Service Path (needful, when they run behind a Proxy |
 |                                    |                      |                                                                 |
 | `ICINGA_SSMTP_RELAY_SERVER`        | -                    | SMTP Service to send Notifications                              |
 | `ICINGA_SSMTP_REWRITE_DOMAIN`      | -                    |                                                                 |
