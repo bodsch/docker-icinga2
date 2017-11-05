@@ -184,12 +184,9 @@ waitForTheCertService() {
         # store the master for later restart
         #
         echo "${masterName}" > ${WORK_DIR}/pki/${HOSTNAME}/master
-
       else
-
-        echo " [E] ${code} - the cert-service has an error."
-        cat /tmp/request_${HOSTNAME}.json
-
+        error=$(cat /tmp/request_${HOSTNAME}.json)
+        echo " [E] ${code} - the cert-service has an error: ${error}"
         rm -f /tmp/request_${HOSTNAME}.json
         exit 1
       fi

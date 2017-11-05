@@ -7,16 +7,18 @@ ENV \
   ALPINE_MIRROR="mirror1.hs-esslingen.de/pub/Mirrors" \
   ALPINE_VERSION="v3.6" \
   TERM=xterm \
-  BUILD_DATE="2017-09-26" \
+  BUILD_DATE="2017-11-05" \
+  BUILD_TYPE="stable" \
+  CERT_SERVICE_VERSION="0.9.1" \
   ICINGA_VERSION="2.7.1-r0" \
   APK_ADD="bind-tools ca-certificates curl fping g++ git inotify-tools jq libffi-dev make mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl openssl-dev pwgen ruby ruby-dev s6 ssmtp unzip" \
   APK_DEL="libffi-dev g++ make git openssl-dev ruby-dev" \
   GEMS="io-console bundler"
 
-EXPOSE 5665
+EXPOSE 5665 4567
 
 LABEL \
-  version="1709" \
+  version="1711" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Icinga2 Docker Image" \
   org.label-schema.description="Inofficial Icinga2 Docker Image" \
@@ -55,7 +57,13 @@ RUN \
   cd /tmp && \
   git clone https://github.com/bodsch/ruby-icinga-cert-service.git && \
   cd ruby-icinga-cert-service && \
-  cd /tmp/ruby-icinga-cert-service && \
+  #
+  # build stable packages
+  if [ "${BUILD_TYPE}" == "stable" ] ; then \
+    echo "switch to stable Tag v${CERT_SERVICE_VERSION}" && \
+    git checkout tags/${CERT_SERVICE_VERSION} 2> /dev/null ; \
+  fi && \
+  #
   bundle install && \
   cp -ar /tmp/ruby-icinga-cert-service/bin /usr/local/ && \
   cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/ && \

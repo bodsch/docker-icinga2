@@ -123,6 +123,8 @@ For Examples to create a Certificate with Commandline Tools look into `rootfs/in
 |                                    |                      |                                                                 |
 | `ICINGA_CLUSTER`                   | `false`              | Icinga2 Cluster Mode - enable a Master / Satellite Setup        |
 | `ICINGA_MASTER`                    | -                    | The Icinga2-Master FQDN for a Satellite Node                    |
+| `BASIC_AUTH_USER`                  | `admin`              | both `BASIC_AUTH_*` and the `ICINGA_MASTER` are importand, if you |
+| `BASIC_AUTH_PASS`                  | `admin`              | use and modify the authentication of the *icinga-cert-service*  |
 |                                    |                      |                                                                 |
 | `ICINGA_API_USERS`                 | -                    | comma separated List to create API Users. The Format are `username:password` |
 |                                    |                      | (e.g. `admin:admin,dashing:dashing` and so on)                  |
