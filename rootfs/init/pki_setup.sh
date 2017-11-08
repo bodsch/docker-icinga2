@@ -195,6 +195,48 @@ waitForTheCertService() {
   fi
 }
 
+validate_local_ca() {
+
+  if [ -f ${WORK_DIR}/pki/${HOSTNAME}/ca.crt ]
+  then
+    CHECKSUM=$(sha256sum ${WORK_DIR}/pki/${HOSTNAME}/ca.crt | cut -f 1 -d ' ')
+
+    # generate a certificate request
+    #
+    code=$(curl \
+      --user ${ICINGA_CERT_SERVICE_BA_USER}:${ICINGA_CERT_SERVICE_BA_PASSWORD} \
+      --silent \
+      --request GET \
+      --header "X-API-USER: ${ICINGA_CERT_SERVICE_API_USER}" \
+      --header "X-API-KEY: ${ICINGA_CERT_SERVICE_API_PASSWORD}" \
+      --write-out "%{http_code}\n" \
+      --output /tmp/validate_ca_${HOSTNAME}.json \
+      http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}${ICINGA_CERT_SERVICE_PATH}v2/validate/${CHECKSUM})
+
+    if ( [ $? -eq 0 ] && [ ${code} == 200 ] )
+    then
+      rm -f /tmp/validate_ca_${HOSTNAME}.json
+    else
+
+      status=$(echo "${code}" | jq --raw-output .status 2> /dev/null)
+      message=$(echo "${code}" | jq --raw-output '.message' 2> /dev/null)
+
+      echo " [w] our master has a new CA"
+      echo -n "     "
+      echo "${message}"
+
+      rm -rf ${WORK_DIR}/pki
+      rm -rf /etc/icinga2/pki/*
+
+      rm -f /etc/icinga2/features-available/api.conf
+      touch /etc/icinga2/features-available/api.conf
+    fi
+  else
+    :
+  fi
+}
+
+
 # configure a Icinga2 Master Instance
 #
 configureIcinga2Master() {
@@ -204,12 +246,11 @@ configureIcinga2Master() {
   # icinga2 cert - restore CA
   if [ ! -d /var/lib/icinga2/ca ]
   then
-
-    if ( [ -d ${WORK_DIR}/icinga2/pki/${HOSTNAME} ] && [ -d ${WORK_DIR}/ca ] )
+    if ( [ -d ${WORK_DIR}/pki ] && [ -d ${WORK_DIR}/ca ] )
     then
       echo " [i] restore older CA"
 
-      cp -ar ${WORK_DIR}/ca               /var/lib/icinga2/ 2> /dev/null
+      cp -arv ${WORK_DIR}/ca               /var/lib/icinga2/ 2> /dev/null
     else
       echo " [i] create new CA"
 
@@ -226,6 +267,8 @@ configureIcinga2Master() {
   # icinga2 API cert - regenerate new private key and certificate when running in a new container
   if [ ! -f /etc/icinga2/pki/${HOSTNAME}.key ]
   then
+    echo " [i] create new certificate"
+
     [ -d ${WORK_DIR}/pki ] || mkdir ${WORK_DIR}/pki
 
     PKI_CMD="icinga2 pki"
@@ -239,6 +282,11 @@ configureIcinga2Master() {
     if [ $? -gt 0 ]
     then
       echo " [E] API Setup has failed"
+      rm -f /etc/icinga2/pki/*
+      rm -rf /var/lib/icinga2/ca
+      rm -rf ${WORK_DIR}/pki
+      rm -rf ${WORK_DIR}/ca
+
       exit 1
     fi
 
@@ -282,9 +330,10 @@ configureIcinga2Satellite() {
 
   enableIcingaFeature api
 
+  validate_local_ca
+
   if ( [ ! -d ${WORK_DIR}/pki/${HOSTNAME} ] || [ ! -f ${WORK_DIR}/pki/${HOSTNAME}/${HOSTNAME}.key ] )
   then
-
     waitForTheCertService
   fi
 
@@ -350,8 +399,10 @@ restoreOldPKI() {
 
     echo " [i] restore older PKI settings for host '${HOSTNAME}'"
 
-    find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.key -o -name ${HOSTNAME}.crt -o -name ${HOSTNAME}.csr -exec cp -a {} /etc/icinga2/pki/ \;
-    find ${WORK_DIR}/pki -type f -name ca.crt -exec cp -a {} /etc/icinga2/pki/ \;
+    find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.csr -exec cp -av {} /etc/icinga2/pki/ \;
+    find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.key -exec cp -av {} /etc/icinga2/pki/ \;
+    find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.crt -exec cp -av {} /etc/icinga2/pki/ \;
+    find ${WORK_DIR}/pki -type f -name ca.crt -exec cp -av {} /etc/icinga2/pki/ \;
 
     enableIcingaFeature api
   fi
