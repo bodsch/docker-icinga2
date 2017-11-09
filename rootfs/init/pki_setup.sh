@@ -322,6 +322,10 @@ object Zone "global-templates" {
   global = true
 }
 
+object Zone "director-global" {
+  global = true
+}
+
 EOF
   fi
 
