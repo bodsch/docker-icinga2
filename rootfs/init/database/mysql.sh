@@ -63,7 +63,7 @@ waitForDatabase() {
 
     echo " [i] Waiting for database to come up"
 
-    sleep 5s
+    sleep 13s
     RETRY=$(expr ${RETRY} - 1)
   done
 
@@ -72,6 +72,8 @@ waitForDatabase() {
     echo " [E] Could not connect to Database on ${MYSQL_HOST}:${MYSQL_PORT}"
     exit 1
   fi
+
+  sleep 2s
 
   RETRY=10
 
@@ -84,10 +86,11 @@ waitForDatabase() {
     [ $? -eq 0 ] && break
 
     echo " [i] wait for the database for her initdb and all other jobs"
-    sleep 5s
+    sleep 13s
     RETRY=$(expr ${RETRY} - 1)
   done
 
+  sleep 2s
 }
 
 
