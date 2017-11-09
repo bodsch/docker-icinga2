@@ -2,6 +2,13 @@
 #
 #
 
+# a satellite don't need this
+#
+if [ ${ICINGA_SATELLITE} == true ]
+then
+  return
+fi
+
 ICINGA_SSMTP_RELAY_SERVER=${ICINGA_SSMTP_RELAY_SERVER:-}
 ICINGA_SSMTP_REWRITE_DOMAIN=${ICINGA_SSMTP_REWRITE_DOMAIN:-}
 ICINGA_SSMTP_RELAY_USE_STARTTLS=${ICINGA_SSMTP_RELAY_USE_STARTTLS:-}
@@ -13,7 +20,7 @@ ICINGA_SSMTP_ALIASES=${ICINGA_SSMTP_ALIASES:-}
 
 #
 
-configureSSMTP() {
+configure_ssmtp() {
 
   file=/etc/ssmtp/ssmtp.conf
 
@@ -49,7 +56,7 @@ EOF
 
 }
 
-createSMTPAliases() {
+create_smtp_aliases() {
 
   file=/etc/ssmtp/revaliases
 
@@ -90,7 +97,7 @@ EOF
 
 }
 
-configureSSMTP
-createSMTPAliases
+configure_ssmtp
+create_smtp_aliases
 
 # EOF

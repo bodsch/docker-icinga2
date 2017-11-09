@@ -7,8 +7,6 @@ MYSQL_ROOT_PASS=${MYSQL_ROOT_PASS:-""}
 MYSQL_OPTS=
 
 IDO_DATABASE_NAME=${IDO_DATABASE_NAME:-"icinga2core"}
-IDO_PASSWORD=${IDO_PASSWORD:-$(pwgen -s 15 1)}
-
 
 if [ -z ${MYSQL_HOST} ]
 then
@@ -16,6 +14,16 @@ then
 
   return
 else
+
+  if [ -z ${IDO_PASSWORD} ]
+  then
+    IDO_PASSWORD=$(pwgen -s 15 1)
+
+    echo " [W] NO IDO PASSWORD SET!"
+    echo " [W] DATABASE CONNECTIONS ARE NOT RESTART FIXED"
+    echo " [W] I CREATE THIS PASSWORD DYNAMIC: '${IDO_PASSWORD}'"
+  fi
+
   MYSQL_OPTS="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_ROOT_PASS} --port=${MYSQL_PORT}"
 fi
 
@@ -48,52 +56,11 @@ version_compare () {
 
 }
 
+# create IDO database schema
+#
+create_schema() {
 
-waitForDatabase() {
-
-  RETRY=15
-
-  # wait for database
-  #
-  until [ ${RETRY} -le 0 ]
-  do
-    nc ${MYSQL_HOST} ${MYSQL_PORT} < /dev/null > /dev/null
-
-    [ $? -eq 0 ] && break
-
-    echo " [i] Waiting for database to come up"
-
-    sleep 5s
-    RETRY=$(expr ${RETRY} - 1)
-  done
-
-  if [ $RETRY -le 0 ]
-  then
-    echo " [E] Could not connect to Database on ${MYSQL_HOST}:${MYSQL_PORT}"
-    exit 1
-  fi
-
-  RETRY=10
-
-  # must start initdb and do other jobs well
-  #
-  until [ ${RETRY} -le 0 ]
-  do
-    mysql ${MYSQL_OPTS} --execute="select 1 from mysql.user limit 1" > /dev/null
-
-    [ $? -eq 0 ] && break
-
-    echo " [i] wait for the database for her initdb and all other jobs"
-    sleep 5s
-    RETRY=$(expr ${RETRY} - 1)
-  done
-
-}
-
-
-createSchema() {
-
-  enableIcingaFeature ido-mysql
+  enable_icinga_feature ido-mysql
 
   # check if database already created ...
   #
@@ -106,75 +73,90 @@ createSchema() {
     # Database isn't created
     # well, i do my job ...
     #
-    echo " [i] Initializing databases and icinga2 configurations."
+    echo " [i] initializing databases and icinga2 configurations"
 
     (
       echo "--- create user '${IDO_DATABASE_NAME}'@'%' IDENTIFIED BY '${IDO_PASSWORD}';"
       echo "CREATE DATABASE IF NOT EXISTS ${IDO_DATABASE_NAME};"
       echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON ${IDO_DATABASE_NAME}.* TO 'icinga2'@'%' IDENTIFIED BY '${IDO_PASSWORD}';"
+      echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON ${IDO_DATABASE_NAME}.* TO 'icinga2'@'$(hostname -i)' IDENTIFIED BY '${IDO_PASSWORD}';"
+      echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON ${IDO_DATABASE_NAME}.* TO 'icinga2'@'$(hostname -s)' IDENTIFIED BY '${IDO_PASSWORD}';"
+      echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON ${IDO_DATABASE_NAME}.* TO 'icinga2'@'$(hostname -f)' IDENTIFIED BY '${IDO_PASSWORD}';"
       echo "FLUSH PRIVILEGES;"
     ) | mysql ${MYSQL_OPTS}
 
     if [ $? -eq 1 ]
     then
-      echo " [E] can't create Database '${IDO_DATABASE_NAME}'"
+      echo " [E] can't create database '${IDO_DATABASE_NAME}'"
       exit 1
     fi
 
-    insertSchema
+    insert_schema
   fi
 }
 
-insertSchema() {
+# insert database structure
+#
+insert_schema() {
 
-    # create the ido schema
-    #
-    mysql ${MYSQL_OPTS} --force ${IDO_DATABASE_NAME}  < /usr/share/icinga2-ido-mysql/schema/mysql.sql
+  # create the ido schema
+  #
+  mysql ${MYSQL_OPTS} --force ${IDO_DATABASE_NAME}  < /usr/share/icinga2-ido-mysql/schema/mysql.sql
 
-    if [ $? -gt 0 ]
-    then
-      echo " [E] can't insert the icinga2 Database Schema"
-      exit 1
-    fi
-
+  if [ $? -gt 0 ]
+  then
+    echo " [E] can't insert the icinga2 database schema"
+    exit 1
+  fi
 }
 
-updateSchema() {
+# update database schema
+#
+update_schema() {
 
-    # Database already created
-    #
-    # check database version
-    # and install the update, when it needed
-    #
-    query="select version from ${IDO_DATABASE_NAME}.icinga_dbversion"
-    db_version=$(mysql ${MYSQL_OPTS} --batch --execute="${query}" | tail -n1)
+  # Database already created
+  #
+  # check database version
+  # and install the update, when it needed
+  #
+  query="select version from ${IDO_DATABASE_NAME}.icinga_dbversion"
+  db_version=$(mysql ${MYSQL_OPTS} --batch --execute="${query}" | tail -n1)
 
-    echo " [i] Database Version: ${db_version}"
+  if [ -z "${db_version}" ]
+  then
+    echo " [w] no database version found. skip database upgrade"
 
-    if [ -z "${db_version}" ]
-    then
-      echo " [w] no database version found. skip database upgrade"
+    insert_schema
+    update_schema
+  else
 
-      insertSchema
-      updateSchema
-    else
+    echo " [i] database version: ${db_version}"
 
-      for DB_UPDATE_FILE in $(ls -1 /usr/share/icinga2-ido-mysql/schema/upgrade/*.sql)
-      do
-        FILE_VER=$(grep icinga_dbversion ${DB_UPDATE_FILE} | grep idoutils | cut -d ',' -f 5 | sed -e "s| ||g" -e "s|\\'||g")
+    for DB_UPDATE_FILE in $(ls -1 /usr/share/icinga2-ido-mysql/schema/upgrade/*.sql)
+    do
+      FILE_VER=$(grep icinga_dbversion ${DB_UPDATE_FILE} | grep idoutils | cut -d ',' -f 5 | sed -e "s| ||g" -e "s|\\'||g")
 
-        if [ "$(version_compare ${db_version} ${FILE_VER})" = "<" ]
+      if [ "$(version_compare ${db_version} ${FILE_VER})" = "<" ]
+      then
+        echo " [i] apply database update '${FILE_VER}' from '${DB_UPDATE_FILE}'"
+
+        mysql ${MYSQL_OPTS} --force ${IDO_DATABASE_NAME}  < /usr/share/icinga2-ido-mysql/schema/upgrade/${DB_UPDATE_FILE}
+
+        if [ $? -gt 0 ]
         then
-          echo " [i] apply Database Update '${FILE_VER}' from '${DB_UPDATE_FILE}'"
-
-          mysql ${MYSQL_OPTS} --force ${IDO_DATABASE_NAME}  < /usr/share/icinga2-ido-mysql/schema/upgrade/${DB_UPDATE_FILE} || exit $?
+          echo " [E] database update ${DB_UPDATE_FILE} failed"
+          exit 1
         fi
-      done
 
-    fi
+      fi
+    done
+
+  fi
 }
 
-createConfig() {
+# update database configuration
+#
+create_config() {
 
   # create the IDO configuration
   #
@@ -188,11 +170,10 @@ createConfig() {
 
 }
 
+. /init/wait_for/mysql.sh
 
-waitForDatabase
-
-createSchema
-updateSchema
-createConfig
+create_schema
+update_schema
+create_config
 
 # EOF
