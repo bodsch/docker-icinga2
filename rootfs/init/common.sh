@@ -53,7 +53,6 @@ prepare() {
   chmod ug+wx ${LOGDIR}   2> /dev/null
   chmod ug+rw ${LOGDIR}/* 2> /dev/null
 
-
   if ( [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" != "${HOSTNAME}" ] )
   then
     # in first, we remove the startup script to start our cert-service
@@ -73,7 +72,7 @@ prepare() {
 
 # enable Icinga2 Feature
 #
-enableIcingaFeature() {
+enable_icinga_feature() {
 
   local feature="${1}"
 
@@ -83,18 +82,29 @@ enableIcingaFeature() {
   fi
 }
 
+# disable Icinga2 Feature
+#
+disable_icinga_feature() {
 
-correctRights() {
+  local feature="${1}"
+
+  if [ $(icinga2 feature list | grep Enabled | grep -c ${feature}) -eq 1 ]
+  then
+    icinga2 feature disable ${feature}
+  fi
+}
+
+# correct rights of files and directories
+#
+correct_rights() {
 
   chmod 1777 /tmp
 
   if ( [ -z ${USER} ] || [ -z ${GROUP} ] )
   then
-    echo " [E] No User/Group nagios or icinga found!"
+    echo " [E] no nagios or icinga user/group found!"
   else
-
     [ -e /var/lib/icinga2/api/log/current ] && rm -rf /var/lib/icinga2/api/log/current
-#    [ -d /var/lib/icinga2/api/log/current ] || mkdir -p /var/lib/icinga2/api/log/current
 
     chown -R ${USER}:root     /etc/icinga2
     chown -R ${USER}:${GROUP} /var/lib/icinga2

@@ -8,6 +8,7 @@ then
 fi
 
 export WORK_DIR=/srv/icinga2
+export ICINGA_SATELLITE=false
 
 HOSTNAME=$(hostname -f)
 
@@ -25,7 +26,7 @@ run() {
   . /init/graphite_setup.sh
   . /init/configure_ssmtp.sh
 
-  correctRights
+  correct_rights
 
   /bin/s6-svscan /etc/s6
 }

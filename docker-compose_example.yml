@@ -1,6 +1,19 @@
 # version: '2.0'
 
 
+database:
+  image: bodsch/docker-mysql:1711.1
+  container_name: database
+  hostname: database
+  ports:
+    - 3306:3306
+  environment:
+    - MYSQL_SYSTEM_USER=root
+    - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
+  volumes:
+    - /etc/localtime:/etc/localtime:ro
+    - /tmp/docker-data/database:/srv
+
 # the Icinga2 Master
 # includes a certificate service to create and provide a icinga certificate
 icinga2-master:
@@ -13,9 +26,10 @@ icinga2-master:
     - 4567:4567
   environment:
     - ICINGA_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
-    #- MYSQL_HOST=192.168.0.5
-    #- MYSQL_ROOT_USER=root
-    #- MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
+    - MYSQL_HOST=database
+    - MYSQL_ROOT_USER=root
+    - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
+    - IDO_PASSWORD=qUVuLTk9oEDUV0A
     # environment variables for the certificates service
     - ICINGA_MASTER=icinga2-master.matrix.lan
     - BASIC_AUTH_USER=foofoo
@@ -35,7 +49,8 @@ icinga2-master:
     - DEMO_DATA=false
   volumes:
     - /tmp/docker-data/icinga2-master:/srv
-
+  links:
+    - database:database
 
 # the first icinga2 satellite
 # ask the master above for an certificate
