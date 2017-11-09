@@ -1,11 +1,9 @@
 #
 # Script to Create API USERS
-
-
-createAPIUser() {
+#
+create_api_user() {
 
   local api_file="/etc/icinga2/conf.d/api-users.conf"
-
   local api_users=
 
   if [ -n "${ICINGA_API_USERS}" ]
@@ -15,11 +13,10 @@ createAPIUser() {
 
   if [ -z "${api_users}" ]
   then
-
-    echo " [i] no API Users found"
+    echo " [i] no API users found"
+    return
   else
-
-    echo " [i] create configuration for API Users ..."
+    echo " [i] create configuration for API users ..."
 
     # DESTROY the old entrys
     #
@@ -27,7 +24,6 @@ createAPIUser() {
 
     for u in ${api_users}
     do
-
       user=$(echo "${u}" | cut -d: -f1)
       pass=$(echo "${u}" | cut -d: -f2)
 
@@ -37,7 +33,6 @@ createAPIUser() {
 
       if [ $(grep -c "object ApiUser \"${user}\"" ${api_file}) -eq 0 ]
       then
-
         cat << EOF >> ${api_file}
 
 object ApiUser "${user}" {
@@ -48,14 +43,12 @@ object ApiUser "${user}" {
 
 EOF
       fi
-
     done
-
   fi
 
 }
 
 
-createAPIUser
+create_api_user
 
 # EOF

@@ -7,9 +7,11 @@ VOLUMES = \
   --volume=/tmp/docker-data/icinga2:/srv \
 
 ENV = \
-  --env ICINGA_MASTER=icinga2.matrix.lan \
+  --env ICINGA_CLUSTER=true \
+  --env ICINGA_MASTER=icinga2-default \
   --env ICINGA_API_USERS='root:icinga,dashing:dashing,cert:foo-bar' \
-  --env ICINGA_CERT_SERVICE=true \
+  --env ICINGA_CERT_SERVICE=false \
+  --env DEMO_DATA=true \
   --env ICINGA_CERT_SERVICE_BA_USER=foo \
   --env ICINGA_CERT_SERVICE_BA_PASSWORD=bar \
   --env ICINGA_CERT_SERVICE_API_USER=root \

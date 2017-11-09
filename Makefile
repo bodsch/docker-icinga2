@@ -45,6 +45,7 @@ run:
 	docker run \
 		--rm \
 		--name $(NAME)-$(INSTANCE) \
+		--hostname $(NAME)-$(INSTANCE) \
 		$(PORTS) \
 		$(VOLUMES) \
 		$(ENV) \

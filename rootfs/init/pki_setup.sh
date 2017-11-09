@@ -20,261 +20,9 @@ then
   return
 fi
 
-# wait for the Icinga2 Master
+# get a new icinga certificate from our icinga-master
 #
-wait_for_icinga_master() {
-
-  if [ ${ICINGA_CLUSTER} == false ]
-  then
-    return
-  fi
-
-  RETRY=50
-
-  until [ ${RETRY} -le 0 ]
-  do
-    nc -z ${ICINGA_MASTER} 5665 < /dev/null > /dev/null
-
-    [ $? -eq 0 ] && break
-
-    echo " [i] Waiting for icinga master to come up"
-
-    sleep 10s
-    RETRY=$(expr ${RETRY} - 1)
-  done
-
-  if [ $RETRY -le 0 ]
-  then
-    echo " [E] could not connect to the icinga2 master instance '${ICINGA_MASTER}'"
-    exit 1
-  fi
-
-  sleep 20s
-}
-
-# wait for the Certificate Service
 #
-waitForTheCertService() {
-
-  # the CERT-Service API use an Basic-Auth as first Authentication *AND*
-  # use an own API Userr
-  if [ ${ICINGA_CERT_SERVICE} ]
-  then
-
-    # use the new Cert Service to create and get a valide certificat for distributed icinga services
-    if (
-      [ ! -z ${ICINGA_CERT_SERVICE_BA_USER} ] && [ ! -z ${ICINGA_CERT_SERVICE_BA_PASSWORD} ] &&
-      [ ! -z ${ICINGA_CERT_SERVICE_API_USER} ] && [ ! -z ${ICINGA_CERT_SERVICE_API_PASSWORD} ]
-    )
-    then
-
-      RETRY=30
-      # wait for the running cert-service
-      #
-      until [ ${RETRY} -le 0 ]
-      do
-        nc -z ${ICINGA_CERT_SERVICE_SERVER} ${ICINGA_CERT_SERVICE_PORT} < /dev/null > /dev/null
-
-        [ $? -eq 0 ] && break
-
-        echo " [i] wait for the cert-service on '${ICINGA_CERT_SERVICE_SERVER}'"
-
-        sleep 10s
-        RETRY=$(expr ${RETRY} - 1)
-      done
-
-      if [ $RETRY -le 0 ]
-      then
-        echo " [E] Could not connect to the Certificate-Service '${ICINGA_CERT_SERVICE_SERVER}'"
-        exit 1
-      fi
-
-      # okay, the web service is available
-      # but, we have a problem, when he runs behind a proxy ...
-      # eg.: https://monitoring-proxy.tld/cert-cert-service
-      #
-
-      RETRY=30
-      # wait for the cert-service health check behind a proxy
-      #
-      until [ ${RETRY} -le 0 ]
-      do
-
-        health=$(curl \
-          --silent \
-          --request GET \
-          --write-out "%{http_code}\n" \
-          --request GET \
-          http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}${ICINGA_CERT_SERVICE_PATH}v2/health-check)
-
-        if ( [ $? -eq 0 ] && [ "${health}" == "healthy200" ] )
-        then
-          break
-        fi
-
-        health=
-
-        echo " [i] wait for the health check for the cert-service on '${ICINGA_CERT_SERVICE_SERVER}'"
-        sleep 10s
-        RETRY=$(expr ${RETRY} - 1)
-      done
-
-      if [ $RETRY -le 0 ]
-      then
-        echo " [E] Could not a Health Check from the Certificate-Service '${ICINGA_CERT_SERVICE_SERVER}'"
-        exit 1
-      fi
-
-      sleep 5s
-
-      echo ""
-      echo " [i] we ask our cert-service for a certificate .."
-
-      # generate a certificate request
-      #
-      code=$(curl \
-        --user ${ICINGA_CERT_SERVICE_BA_USER}:${ICINGA_CERT_SERVICE_BA_PASSWORD} \
-        --silent \
-        --request GET \
-        --header "X-API-USER: ${ICINGA_CERT_SERVICE_API_USER}" \
-        --header "X-API-KEY: ${ICINGA_CERT_SERVICE_API_PASSWORD}" \
-        --write-out "%{http_code}\n" \
-        --output /tmp/request_${HOSTNAME}.json \
-        http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}${ICINGA_CERT_SERVICE_PATH}v2/request/${HOSTNAME})
-
-      if ( [ $? -eq 0 ] && [ ${code} -eq 200 ] )
-      then
-
-        echo " [i] certifiacte request was successful"
-        echo " [i] download and install the certificate"
-
-        masterName=$(jq --raw-output .master_name /tmp/request_${HOSTNAME}.json)
-        checksum=$(jq --raw-output .checksum /tmp/request_${HOSTNAME}.json)
-
-#        rm -f /tmp/request_${HOSTNAME}.json
-
-        mkdir -p ${WORK_DIR}/pki/${HOSTNAME}
-
-        # get our created cert
-        #
-        curl \
-          --user ${ICINGA_CERT_SERVICE_BA_USER}:${ICINGA_CERT_SERVICE_BA_PASSWORD} \
-          --silent \
-          --request GET \
-          --header "X-API-USER: ${ICINGA_CERT_SERVICE_API_USER}" \
-          --header "X-API-KEY: ${ICINGA_CERT_SERVICE_API_PASSWORD}" \
-          --header "X-CHECKSUM: ${checksum}" \
-          --write-out "%{http_code}\n" \
-          --request GET \
-          --output ${WORK_DIR}/pki/${HOSTNAME}/${HOSTNAME}.tgz \
-          http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}${ICINGA_CERT_SERVICE_PATH}v2/cert/${HOSTNAME}
-
-        cd ${WORK_DIR}/pki/${HOSTNAME}
-
-        # the download has not working
-        #
-        if [ ! -f ${HOSTNAME}.tgz ]
-        then
-          echo " [E] Cert File '${HOSTNAME}.tgz' not found!"
-          exit 1
-        fi
-
-        tar -xzf ${HOSTNAME}.tgz
-
-        # store the master for later restart
-        #
-        echo "${masterName}" > ${WORK_DIR}/pki/${HOSTNAME}/master
-      else
-        error=$(cat /tmp/request_${HOSTNAME}.json)
-        echo " [E] ${code} - the cert-service has an error: ${error}"
-        rm -f /tmp/request_${HOSTNAME}.json
-        exit 1
-      fi
-
-    fi
-  fi
-}
-
-
-# wait for the Certificate Service
-#
-wait_for_icinga_cert_service() {
-
-  # the CERT-Service API use an Basic-Auth as first Authentication *AND*
-  # use an own API Userr
-  if [ ${ICINGA_CERT_SERVICE} ]
-  then
-
-    # use the new Cert Service to create and get a valide certificat for distributed icinga services
-    if (
-      [ ! -z ${ICINGA_CERT_SERVICE_BA_USER} ] && [ ! -z ${ICINGA_CERT_SERVICE_BA_PASSWORD} ] &&
-      [ ! -z ${ICINGA_CERT_SERVICE_API_USER} ] && [ ! -z ${ICINGA_CERT_SERVICE_API_PASSWORD} ]
-    )
-    then
-
-      RETRY=30
-      # wait for the running cert-service
-      #
-      until [ ${RETRY} -le 0 ]
-      do
-        nc -z ${ICINGA_CERT_SERVICE_SERVER} ${ICINGA_CERT_SERVICE_PORT} < /dev/null > /dev/null
-
-        [ $? -eq 0 ] && break
-
-        echo " [i] wait for the cert-service on '${ICINGA_CERT_SERVICE_SERVER}'"
-
-        sleep 15s
-        RETRY=$(expr ${RETRY} - 1)
-      done
-
-      if [ $RETRY -le 0 ]
-      then
-        echo " [E] Could not connect to the Certificate-Service '${ICINGA_CERT_SERVICE_SERVER}'"
-        exit 1
-      fi
-
-      # okay, the web service is available
-      # but, we have a problem, when he runs behind a proxy ...
-      # eg.: https://monitoring-proxy.tld/cert-cert-service
-      #
-
-      RETRY=30
-      # wait for the cert-service health check behind a proxy
-      #
-      until [ ${RETRY} -le 0 ]
-      do
-
-        health=$(curl \
-          --silent \
-          --request GET \
-          --write-out "%{http_code}\n" \
-          --request GET \
-          http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}${ICINGA_CERT_SERVICE_PATH}v2/health-check)
-
-        if ( [ $? -eq 0 ] && [ "${health}" == "healthy200" ] )
-        then
-          break
-        fi
-
-        health=
-
-        echo " [i] wait for the health check for the cert-service on '${ICINGA_CERT_SERVICE_SERVER}'"
-        sleep 15s
-        RETRY=$(expr ${RETRY} - 1)
-      done
-
-      if [ $RETRY -le 0 ]
-      then
-        echo " [E] Could not a Health Check from the Certificate-Service '${ICINGA_CERT_SERVICE_SERVER}'"
-        exit 1
-      fi
-
-      sleep 5s
-    fi
-  fi
-}
-
-
 get_certificate() {
 
   validate_local_ca
@@ -307,7 +55,7 @@ get_certificate() {
       echo " [i] certifiacte request was successful"
       echo " [i] download and install the certificate"
 
-      masterName=$(jq --raw-output .master_name /tmp/request_${HOSTNAME}.json)
+      master_name=$(jq --raw-output .master_name /tmp/request_${HOSTNAME}.json)
       checksum=$(jq --raw-output .checksum /tmp/request_${HOSTNAME}.json)
 
 #      rm -f /tmp/request_${HOSTNAME}.json
@@ -331,26 +79,29 @@ get_certificate() {
       if ( [ $? -eq 0 ] && [ ${code} -eq 200 ] )
       then
 
-      cd ${WORK_DIR}/pki/${HOSTNAME}
+        cd ${WORK_DIR}/pki/${HOSTNAME}
 
-      # the download has not working
-      #
-      if [ ! -f ${HOSTNAME}.tgz ]
-      then
-        echo " [E] Cert File '${HOSTNAME}.tgz' not found!"
-        exit 1
-      fi
+        # the download has not working
+        #
+        if [ ! -f ${HOSTNAME}.tgz ]
+        then
+          echo " [E] Cert File '${HOSTNAME}.tgz' not found!"
+          exit 1
+        fi
 
-      tar -xzf ${HOSTNAME}.tgz
+        tar -xzf ${HOSTNAME}.tgz
 
-      if [ ! -f ${HOSTNAME}.pem ]
-      then
-        cat ${HOSTNAME}.crt ${HOSTNAME}.key >> ${HOSTNAME}.pem
-      fi
+        if [ ! -f ${HOSTNAME}.pem ]
+        then
+          cat ${HOSTNAME}.crt ${HOSTNAME}.key >> ${HOSTNAME}.pem
+        fi
 
-      # store the master for later restart
-      #
-      echo "${masterName}" > ${WORK_DIR}/pki/${HOSTNAME}/master
+        # store the master for later restart
+        #
+        echo "${master_name}" > ${WORK_DIR}/pki/${HOSTNAME}/master
+
+        create_api_config
+
       else
         echo " [E] can't download out certificate!"
 
@@ -360,8 +111,10 @@ get_certificate() {
       fi
     else
 
-      echo " [E] ${code} - the cert-service has an error."
-      cat /tmp/request_${HOSTNAME}.json
+      error=$(cat /tmp/request_${HOSTNAME}.json)
+
+      echo " [E] ${code} - the cert-service tell us a problem: '${error}'"
+      echo " [E] exit ..."
 
       rm -f /tmp/request_${HOSTNAME}.json
       exit 1
@@ -369,14 +122,19 @@ get_certificate() {
   fi
 }
 
-
+# validate our lokal certificate against our certificate service
+# with an API Request against
+# http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}${ICINGA_CERT_SERVICE_PATH}v2/validate/${checksum})
+#
+# if this failed, the PKI schould be removed
+#
 validate_local_ca() {
 
   if [ -f ${WORK_DIR}/pki/${HOSTNAME}/ca.crt ]
   then
-    CHECKSUM=$(sha256sum ${WORK_DIR}/pki/${HOSTNAME}/ca.crt | cut -f 1 -d ' ')
+    checksum=$(sha256sum ${WORK_DIR}/pki/${HOSTNAME}/ca.crt | cut -f 1 -d ' ')
 
-    # generate a certificate request
+    # validate our ca file
     #
     code=$(curl \
       --user ${ICINGA_CERT_SERVICE_BA_USER}:${ICINGA_CERT_SERVICE_BA_PASSWORD} \
@@ -386,7 +144,7 @@ validate_local_ca() {
       --header "X-API-KEY: ${ICINGA_CERT_SERVICE_API_PASSWORD}" \
       --write-out "%{http_code}\n" \
       --output /tmp/validate_ca_${HOSTNAME}.json \
-      http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}${ICINGA_CERT_SERVICE_PATH}v2/validate/${CHECKSUM})
+      http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}${ICINGA_CERT_SERVICE_PATH}v2/validate/${checksum})
 
     if ( [ $? -eq 0 ] && [ ${code} == 200 ] )
     then
@@ -394,24 +152,28 @@ validate_local_ca() {
     else
 
       status=$(echo "${code}" | jq --raw-output .status 2> /dev/null)
-      message=$(echo "${code}" | jq --raw-output '.message' 2> /dev/null)
+      message=$(echo "${code}" | jq --raw-output .message 2> /dev/null)
 
       echo " [w] our master has a new CA"
-      echo -n "     "
-      echo "${message}"
 
+      rm -f /tmp/validate_ca_${HOSTNAME}.json
       rm -rf ${WORK_DIR}/pki
       rm -rf /etc/icinga2/pki/*
 
-      rm -f /etc/icinga2/features-available/api.conf
-      touch /etc/icinga2/features-available/api.conf
+      cat /dev/null > /etc/icinga2/features-available/api.conf
+      #touch /etc/icinga2/features-available/api.conf
     fi
   else
+    # we have no local cert file ..
     :
   fi
 }
 
-
+# validate our lokal certificate against our icinga-master
+# with an API Request against https://${ICINGA_HOST}:${ICINGA_API_PORT}/v1/status/CIB
+#
+# if this failed, the PKI schould be removed
+#
 validate_cert() {
 
   if [ -d ${WORK_DIR}/pki/${HOSTNAME} ]
@@ -442,15 +204,17 @@ validate_cert() {
 }
 
 
-# configure a Icinga2 Master Instance
+# configure a icinga2 master instance
 #
-configureIcinga2Master() {
+configure_icinga2_master() {
 
   echo " [i] we are the master .."
 
   # icinga2 cert - restore CA
-  if [ ! -d /var/lib/icinga2/ca ]
+  if [ -d /var/lib/icinga2/ca ]
   then
+    echo " [i] create new CA"
+  else
     if ( [ -d ${WORK_DIR}/pki ] && [ -d ${WORK_DIR}/ca ] )
     then
       echo " [i] restore older CA"
@@ -498,7 +262,7 @@ configureIcinga2Master() {
     ${PKI_CMD} new-cert --cn ${HOSTNAME} --key ${PKI_KEY} --csr ${PKI_CSR}
     ${PKI_CMD} sign-csr --csr ${PKI_CSR} --cert ${PKI_CRT}
 
-    correctRights
+    correct_rights
 
     /usr/sbin/icinga2 \
       daemon \
@@ -517,50 +281,48 @@ configureIcinga2Master() {
   cp -ar /etc/icinga2/pki    ${WORK_DIR}/
   cp -ar /var/lib/icinga2/ca ${WORK_DIR}/
 
-  restoreOldZoneConfig
+  restore_old_zone_config
 }
 
-# configure a Icinga2 Satellite Instance
+# configure a icinga2 satellite instance
 #
-configureIcinga2Satellite() {
+configure_icinga2_satellite() {
 
   echo " [i] we are an satellite .."
 
-  wait_for_icinga_master
-  validate_cert
+  export ICINGA_SATELLITE=true
+
+  . /init/wait_for/cert_service.sh
+  . /init/wait_for/icinga_master.sh
 
   if [ -e /etc/icinga2/features-enabled/notification.conf ]
   then
-    icinga2 feature disable notification
+    disable_icinga_feature notification
   fi
 
-  enableIcingaFeature api
+  enable_icinga_feature api
 
-  wait_for_icinga_cert_service
   get_certificate
-
-#   if ( [ ! -d ${WORK_DIR}/pki/${HOSTNAME} ] || [ ! -f ${WORK_DIR}/pki/${HOSTNAME}/${HOSTNAME}.key ] )
-#   then
-#     waitForTheCertService
-#   fi
 
   # restore an old master name
   #
-  [ -f ${WORK_DIR}/pki/${HOSTNAME}/master ] && masterName=$(cat ${WORK_DIR}/pki/${HOSTNAME}/master)
+  [ -f ${WORK_DIR}/pki/${HOSTNAME}/master ] && master_name=$(cat ${WORK_DIR}/pki/${HOSTNAME}/master)
+
+  echo " [i] configure the endpoint: '${master_name}'"
 
   # now, we configure our satellite
-  if ( [ $(grep -c "Endpoint \"${masterName}\"" /etc/icinga2/zones.conf ) -eq 0 ] || [ $(grep -c "host = \"${ICINGA_MASTER}\"" /etc/icinga2/zones.conf) -eq 0 ] )
+  if ( [ $(grep -c "Endpoint \"${master_name}\"" /etc/icinga2/zones.conf ) -eq 0 ] || [ $(grep -c "host = \"${ICINGA_MASTER}\"" /etc/icinga2/zones.conf) -eq 0 ] )
   then
     cat << EOF > /etc/icinga2/zones.conf
 
-object Endpoint "${masterName}" {
+object Endpoint "${master_name}" {
   ### Folgende Zeile legt fest, dass der Client die Verbindung zum Master aufbaut und nicht umgekehrt
   host = "${ICINGA_MASTER}"
   port = "5665"
 }
 
 object Zone "master" {
-  endpoints = [ "${masterName}" ]
+  endpoints = [ "${master_name}" ]
 }
 
 object Endpoint NodeName {
@@ -585,7 +347,7 @@ EOF
 
   cp -a ${WORK_DIR}/pki/${HOSTNAME}/* /etc/icinga2/pki/
 
-  correctRights
+  correct_rights
 
   # test the configuration
   /usr/sbin/icinga2 \
@@ -599,21 +361,27 @@ EOF
 #  - restore private key and certificate
 #  - configure API Feature
 #
-restoreOldPKI() {
+restore_old_pki() {
 
   if [ -d ${WORK_DIR}/pki ]
   then
 
     echo " [i] restore older PKI settings for host '${HOSTNAME}'"
 
-    find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.csr -exec cp -av {} /etc/icinga2/pki/ \;
-    find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.key -exec cp -av {} /etc/icinga2/pki/ \;
-    find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.crt -exec cp -av {} /etc/icinga2/pki/ \;
-    find ${WORK_DIR}/pki -type f -name ca.crt -exec cp -av {} /etc/icinga2/pki/ \;
+    find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.csr -exec cp -a {} /etc/icinga2/pki/ \;
+    find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.key -exec cp -a {} /etc/icinga2/pki/ \;
+    find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.crt -exec cp -a {} /etc/icinga2/pki/ \;
+    find ${WORK_DIR}/pki -type f -name ca.crt -exec cp -a {} /etc/icinga2/pki/ \;
 
-    enableIcingaFeature api
+    enable_icinga_feature api
   fi
 
+  create_api_config
+}
+
+# create API config file
+#
+create_api_config() {
 
   if [ -f /etc/icinga2/features-available/api.conf ]
     then
@@ -635,7 +403,10 @@ EOF
   fi
 }
 
-restoreOldZoneConfig() {
+
+# restore a ols zone file for automatic generated satellites
+#
+restore_old_zone_config() {
 
   if [ -d ${WORK_DIR}/automatic-zones.d ]
   then
@@ -650,17 +421,17 @@ restoreOldZoneConfig() {
 
 # ----------------------------------------------------------------------
 
-restoreOldPKI
+restore_old_pki
 
 if ( [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" == "${HOSTNAME}" ] )
 then
 
-  configureIcinga2Master
+  configure_icinga2_master
 
   nohup /init/inotify.sh > /tmp/inotify.log 2>&1 &
 else
 
-  configureIcinga2Satellite
+  configure_icinga2_satellite
 fi
 
 
