@@ -11,7 +11,7 @@ ENV \
   BUILD_TYPE="stable" \
   CERT_SERVICE_VERSION="0.10.2" \
   ICINGA_VERSION="2.7.1-r0" \
-  APK_ADD="bind-tools ca-certificates curl fping g++ git inotify-tools jq libffi-dev make mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl openssl-dev pwgen ruby ruby-dev s6 ssmtp unzip" \
+  APK_ADD="bind-tools ca-certificates curl fping g++ git inotify-tools jq libffi-dev make mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl openssl-dev pwgen ruby ruby-dev s6 ssmtp unzip bash" \
   APK_DEL="libffi-dev g++ make git openssl-dev ruby-dev" \
   GEMS="io-console bundler"
 
