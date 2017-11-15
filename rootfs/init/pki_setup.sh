@@ -432,7 +432,7 @@ then
 
   configure_icinga2_master
 
-  nohup /init/inotify.sh > /tmp/inotify.log 2>&1 &
+  nohup /init/inotify.sh > /tmp/inotify-automatic-zones.log 2>&1 &
 else
 
   configure_icinga2_satellite

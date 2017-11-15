@@ -14,6 +14,27 @@ HOSTNAME=$(hostname -f)
 
 # -------------------------------------------------------------------------------------------------
 
+custom_scripts() {
+
+  if [ -d /init/custom.d ]
+  then
+    for f in /init/custom.d/*
+    do
+      case "$f" in
+        *.sh)
+          echo " [i] start $f";
+          nohup "${f}" > /tmp/$(basename ${f} .sh).log 2>&1 &
+          ;;
+        *)
+          echo " [w] ignoring $f"
+          ;;
+      esac
+      echo
+    done
+  fi
+}
+
+
 run() {
 
   . /init/common.sh
@@ -27,6 +48,8 @@ run() {
   . /init/configure_ssmtp.sh
 
   correct_rights
+
+  custom_scripts
 
   /bin/s6-svscan /etc/s6
 }

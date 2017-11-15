@@ -1,19 +1,16 @@
 
-FROM alpine:latest
+FROM alpine:edge
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
 ENV \
-  ALPINE_MIRROR="mirror1.hs-esslingen.de/pub/Mirrors" \
-  ALPINE_VERSION="v3.6" \
   TERM=xterm \
-  BUILD_DATE="2017-11-08" \
+  BUILD_DATE="2017-11-15" \
   BUILD_TYPE="stable" \
-  CERT_SERVICE_VERSION="0.10.2" \
-  ICINGA_VERSION="2.7.1-r0" \
-  APK_ADD="bind-tools ca-certificates curl fping g++ git inotify-tools jq libffi-dev make mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl openssl-dev pwgen ruby ruby-dev s6 ssmtp unzip" \
-  APK_DEL="libffi-dev g++ make git openssl-dev ruby-dev" \
-  GEMS="io-console bundler"
+  CERT_SERVICE_VERSION="0.10.3" \
+  ICINGA_VERSION="2.7.1-r1" \
+  APK_ADD="bind-tools ca-certificates curl fping g++ git icinga2 inotify-tools jq libffi-dev make mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl openssl-dev pwgen ruby ruby-dev s6 ssmtp unzip" \
+  APK_DEL="libffi-dev g++ make git openssl-dev ruby-dev"
 
 EXPOSE 5665 4567
 
@@ -33,21 +30,12 @@ LABEL \
 # ---------------------------------------------------------------------------------------
 
 RUN \
-  echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/main"       > /etc/apk/repositories && \
-  echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/community" >> /etc/apk/repositories && \
-  apk --no-cache update && \
-  apk --no-cache upgrade && \
-  apk --no-cache add ${APK_ADD} && \
-  #
-  apk \
-    --no-cache \
-    --update-cache \
-    --repository http://${ALPINE_MIRROR}/alpine/edge/community \
-    --allow-untrusted \
-    add icinga2  && \
-  #
+  apk update --quiet --no-cache  && \
+  apk upgrade --quiet --no-cache && \
+  apk add --quiet --no-cache ${APK_ADD} && \
   echo 'gem: --no-document' >> /etc/gemrc && \
-  gem install --no-rdoc --no-ri ${GEMS} && \
+  gem install --quiet --no-rdoc --no-ri \
+    io-console bundler && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   cp /usr/lib/nagios/plugins/*     /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command checker mainlog notification && \
@@ -58,14 +46,11 @@ RUN \
   cd /tmp && \
   git clone https://github.com/bodsch/ruby-icinga-cert-service.git && \
   cd ruby-icinga-cert-service && \
-  #
-  # build stable packages
   if [ "${BUILD_TYPE}" == "stable" ] ; then \
     echo "switch to stable Tag v${CERT_SERVICE_VERSION}" && \
     git checkout tags/${CERT_SERVICE_VERSION} 2> /dev/null ; \
   fi && \
-  #
-  bundle install && \
+  bundle install --quiet && \
   cp -ar /tmp/ruby-icinga-cert-service/bin /usr/local/ && \
   cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/ && \
   apk del --purge ${APK_DEL} && \
