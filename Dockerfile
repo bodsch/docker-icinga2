@@ -1,16 +1,14 @@
 
-FROM alpine:edge
+FROM alpine:3.6
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
 ENV \
   TERM=xterm \
-  BUILD_DATE="2017-11-15" \
+  BUILD_DATE="2017-11-16" \
   BUILD_TYPE="stable" \
   CERT_SERVICE_VERSION="0.10.3" \
-  ICINGA_VERSION="2.7.1-r1" \
-  APK_ADD="bind-tools ca-certificates curl fping g++ git icinga2 inotify-tools jq libffi-dev make mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl openssl-dev pwgen ruby ruby-dev s6 ssmtp unzip" \
-  APK_DEL="libffi-dev g++ make git openssl-dev ruby-dev"
+  ICINGA_VERSION="2.7.1-r1"
 
 EXPOSE 5665 4567
 
@@ -32,7 +30,18 @@ LABEL \
 RUN \
   apk update --quiet --no-cache  && \
   apk upgrade --quiet --no-cache && \
-  apk add --quiet --no-cache ${APK_ADD} && \
+  apk add --quiet --no-cache --virtual .build-deps \
+    libffi-dev g++ make git openssl-dev ruby-dev && \
+  apk add --quiet --no-cache \
+    bash bind-tools curl fping inotify-tools jq mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby s6 ssmtp unzip && \
+  apk add \
+    --quiet \
+    --no-cache \
+    --update-cache \
+    --repository http://dl-cdn.alpinelinux.org/alpine/edge/community \
+    --repository http://dl-cdn.alpinelinux.org/alpine/edge/main \
+    --allow-untrusted \
+    icinga2 && \
   echo 'gem: --no-document' >> /etc/gemrc && \
   gem install --quiet --no-rdoc --no-ri \
     io-console bundler && \
@@ -53,7 +62,7 @@ RUN \
   bundle install --quiet && \
   cp -ar /tmp/ruby-icinga-cert-service/bin /usr/local/ && \
   cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/ && \
-  apk del --purge ${APK_DEL} && \
+  apk del --quiet --purge .build-deps && \
   rm -rf \
     /tmp/* \
     /var/cache/apk/* \
