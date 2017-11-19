@@ -2,7 +2,7 @@
 
 
 database:
-  image: bodsch/docker-mysql:1711.1
+  image: bodsch/docker-mysql:1711.2
   container_name: database
   hostname: database
   ports:
@@ -46,7 +46,7 @@ icinga2-master:
     - ICINGA_CERT_SERVICE_PATH=/
     - CARBON_HOST=
     - CARBON_PORT=2003
-    - DEMO_DATA=false
+    - DEMO_DATA=true
   volumes:
     - /tmp/docker-data/icinga2-master:/srv
   links:
