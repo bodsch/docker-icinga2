@@ -130,9 +130,11 @@ update_schema() {
     update_schema
   else
 
+    upgrape_directory="/usr/share/icinga2-ido-mysql/schema/upgrade"
+
     echo " [i] database version: ${db_version}"
 
-    for DB_UPDATE_FILE in $(ls -1 /usr/share/icinga2-ido-mysql/schema/upgrade/*.sql)
+    for DB_UPDATE_FILE in $(ls -1 ${upgrape_directory}/*.sql)
     do
       FILE_VER=$(grep icinga_dbversion ${DB_UPDATE_FILE} | grep idoutils | cut -d ',' -f 5 | sed -e "s| ||g" -e "s|\\'||g")
 
@@ -140,7 +142,7 @@ update_schema() {
       then
         echo " [i] apply database update '${FILE_VER}' from '${DB_UPDATE_FILE}'"
 
-        mysql ${MYSQL_OPTS} --force ${IDO_DATABASE_NAME}  < /usr/share/icinga2-ido-mysql/schema/upgrade/${DB_UPDATE_FILE}
+        mysql ${MYSQL_OPTS} --force ${IDO_DATABASE_NAME}  < ${DB_UPDATE_FILE}
 
         if [ $? -gt 0 ]
         then
