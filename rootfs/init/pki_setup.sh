@@ -27,7 +27,7 @@ get_certificate() {
 
   validate_local_ca
 
-  if [ -f /etc/icinga2/pki/${HOSTNAME}.key ]
+  if [ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ]
   then
     return
   fi
@@ -36,6 +36,14 @@ get_certificate() {
   then
     echo ""
     echo " [i] we ask our cert-service for a certificate .."
+
+    code=$(curl \
+      --user ${ICINGA_CERT_SERVICE_BA_USER}:${ICINGA_CERT_SERVICE_BA_PASSWORD} \
+      --silent \
+      --request GET \
+      http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}${ICINGA_CERT_SERVICE_PATH}v2/icinga-version)
+
+    echo " [i] remote icinga version: ${code}"
 
     # generate a certificate request
     #
@@ -158,7 +166,7 @@ validate_local_ca() {
 
       rm -f /tmp/validate_ca_${HOSTNAME}.json
       rm -rf ${WORK_DIR}/pki
-      rm -rf /etc/icinga2/pki/*
+      rm -rf ${ICINGA_CERT_DIR}/*
 
       cat /dev/null > /etc/icinga2/features-available/api.conf
       #touch /etc/icinga2/features-available/api.conf
@@ -226,15 +234,15 @@ configure_icinga2_master() {
       rm -f ${WORK_DIR}/pki/${HOSTNAME}*  2> /dev/null
       rm -f ${WORK_DIR}/pki/ca.crt        2> /dev/null
 
-      rm -f /etc/icinga2/pki/${HOSTNAME}* 2> /dev/null
+      rm -f ${ICINGA_CERT_DIR}/${HOSTNAME}* 2> /dev/null
     fi
   fi
-
-  # set NodeName
-  sed -i "s,^.*\ NodeName\ \=\ .*,const\ NodeName\ \=\ \"${HOSTNAME}\",g" /etc/icinga2/constants.conf
+#
+#   # set NodeName
+#   sed -i "s,^.*\ NodeName\ \=\ .*,const\ NodeName\ \=\ \"${HOSTNAME}\",g" /etc/icinga2/constants.conf
 
   # icinga2 API cert - regenerate new private key and certificate when running in a new container
-  if [ ! -f /etc/icinga2/pki/${HOSTNAME}.key ]
+  if [ ! -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ]
   then
     echo " [i] create new certificate"
 
@@ -242,16 +250,16 @@ configure_icinga2_master() {
 
     PKI_CMD="icinga2 pki"
 
-    PKI_KEY="/etc/icinga2/pki/${HOSTNAME}.key"
-    PKI_CSR="/etc/icinga2/pki/${HOSTNAME}.csr"
-    PKI_CRT="/etc/icinga2/pki/${HOSTNAME}.crt"
+    PKI_KEY="${ICINGA_CERT_DIR}/${HOSTNAME}.key"
+    PKI_CSR="${ICINGA_CERT_DIR}/${HOSTNAME}.csr"
+    PKI_CRT="${ICINGA_CERT_DIR}/${HOSTNAME}.crt"
 
     icinga2 api setup > /dev/null
 
     if [ $? -gt 0 ]
     then
       echo " [E] API Setup has failed"
-      rm -f /etc/icinga2/pki/*
+      rm -f ${ICINGA_CERT_DIR}/*
       rm -rf /var/lib/icinga2/ca
       rm -rf ${WORK_DIR}/pki
       rm -rf ${WORK_DIR}/ca
@@ -278,7 +286,7 @@ configure_icinga2_master() {
     echo " [i] Finished cert generation"
   fi
 
-  cp -ar /etc/icinga2/pki    ${WORK_DIR}/
+  cp -ar ${ICINGA_CERT_DIR}    ${WORK_DIR}/
   cp -ar /var/lib/icinga2/ca ${WORK_DIR}/
 
   restore_old_zone_config
@@ -349,7 +357,7 @@ EOF
     [ -f /etc/icinga2/conf.d/${file} ]    && mv /etc/icinga2/conf.d/${file} /etc/icinga2/conf.d/${file}-SAVE
   done
 
-  cp -a ${WORK_DIR}/pki/${HOSTNAME}/* /etc/icinga2/pki/
+  cp -a ${WORK_DIR}/pki/${HOSTNAME}/* ${ICINGA_CERT_DIR}/
 
   correct_rights
 
@@ -372,10 +380,10 @@ restore_old_pki() {
 
     echo " [i] restore older PKI settings for host '${HOSTNAME}'"
 
-    find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.csr -exec cp -a {} /etc/icinga2/pki/ \;
-    find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.key -exec cp -a {} /etc/icinga2/pki/ \;
-    find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.crt -exec cp -a {} /etc/icinga2/pki/ \;
-    find ${WORK_DIR}/pki -type f -name ca.crt -exec cp -a {} /etc/icinga2/pki/ \;
+    find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.csr -exec cp -a {} ${ICINGA_CERT_DIR}/ \;
+    find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.key -exec cp -a {} ${ICINGA_CERT_DIR}/ \;
+    find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.crt -exec cp -a {} ${ICINGA_CERT_DIR}/ \;
+    find ${WORK_DIR}/pki -type f -name ca.crt -exec cp -a {} ${ICINGA_CERT_DIR}/ \;
 
     enable_icinga_feature api
   fi
@@ -387,7 +395,24 @@ restore_old_pki() {
 #
 create_api_config() {
 
-  if [ -f /etc/icinga2/features-available/api.conf ]
+  if [ "${ICINGA_VERSION}" == "2.8" ]
+  then
+    # look at https://www.icinga.com/docs/icinga2/latest/doc/16-upgrading-icinga-2/#upgrading-to-v28
+    if [ -f /etc/icinga2/features-available/api.conf ]
+    then
+      cat << EOF > /etc/icinga2/features-available/api.conf
+
+object ApiListener "api" {
+  accept_config = true
+  accept_commands = true
+  ticket_salt = TicketSalt
+}
+
+EOF
+    fi
+  else
+
+    if [ -f /etc/icinga2/features-available/api.conf ]
     then
       cat << EOF > /etc/icinga2/features-available/api.conf
 
@@ -403,7 +428,7 @@ object ApiListener "api" {
 }
 
 EOF
-
+    fi
   fi
 }
 

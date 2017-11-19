@@ -4,6 +4,7 @@ PORTS = \
 
 VOLUMES = \
   --volume /var/log/docker:/var/log \
+  --volume=/tmp/docker-data/icinga2-base:/var/lib/icinga \
   --volume=/tmp/docker-data/icinga2:/srv \
 
 ENV = \

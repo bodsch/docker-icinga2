@@ -2,15 +2,19 @@
 #
 #
 
-if [ ${DEBUG} ]
-then
-  set -x
-fi
+[ ${DEBUG} ] && set -x
+
+HOSTNAME=$(hostname -f)
+
+ICINGA_CERT_DIR="/etc/icinga2/pki"
+ICINGA_VERSION=$(icinga2 --version | head -n1 | awk -F 'version: ' '{printf $2}' | awk -F \. {'print $1 "." $2'} | sed 's|r||')
+[ "${ICINGA_VERSION}" = "2.8" ] && ICINGA_CERT_DIR="/var/lib/icinga2/certs"
 
 export WORK_DIR=/srv/icinga2
 export ICINGA_SATELLITE=false
-
-HOSTNAME=$(hostname -f)
+export ICINGA_VERSION
+export ICINGA_CERT_DIR
+export HOSTNAME
 
 # -------------------------------------------------------------------------------------------------
 
@@ -36,6 +40,11 @@ custom_scripts() {
 
 
 run() {
+
+  echo " ---------------------------------------------------"
+  echo "   Icinga ${ICINGA_VERSION} build: ${BUILD_DATE}"
+  echo " ---------------------------------------------------"
+  echo ""
 
   . /init/common.sh
 

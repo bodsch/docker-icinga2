@@ -5,10 +5,10 @@ MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
 ENV \
   TERM=xterm \
-  BUILD_DATE="2017-11-16" \
+  BUILD_DATE="2017-11-19" \
   BUILD_TYPE="stable" \
-  CERT_SERVICE_VERSION="0.10.3" \
-  ICINGA_VERSION="2.7.1-r1"
+  CERT_SERVICE_VERSION="0.12.2" \
+  ICINGA_VERSION="2.8.0-r0"
 
 EXPOSE 5665 4567
 

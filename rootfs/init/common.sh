@@ -3,6 +3,7 @@
 DEMO_DATA=${DEMO_DATA:-false}
 USER=
 GROUP=
+ICINGA_MASTER=${ICINGA_MASTER:-''}
 
 prepare() {
 
@@ -39,27 +40,26 @@ prepare() {
   #  ICINGA2_RUNasGROUP=$(/usr/sbin/icinga2 variable get RunAsGroup)
   fi
 
+  [ -d ${ICINGA_CERT_DIR} ] || mkdir -p ${ICINGA_CERT_DIR}
+
   # change var.os from 'Linux' to 'Docker' to disable ssh-checks
   if [ -f /etc/icinga2/conf.d/hosts.conf ]
   then
     sed -i -e "s,^.*\ vars.os\ \=\ .*,  vars.os = \"Docker\",g" /etc/icinga2/conf.d/hosts.conf
   fi
 
+  # set NodeName
+  sed -i "s,^.*\ NodeName\ \=\ .*,const\ NodeName\ \=\ \"${HOSTNAME}\",g" /etc/icinga2/constants.conf
+
   LOGDIR=$(dirname ${ICINGA2_LOG})
 
   [ -d ${LOGDIR} ] || mkdir -p ${LOGDIR}
 
-  chown ${USER}:${GROUP} ${LOGDIR}
-  chmod ug+wx ${LOGDIR}   2> /dev/null
-  chmod ug+rw ${LOGDIR}/* 2> /dev/null
+  chown -v ${USER}:${GROUP} ${LOGDIR}
+  chmod -v ug+wx ${LOGDIR}
+  find ${LOGDIR} -type f -exec chmod -v ug+rw {} \;
 
-  if ( [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" != "${HOSTNAME}" ] )
-  then
-    # in first, we remove the startup script to start our cert-service
-    # they is only needed at a master instance
-    [ -d /etc/s6/icinga2-cert-service ] && rm -rf /etc/s6/icinga2-cert-service
-  fi
-
+  # install demo data
   if [ ${DEMO_DATA} = true ]
   then
     cp -fua /init/demo /etc/icinga2/
@@ -67,6 +67,13 @@ prepare() {
     sed -i \
       -e 's|// include_recursive "demo"|include_recursive "demo"|g' \
       /etc/icinga2/icinga2.conf
+  fi
+
+  if ( [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" != "${HOSTNAME}" ] )
+  then
+    # in first, we remove the startup script to start our cert-service
+    # they is only needed at a master instance
+    [ -d /etc/s6/icinga2-cert-service ] && rm -rf /etc/s6/icinga2-cert-service
   fi
 }
 
@@ -109,6 +116,7 @@ correct_rights() {
     chown -R ${USER}:root     /etc/icinga2
     chown -R ${USER}:${GROUP} /var/lib/icinga2
     chown -R ${USER}:${GROUP} ${ICINGA2_RUN_DIR}/icinga2
+    chown -R ${USER}:${GROUP} ${ICINGA_CERT_DIR}
   fi
 }
 

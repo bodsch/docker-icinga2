@@ -14,6 +14,9 @@ INSTANCE = default
 build:
 	docker build \
 		--rm \
+		--force-rm \
+		--no-cache \
+		--compress \
 		--tag $(NS)/$(REPO):$(VERSION) .
 
 clean:
@@ -33,6 +36,7 @@ shell:
 	docker run \
 		--rm \
 		--name $(NAME)-$(INSTANCE) \
+		--hostname $(NAME)-$(INSTANCE) \
 		--interactive \
 		--tty \
 		$(PORTS) \
