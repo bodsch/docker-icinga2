@@ -87,7 +87,7 @@ services:
   #
   # this satellite should fail, because the BA is faulty
   icinga2-satellite-2:
-    image: bodsch/docker-icinga2:2.8.0-r2
+    build: .
     container_name: icinga2-satellite-2
     hostname: icinga2-satellite-2.matrix.lan
     restart: always

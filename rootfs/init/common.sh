@@ -1,6 +1,6 @@
 #
 
-DEMO_DATA=${DEMO_DATA:-false}
+DEMO_DATA=${DEMO_DATA:-'false'}
 USER=
 GROUP=
 ICINGA_MASTER=${ICINGA_MASTER:-''}
@@ -50,6 +50,10 @@ prepare() {
   # set NodeName
   sed -i "s,^.*\ NodeName\ \=\ .*,const\ NodeName\ \=\ \"${HOSTNAME}\",g" /etc/icinga2/constants.conf
 
+  # create global zone directories
+  [ -d /etc/icinga2/zones.d/global-templates ] || mkdir -p /etc/icinga2/zones.d/global-templates
+  [ -d /etc/icinga2/zones.d/director-global ] || mkdir -p /etc/icinga2/zones.d/director-global
+
   LOGDIR=$(dirname ${ICINGA2_LOG})
 
   [ -d ${LOGDIR} ] || mkdir -p ${LOGDIR}
@@ -59,7 +63,7 @@ prepare() {
   find ${LOGDIR} -type f -exec chmod ug+rw {} \;
 
   # install demo data
-  if [ ${DEMO_DATA} = true ]
+  if [ "${DEMO_DATA}" = "true" ]
   then
     cp -fua /init/demo /etc/icinga2/
 

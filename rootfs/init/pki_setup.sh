@@ -458,12 +458,12 @@ restore_old_zone_config() {
 
 create_api_config
 
-if [ "${ICINGA_TYPE_MASTER}" == "true" ]  # ( [ -z ${ICINGA_PARENT} ] && [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" == "${HOSTNAME}" ] )
+if [[ "${ICINGA_TYPE}" = "Master" ]]  # ( [ -z ${ICINGA_PARENT} ] && [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" == "${HOSTNAME}" ] )
 then
   configure_icinga2_master
 
   nohup /init/inotify.sh > /tmp/inotify-automatic-zones.log 2>&1 &
-elif [ "${ICINGA_TYPE_SATELLITE}" == "true" ]  # ( [ ! -z ${ICINGA_PARENT} ] && [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" == "${ICINGA_PARENT}" ] )
+elif [[ "${ICINGA_TYPE}" = "Satellite" ]]  # ( [ ! -z ${ICINGA_PARENT} ] && [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" == "${ICINGA_PARENT}" ] )
 then
   configure_icinga2_satellite
 else

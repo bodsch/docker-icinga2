@@ -1,5 +1,5 @@
 
-FROM alpine:3.6
+FROM alpine:3.7
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
