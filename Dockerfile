@@ -75,6 +75,12 @@ WORKDIR "/etc/icinga2"
 
 VOLUME [ "/etc/icinga2", "/var/lib/icinga2" ]
 
+HEALTHCHECK \
+  --interval=5s \
+  --timeout=2s \
+  --retries=12 \
+  CMD ps ax | grep -v grep | grep -c "/usr/lib/icinga2/sbin/icinga2" || exit 1
+
 CMD [ "/init/run.sh" ]
 
 # ---------------------------------------------------------------------------------------

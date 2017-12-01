@@ -2,6 +2,8 @@
 #
 #
 
+set -x
+
 [ ${DEBUG} ] && set -x
 
 HOSTNAME=$(hostname -f)
@@ -43,25 +45,29 @@ detect_type() {
 
   if ( [ -z ${ICINGA_PARENT} ] && [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" == "${HOSTNAME}" ] )
   then
-    export ICINGA_TYPE_MASTER=true
-    export ICINGA_TYPE_SATELLITE=false
-    export ICINGA_TYPE_AGENT=false
+    ICINGA_TYPE_MASTER=true
+    ICINGA_TYPE_SATELLITE=false
+    ICINGA_TYPE_AGENT=false
 
     type="Master"
   elif ( [ ! -z ${ICINGA_PARENT} ] && [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" == "${ICINGA_PARENT}" ] )
   then
-    export ICINGA_TYPE_MASTER=false
-    export ICINGA_TYPE_SATELLITE=true
-    export ICINGA_TYPE_AGENT=false
+    ICINGA_TYPE_MASTER=false
+    ICINGA_TYPE_SATELLITE=true
+    ICINGA_TYPE_AGENT=false
 
     type="Satellite"
   else
-    export ICINGA_TYPE_MASTER=false
-    export ICINGA_TYPE_SATELLITE=false
-    export ICINGA_TYPE_AGENT=true
+    ICINGA_TYPE_MASTER=false
+    ICINGA_TYPE_SATELLITE=false
+    ICINGA_TYPE_AGENT=true
 
     type="Agent"
   fi
+
+  export ICINGA_TYPE_MASTER
+  export ICINGA_TYPE_SATELLITE
+  export ICINGA_TYPE_AGENT
 
   echo $type
 }
