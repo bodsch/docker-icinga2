@@ -4,12 +4,12 @@ PORTS = \
 
 VOLUMES = \
   --volume /var/log/docker:/var/log \
-  --volume=/tmp/docker-data/icinga2-base:/var/lib/icinga \
-  --volume=/tmp/docker-data/icinga2:/srv \
+  --volume=/tmp/docker-data/icinga2-base:/var/lib/icinga2
 
 ENV = \
   --env ICINGA_CLUSTER=true \
   --env ICINGA_MASTER=icinga2-default \
+  --env ICINGA_PARENT= \
   --env ICINGA_API_USERS='root:icinga,dashing:dashing,cert:foo-bar' \
   --env ICINGA_CERT_SERVICE=false \
   --env DEMO_DATA=true \

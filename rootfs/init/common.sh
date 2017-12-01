@@ -7,7 +7,8 @@ ICINGA_MASTER=${ICINGA_MASTER:-''}
 
 prepare() {
 
-  [ -d ${WORK_DIR} ] || mkdir -p ${WORK_DIR}
+  [ -d ${ICINGA_LIB_DIR}/backup ] || mkdir -p ${ICINGA_LIB_DIR}/backup
+  [ -d ${ICINGA_CERT_DIR} ] || mkdir -p ${ICINGA_CERT_DIR}
 
   for u in nagios icinga
   do
@@ -40,8 +41,6 @@ prepare() {
   #  ICINGA2_RUNasGROUP=$(/usr/sbin/icinga2 variable get RunAsGroup)
   fi
 
-  [ -d ${ICINGA_CERT_DIR} ] || mkdir -p ${ICINGA_CERT_DIR}
-
   # change var.os from 'Linux' to 'Docker' to disable ssh-checks
   if [ -f /etc/icinga2/conf.d/hosts.conf ]
   then
@@ -55,9 +54,9 @@ prepare() {
 
   [ -d ${LOGDIR} ] || mkdir -p ${LOGDIR}
 
-  chown -v ${USER}:${GROUP} ${LOGDIR}
-  chmod -v ug+wx ${LOGDIR}
-  find ${LOGDIR} -type f -exec chmod -v ug+rw {} \;
+  chown  ${USER}:${GROUP} ${LOGDIR}
+  chmod  ug+wx ${LOGDIR}
+  find ${LOGDIR} -type f -exec chmod ug+rw {} \;
 
   # install demo data
   if [ ${DEMO_DATA} = true ]
@@ -119,4 +118,3 @@ correct_rights() {
     chown -R ${USER}:${GROUP} ${ICINGA_CERT_DIR}
   fi
 }
-

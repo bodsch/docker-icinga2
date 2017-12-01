@@ -75,6 +75,27 @@ The Cluster and Cert-Service are **experimental**.
 
 [Sourcecode](https://github.com/bodsch/ruby-icinga-cert-service)
 
+### new way (since 2.8)
+
+You can use `expect` on a *satellite* or *agent* to create an certificate request with the *icinga2 node wizard*:
+
+    expect /init/node-wizard.expect
+
+After this, you can use the *cert-service* to sign this request:
+
+    curl \
+      --user ${ICINGA_CERT_SERVICE_BA_USER}:${ICINGA_CERT_SERVICE_BA_PASSWORD} \
+      --silent \
+      --request GET \
+      --header "X-API-USER: ${ICINGA_CERT_SERVICE_API_USER}" \
+      --header "X-API-PASSWORD: ${ICINGA_CERT_SERVICE_API_PASSWORD}" \
+      --write-out "%{http_code}\n" \
+      --output /tmp/sign_${HOSTNAME}.json \
+      http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}/v2/sign/${HOSTNAME}
+
+
+### old way (pre 2.8)
+
 To create a certificate:
 
     curl \
@@ -82,7 +103,7 @@ To create a certificate:
       --user ${ICINGA_CERT_SERVICE_BA_USER}:${ICINGA_CERT_SERVICE_BA_PASSWORD} \
       --silent \
       --header "X-API-USER: ${ICINGA_CERT_SERVICE_API_USER}" \
-      --header "X-API-KEY: ${ICINGA_CERT_SERVICE_API_PASSWORD}" \
+      --header "X-API-PASSWORD: ${ICINGA_CERT_SERVICE_API_PASSWORD}" \
       --output /tmp/request_${HOSTNAME}.json \
       http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}/v2/request/${HOSTNAME}
 
@@ -93,9 +114,9 @@ Download the created certificate:
       --user ${ICINGA_CERT_SERVICE_BA_USER}:${ICINGA_CERT_SERVICE_BA_PASSWORD} \
       --silent \
       --header "X-API-USER: ${ICINGA_CERT_SERVICE_API_USER}" \
-      --header "X-API-KEY: ${ICINGA_CERT_SERVICE_API_PASSWORD}" \
+      --header "X-API-PASSWORD: ${ICINGA_CERT_SERVICE_API_PASSWORD}" \
       --header "X-CHECKSUM: ${checksum}" \
-      --output ${WORK_DIR}/pki/${HOSTNAME}/${HOSTNAME}.tgz \
+      --output /tmp/${HOSTNAME}/${HOSTNAME}.tgz \
        http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}/v2/cert/${HOSTNAME}
 
 You need a valid and configured API User in Icinga2 and the created Checksum above.

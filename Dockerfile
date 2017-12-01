@@ -5,15 +5,15 @@ MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
 ENV \
   TERM=xterm \
-  BUILD_DATE="2017-11-19" \
+  BUILD_DATE="2017-12-01" \
   BUILD_TYPE="stable" \
-  CERT_SERVICE_VERSION="0.12.2" \
+  CERT_SERVICE_VERSION="0.14.0" \
   ICINGA_VERSION="2.8.0-r0"
 
 EXPOSE 5665 4567
 
 LABEL \
-  version="1711" \
+  version="1712" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Icinga2 Docker Image" \
   org.label-schema.description="Inofficial Icinga2 Docker Image" \
@@ -33,7 +33,7 @@ RUN \
   apk add --quiet --no-cache --virtual .build-deps \
     libffi-dev g++ make git openssl-dev ruby-dev && \
   apk add --quiet --no-cache \
-    bash bind-tools curl fping inotify-tools jq mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby s6 ssmtp unzip && \
+    bash bind-tools curl expect fping inotify-tools jq mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby s6 ssmtp unzip && \
   apk add \
     --quiet \
     --no-cache \
