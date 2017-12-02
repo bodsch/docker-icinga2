@@ -1,19 +1,20 @@
 
-FROM alpine:3.6
+FROM alpine:3.7
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
 ENV \
   TERM=xterm \
-  BUILD_DATE="2017-11-16" \
+  TZ='Europe/Berlin' \
+  BUILD_DATE="2017-12-02" \
   BUILD_TYPE="stable" \
-  CERT_SERVICE_VERSION="0.10.3" \
-  ICINGA_VERSION="2.7.1-r1"
+  CERT_SERVICE_VERSION="0.14.0" \
+  ICINGA_VERSION="2.8.0-r0"
 
 EXPOSE 5665 4567
 
 LABEL \
-  version="1711" \
+  version="1712" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Icinga2 Docker Image" \
   org.label-schema.description="Inofficial Icinga2 Docker Image" \
@@ -33,18 +34,7 @@ RUN \
   apk add --quiet --no-cache --virtual .build-deps \
     libffi-dev g++ make git openssl-dev ruby-dev && \
   apk add --quiet --no-cache \
-    bash bind-tools curl fping inotify-tools jq mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby s6 ssmtp unzip && \
-  apk add \
-    --quiet \
-    --no-cache \
-    --update-cache \
-    --repository http://dl-cdn.alpinelinux.org/alpine/edge/community \
-    --repository http://dl-cdn.alpinelinux.org/alpine/edge/main \
-    --allow-untrusted \
-    icinga2 && \
-  echo 'gem: --no-document' >> /etc/gemrc && \
-  gem install --quiet --no-rdoc --no-ri \
-    io-console bundler && \
+    bash bind-tools curl expect fping inotify-tools icinga2 jq mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby s6 ssmtp unzip && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   cp /usr/lib/nagios/plugins/*     /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command checker mainlog notification && \
@@ -52,6 +42,9 @@ RUN \
   mkdir -p /etc/icinga2/automatic-zones.d && \
   mkdir -p /run/icinga2/cmd && \
   chmod u+s /bin/busybox && \
+  echo 'gem: --no-document' >> /etc/gemrc && \
+  gem install --quiet --no-rdoc --no-ri \
+    io-console bundler && \
   cd /tmp && \
   git clone https://github.com/bodsch/ruby-icinga-cert-service.git && \
   cd ruby-icinga-cert-service && \
@@ -74,6 +67,12 @@ COPY rootfs/ /
 WORKDIR "/etc/icinga2"
 
 VOLUME [ "/etc/icinga2", "/var/lib/icinga2" ]
+
+HEALTHCHECK \
+  --interval=5s \
+  --timeout=2s \
+  --retries=12 \
+  CMD ps ax | grep -v grep | grep -c "/usr/lib/icinga2/sbin/icinga2" || exit 1
 
 CMD [ "/init/run.sh" ]
 

@@ -1,12 +1,14 @@
 #
 
-DEMO_DATA=${DEMO_DATA:-false}
+DEMO_DATA=${DEMO_DATA:-'false'}
 USER=
 GROUP=
+ICINGA_MASTER=${ICINGA_MASTER:-''}
 
 prepare() {
 
-  [ -d ${WORK_DIR} ] || mkdir -p ${WORK_DIR}
+  [ -d ${ICINGA_LIB_DIR}/backup ] || mkdir -p ${ICINGA_LIB_DIR}/backup
+  [ -d ${ICINGA_CERT_DIR} ] || mkdir -p ${ICINGA_CERT_DIR}
 
   for u in nagios icinga
   do
@@ -45,28 +47,36 @@ prepare() {
     sed -i -e "s,^.*\ vars.os\ \=\ .*,  vars.os = \"Docker\",g" /etc/icinga2/conf.d/hosts.conf
   fi
 
+  # set NodeName
+  sed -i "s,^.*\ NodeName\ \=\ .*,const\ NodeName\ \=\ \"${HOSTNAME}\",g" /etc/icinga2/constants.conf
+
+  # create global zone directories
+  [ -d /etc/icinga2/zones.d/global-templates ] || mkdir -p /etc/icinga2/zones.d/global-templates
+  [ -d /etc/icinga2/zones.d/director-global ] || mkdir -p /etc/icinga2/zones.d/director-global
+
   LOGDIR=$(dirname ${ICINGA2_LOG})
 
   [ -d ${LOGDIR} ] || mkdir -p ${LOGDIR}
 
-  chown ${USER}:${GROUP} ${LOGDIR}
-  chmod ug+wx ${LOGDIR}   2> /dev/null
-  chmod ug+rw ${LOGDIR}/* 2> /dev/null
+  chown  ${USER}:${GROUP} ${LOGDIR}
+  chmod  ug+wx ${LOGDIR}
+  find ${LOGDIR} -type f -exec chmod ug+rw {} \;
 
-  if ( [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" != "${HOSTNAME}" ] )
-  then
-    # in first, we remove the startup script to start our cert-service
-    # they is only needed at a master instance
-    [ -d /etc/s6/icinga2-cert-service ] && rm -rf /etc/s6/icinga2-cert-service
-  fi
-
-  if [ ${DEMO_DATA} = true ]
+  # install demo data
+  if [ "${DEMO_DATA}" = "true" ]
   then
     cp -fua /init/demo /etc/icinga2/
 
     sed -i \
       -e 's|// include_recursive "demo"|include_recursive "demo"|g' \
       /etc/icinga2/icinga2.conf
+  fi
+
+  if ( [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" != "${HOSTNAME}" ] )
+  then
+    # in first, we remove the startup script to start our cert-service
+    # they is only needed at a master instance
+    [ -d /etc/s6/icinga2-cert-service ] && rm -rf /etc/s6/icinga2-cert-service
   fi
 }
 
@@ -109,6 +119,6 @@ correct_rights() {
     chown -R ${USER}:root     /etc/icinga2
     chown -R ${USER}:${GROUP} /var/lib/icinga2
     chown -R ${USER}:${GROUP} ${ICINGA2_RUN_DIR}/icinga2
+    chown -R ${USER}:${GROUP} ${ICINGA_CERT_DIR}
   fi
 }
-

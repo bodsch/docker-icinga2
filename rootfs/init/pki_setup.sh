@@ -9,25 +9,81 @@ ICINGA_CERT_SERVICE_SERVER=${ICINGA_CERT_SERVICE_SERVER:-"localhost"}
 ICINGA_CERT_SERVICE_PORT=${ICINGA_CERT_SERVICE_PORT:-"80"}
 ICINGA_CERT_SERVICE_PATH=${ICINGA_CERT_SERVICE_PATH:-"/"}
 
+PKI_CMD="icinga2 pki"
+PKI_KEY_FILE="${ICINGA_CERT_DIR}/${HOSTNAME}.key"
+PKI_CSR_FILE="${ICINGA_CERT_DIR}/${HOSTNAME}.csr"
+PKI_CRT_FILE="${ICINGA_CERT_DIR}/${HOSTNAME}.crt"
+
 # ICINGA_MASTER must be an FQDN or an IP
 
 # -------------------------------------------------------------------------------------------------
 
-if [ ! ${ICINGA_CLUSTER} ]
-then
-  echo " [i] we need no cluster config .."
+create_local_certificate() {
 
-  return
-fi
+  if [ ! -f ${ICINGA_LIB_DIR}/ca/ca.crt ]
+  then
+    echo " [i] create new CA"
+
+    if [ -f ${PKI_KEY_FILE} ]
+    then
+      rm -rf ${ICINGA_CERT_DIR}/${HOSTNAME}*
+    fi
+
+    icinga2 api setup  # > /dev/null
+
+    # ${PKI_CMD} new-ca
+
+    if [ $? -gt 0 ]
+    then
+      echo " [E] API Setup has failed"
+      rm -rf ${ICINGA_LIB_DIR}/ca 2> /dev/null
+      rm -rf ${ICINGA_CERT_DIR}/${HOSTNAME}* 2> /dev/null
+
+      exit 1
+    fi
+  fi
+
+  # icinga2 API cert - regenerate new private key and certificate when running in a new container
+  if [ ! -f ${ICINGA_LIB_DIR}/certs/${HOSTNAME}.key ]
+  then
+    echo " [i] create new certificate"
+
+    ${PKI_CMD} new-cert --cn ${HOSTNAME} --key ${PKI_KEY_FILE} --csr ${PKI_CSR_FILE}
+    ${PKI_CMD} sign-csr --csr ${PKI_CSR_FILE} --cert ${PKI_CRT_FILE}
+
+    correct_rights
+
+    /usr/sbin/icinga2 \
+      daemon \
+      --validate \
+      --config /etc/icinga2/icinga2.conf \
+      --errorlog /var/log/icinga2/error.log
+
+    if [ $? -gt 0 ]
+    then
+      exit $?
+    fi
+
+    chown -R icinga:icinga ${ICINGA_LIB_DIR}/certs
+    chmod 600 ${ICINGA_LIB_DIR}/certs/*.key
+    chmod 644 ${ICINGA_LIB_DIR}/certs/*.crt
+
+    echo " [i] Finished cert generation"
+  fi
+}
+
 
 # get a new icinga certificate from our icinga-master
 #
+#
+# withicinga version 2.8 we dont need this codefragment
+# this is also obsolete and will be removed in near future
 #
 get_certificate() {
 
   validate_local_ca
 
-  if [ -f /etc/icinga2/pki/${HOSTNAME}.key ]
+  if [ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ]
   then
     return
   fi
@@ -36,6 +92,14 @@ get_certificate() {
   then
     echo ""
     echo " [i] we ask our cert-service for a certificate .."
+
+    code=$(curl \
+      --user ${ICINGA_CERT_SERVICE_BA_USER}:${ICINGA_CERT_SERVICE_BA_PASSWORD} \
+      --silent \
+      --request GET \
+      http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}${ICINGA_CERT_SERVICE_PATH}v2/icinga-version)
+
+    echo " [i] remote icinga version: ${code}"
 
     # generate a certificate request
     #
@@ -130,9 +194,12 @@ get_certificate() {
 #
 validate_local_ca() {
 
-  if [ -f ${WORK_DIR}/pki/${HOSTNAME}/ca.crt ]
+  # TODO
+  # we need this part?
+
+  if [ -f ${ICINGA_CERT_DIR}/ca.crt ]
   then
-    checksum=$(sha256sum ${WORK_DIR}/pki/${HOSTNAME}/ca.crt | cut -f 1 -d ' ')
+    checksum=$(sha256sum ${ICINGA_CERT_DIR}/ca.crt | cut -f 1 -d ' ')
 
     # validate our ca file
     #
@@ -157,11 +224,11 @@ validate_local_ca() {
       echo " [w] our master has a new CA"
 
       rm -f /tmp/validate_ca_${HOSTNAME}.json
-      rm -rf ${WORK_DIR}/pki
-      rm -rf /etc/icinga2/pki/*
+
+      rm -rf ${ICINGA_CERT_DIR}/${HOSTNAME}*
+      rm -rf ${ICINGA_LIB_DIR}/ca/*
 
       cat /dev/null > /etc/icinga2/features-available/api.conf
-      #touch /etc/icinga2/features-available/api.conf
     fi
   else
     # we have no local cert file ..
@@ -176,9 +243,9 @@ validate_local_ca() {
 #
 validate_cert() {
 
-  if [ -d ${WORK_DIR}/pki/${HOSTNAME} ]
+  if [ -d ${ICINGA_CERT_DIR}/ ]
   then
-    cd ${WORK_DIR}/pki/${HOSTNAME}
+    cd ${ICINGA_CERT_DIR}
 
     if [ ! -f ${HOSTNAME}.pem ]
     then
@@ -192,14 +259,15 @@ validate_cert() {
       --insecure \
       --user ${ICINGA_CERT_SERVICE_API_USER}:${ICINGA_CERT_SERVICE_API_PASSWORD} \
       --capath . \
-      --cert ./dashing.pem \
+      --cert ./${HOSTNAME}.pem \
       --cacert ./ca.crt \
-      https://${ICINGA_HOST}:${ICINGA_API_PORT}/v1/status/CIB)
+      https://${ICINGA_MASTER}:5665/v1/status/CIB)
 
-    if [[ $? -gt 0 ]]
-    then
-      rm -rf ${WORK_DIR}/pki
-    fi
+#     if [[ $? -gt 0 ]]
+#     then
+#       cd /
+#       rm -rf ${ICINGA_CERT_DIR}/*
+#     fi
   fi
 }
 
@@ -210,76 +278,9 @@ configure_icinga2_master() {
 
   echo " [i] we are the master .."
 
-  # icinga2 cert - restore CA
-  if [ -d /var/lib/icinga2/ca ]
-  then
-    echo " [i] create new CA"
-  else
-    if ( [ -d ${WORK_DIR}/pki ] && [ -d ${WORK_DIR}/ca ] )
-    then
-      echo " [i] restore older CA"
+  enable_icinga_feature api
 
-      cp -arv ${WORK_DIR}/ca               /var/lib/icinga2/ 2> /dev/null
-    else
-      echo " [i] create new CA"
-
-      rm -f ${WORK_DIR}/pki/${HOSTNAME}*  2> /dev/null
-      rm -f ${WORK_DIR}/pki/ca.crt        2> /dev/null
-
-      rm -f /etc/icinga2/pki/${HOSTNAME}* 2> /dev/null
-    fi
-  fi
-
-  # set NodeName
-  sed -i "s,^.*\ NodeName\ \=\ .*,const\ NodeName\ \=\ \"${HOSTNAME}\",g" /etc/icinga2/constants.conf
-
-  # icinga2 API cert - regenerate new private key and certificate when running in a new container
-  if [ ! -f /etc/icinga2/pki/${HOSTNAME}.key ]
-  then
-    echo " [i] create new certificate"
-
-    [ -d ${WORK_DIR}/pki ] || mkdir ${WORK_DIR}/pki
-
-    PKI_CMD="icinga2 pki"
-
-    PKI_KEY="/etc/icinga2/pki/${HOSTNAME}.key"
-    PKI_CSR="/etc/icinga2/pki/${HOSTNAME}.csr"
-    PKI_CRT="/etc/icinga2/pki/${HOSTNAME}.crt"
-
-    icinga2 api setup > /dev/null
-
-    if [ $? -gt 0 ]
-    then
-      echo " [E] API Setup has failed"
-      rm -f /etc/icinga2/pki/*
-      rm -rf /var/lib/icinga2/ca
-      rm -rf ${WORK_DIR}/pki
-      rm -rf ${WORK_DIR}/ca
-
-      exit 1
-    fi
-
-    ${PKI_CMD} new-cert --cn ${HOSTNAME} --key ${PKI_KEY} --csr ${PKI_CSR}
-    ${PKI_CMD} sign-csr --csr ${PKI_CSR} --cert ${PKI_CRT}
-
-    correct_rights
-
-    /usr/sbin/icinga2 \
-      daemon \
-      --validate \
-      --config /etc/icinga2/icinga2.conf \
-      --errorlog /var/log/icinga2/error.log
-
-    if [ $? -gt 0 ]
-    then
-      exit $?
-    fi
-
-    echo " [i] Finished cert generation"
-  fi
-
-  cp -ar /etc/icinga2/pki    ${WORK_DIR}/
-  cp -ar /var/lib/icinga2/ca ${WORK_DIR}/
+  create_local_certificate
 
   restore_old_zone_config
 }
@@ -300,29 +301,53 @@ configure_icinga2_satellite() {
     disable_icinga_feature notification
   fi
 
-  enable_icinga_feature api
-
-  get_certificate
-
-  # restore an old master name
-  #
-  [ -f ${WORK_DIR}/pki/${HOSTNAME}/master ] && master_name=$(cat ${WORK_DIR}/pki/${HOSTNAME}/master)
-
-  echo " [i] configure the endpoint: '${master_name}'"
-
-  # now, we configure our satellite
-  if ( [ $(grep -c "Endpoint \"${master_name}\"" /etc/icinga2/zones.conf ) -eq 0 ] || [ $(grep -c "host = \"${ICINGA_MASTER}\"" /etc/icinga2/zones.conf) -eq 0 ] )
+  if ( [ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ] && [ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.crt ] )
   then
-    cat << EOF > /etc/icinga2/zones.conf
+    validate_cert
+  fi
 
-object Endpoint "${master_name}" {
+  if ( [ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ] && [ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.crt ] )
+  then
+    [ -d ${ICINGA_LIB_DIR}/backup ] && cp -v ${ICINGA_LIB_DIR}/backup/zones.conf /etc/icinga2/zones.conf 2> /dev/null
+  else
+
+    expect /init/node-wizard.expect 1> /dev/null
+
+    sleep 5s
+
+    echo " [i] ask our cert-service to sign our certifiacte"
+
+    code=$(curl \
+      --user ${ICINGA_CERT_SERVICE_BA_USER}:${ICINGA_CERT_SERVICE_BA_PASSWORD} \
+      --silent \
+      --request GET \
+      --header "X-API-USER: ${ICINGA_CERT_SERVICE_API_USER}" \
+      --header "X-API-PASSWORD: ${ICINGA_CERT_SERVICE_API_PASSWORD}" \
+      --write-out "%{http_code}\n" \
+      --output /tmp/sign_${HOSTNAME}.json \
+      http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}${ICINGA_CERT_SERVICE_PATH}v2/sign/${HOSTNAME})
+
+    if [[ $? -gt 0 ]]
+    then
+      cat /tmp/sign_${HOSTNAME}.json
+      rm -f /tmp/sign_${HOSTNAME}.json
+    fi
+
+    echo " [i] configure the endpoint: '${ICINGA_MASTER}'"
+
+    # now, we configure our satellite
+    if ( [ $(grep -c "Endpoint \"${ICINGA_MASTER}\"" /etc/icinga2/zones.conf ) -eq 0 ] || [ $(grep -c "host = \"${ICINGA_MASTER}\"" /etc/icinga2/zones.conf) -eq 0 ] )
+    then
+      cat << EOF > /etc/icinga2/zones.conf
+
+object Endpoint "${ICINGA_MASTER}" {
   ### Folgende Zeile legt fest, dass der Client die Verbindung zum Master aufbaut und nicht umgekehrt
   host = "${ICINGA_MASTER}"
   port = "5665"
 }
 
 object Zone "master" {
-  endpoints = [ "${master_name}" ]
+  endpoints = [ "${ICINGA_MASTER}" ]
 }
 
 object Endpoint NodeName {
@@ -342,14 +367,16 @@ object Zone "director-global" {
 }
 
 EOF
+    fi
   fi
+
 
   for file in hosts.conf services.conf
   do
     [ -f /etc/icinga2/conf.d/${file} ]    && mv /etc/icinga2/conf.d/${file} /etc/icinga2/conf.d/${file}-SAVE
   done
 
-  cp -a ${WORK_DIR}/pki/${HOSTNAME}/* /etc/icinga2/pki/
+  cp -a /etc/icinga2/zones.conf ${ICINGA_LIB_DIR}/backup/zones.conf
 
   correct_rights
 
@@ -358,36 +385,40 @@ EOF
     daemon \
     --validate \
     --config /etc/icinga2/icinga2.conf \
-    --errorlog /var/log/icinga2/error.log
+    --errorlog /dev/stderr
 }
 
-# for Master AND Satellite
-#  - restore private key and certificate
-#  - configure API Feature
-#
-restore_old_pki() {
 
-  if [ -d ${WORK_DIR}/pki ]
-  then
+configure_icinga2_agent() {
 
-    echo " [i] restore older PKI settings for host '${HOSTNAME}'"
+  echo " [i] we are an agent .."
 
-    find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.csr -exec cp -a {} /etc/icinga2/pki/ \;
-    find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.key -exec cp -a {} /etc/icinga2/pki/ \;
-    find ${WORK_DIR}/pki -type f -name ${HOSTNAME}.crt -exec cp -a {} /etc/icinga2/pki/ \;
-    find ${WORK_DIR}/pki -type f -name ca.crt -exec cp -a {} /etc/icinga2/pki/ \;
-
-    enable_icinga_feature api
-  fi
-
-  create_api_config
+  # TODO
 }
+
 
 # create API config file
 #
 create_api_config() {
 
-  if [ -f /etc/icinga2/features-available/api.conf ]
+  if [ "${ICINGA_VERSION}" == "2.8" ]
+  then
+    # look at https://www.icinga.com/docs/icinga2/latest/doc/16-upgrading-icinga-2/#upgrading-to-v28
+    if [ -f /etc/icinga2/features-available/api.conf ]
+    then
+      cat << EOF > /etc/icinga2/features-available/api.conf
+
+object ApiListener "api" {
+  accept_config = true
+  accept_commands = true
+  ticket_salt = TicketSalt
+}
+
+EOF
+    fi
+  else
+
+    if [ -f /etc/icinga2/features-available/api.conf ]
     then
       cat << EOF > /etc/icinga2/features-available/api.conf
 
@@ -403,7 +434,7 @@ object ApiListener "api" {
 }
 
 EOF
-
+    fi
   fi
 }
 
@@ -412,30 +443,31 @@ EOF
 #
 restore_old_zone_config() {
 
-  if [ -d ${WORK_DIR}/automatic-zones.d ]
+  if [ -d ${ICINGA_LIB_DIR}/backup/automatic-zones.d ]
   then
     echo " [i] restore older zone configurations"
 
     [ -d /etc/icinga2/automatic-zones.d ] || mkdir -vp /etc/icinga2/automatic-zones.d
 
-    cp -a ${WORK_DIR}/automatic-zones.d/* /etc/icinga2/automatic-zones.d/
+    cp -a ${ICINGA_LIB_DIR}/backup/automatic-zones.d/* /etc/icinga2/automatic-zones.d/
   fi
 }
 
 
 # ----------------------------------------------------------------------
 
-restore_old_pki
+create_api_config
 
-if ( [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" == "${HOSTNAME}" ] )
+if [[ "${ICINGA_TYPE}" = "Master" ]]  # ( [ -z ${ICINGA_PARENT} ] && [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" == "${HOSTNAME}" ] )
 then
-
   configure_icinga2_master
 
   nohup /init/inotify.sh > /tmp/inotify-automatic-zones.log 2>&1 &
-else
-
+elif [[ "${ICINGA_TYPE}" = "Satellite" ]]  # ( [ ! -z ${ICINGA_PARENT} ] && [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" == "${ICINGA_PARENT}" ] )
+then
   configure_icinga2_satellite
+else
+  configure_icinga2_agent
 fi
 
 
