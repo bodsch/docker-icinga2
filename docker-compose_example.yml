@@ -37,7 +37,6 @@ services:
       - ICINGA_MASTER=icinga2-master.matrix.lan
       - BASIC_AUTH_USER=foofoo
       - BASIC_AUTH_PASS=barbar
-      #
       - ICINGA_CLUSTER=true
       - ICINGA_CERT_SERVICE=true
       - ICINGA_CERT_SERVICE_BA_USER=admin
@@ -51,7 +50,8 @@ services:
       - CARBON_PORT=2003
       - DEMO_DATA=false
     volumes:
-      - /tmp/docker-data/icinga2-master-data:/var/lib/icinga2
+      - /etc/localtime:/etc/localtime:ro
+      - /tmp/docker-data/icinga2-master:/var/lib/icinga2
     links:
       - database:database
 
@@ -78,7 +78,8 @@ services:
       - ICINGA_CERT_SERVICE_PORT=4567
       - ICINGA_CERT_SERVICE_PATH=/
     volumes:
-      - /tmp/docker-data/icinga2-satellite-1-data:/var/lib/icinga2
+      - /etc/localtime:/etc/localtime:ro
+      - /tmp/docker-data/icinga2-satellite-1:/var/lib/icinga2
     links:
       - icinga2-master:icinga2-master.matrix.lan
 
@@ -105,7 +106,8 @@ services:
       - ICINGA_CERT_SERVICE_PORT=4567
       - ICINGA_CERT_SERVICE_PATH=/
     volumes:
-      - /tmp/docker-data/icinga2-satellite-2-data:/var/lib/icinga2
+      - /etc/localtime:/etc/localtime:ro
+      - /tmp/docker-data/icinga2-satellite-2:/var/lib/icinga2
     links:
       - icinga2-master:icinga2-master.matrix.lan
 
