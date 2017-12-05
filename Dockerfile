@@ -6,7 +6,7 @@ MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
-  BUILD_DATE="2017-12-02" \
+  BUILD_DATE="2017-12-05" \
   BUILD_TYPE="stable" \
   CERT_SERVICE_VERSION="0.14.0" \
   ICINGA_VERSION="2.8.0-r0"
