@@ -6,9 +6,9 @@ MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
-  BUILD_DATE="2017-12-02" \
-  BUILD_TYPE="stable" \
-  CERT_SERVICE_VERSION="0.14.0" \
+  BUILD_DATE="2017-12-05" \
+  BUILD_TYPE="development" \
+  CERT_SERVICE_VERSION="0.14.4" \
   ICINGA_VERSION="2.8.0-r0"
 
 EXPOSE 5665 4567
@@ -72,6 +72,7 @@ HEALTHCHECK \
   --interval=5s \
   --timeout=2s \
   --retries=12 \
+  --start-period=10s \
   CMD ps ax | grep -v grep | grep -c "/usr/lib/icinga2/sbin/icinga2" || exit 1
 
 CMD [ "/init/run.sh" ]

@@ -36,7 +36,7 @@ mailhub=${ICINGA_SSMTP_RELAY_SERVER}
 FromLineOverride=NO
 EOF
 
-  if ( [[ ! -z ${ICINGA_SSMTP_RELAY_USE_STARTTLS} ]] && [[ "${ICINGA_SSMTP_RELAY_USE_STARTTLS}" = "true" ]] )
+  if ( [[ ! -z "${ICINGA_SSMTP_RELAY_USE_STARTTLS}" ]] && [[ "${ICINGA_SSMTP_RELAY_USE_STARTTLS}" = "true" ]] )
   then
     cat << EOF >> ${file}
 UseSTARTTLS=YES
