@@ -144,6 +144,8 @@ For Examples to create a Certificate with Commandline Tools look into `rootfs/in
 |                                    |                      |                                                                 |
 | `ICINGA_CLUSTER`                   | `false`              | Icinga2 Cluster Mode - enable a Master / Satellite Setup        |
 | `ICINGA_MASTER`                    | -                    | The Icinga2-Master FQDN for a Satellite Node                    |
+| `ICINGA_PARENT`                    | -                    | The Parent Node for an Cluster Setup                            |
+|                                    |                      |                                                                 |
 | `BASIC_AUTH_USER`                  | `admin`              | both `BASIC_AUTH_*` and the `ICINGA_MASTER` are importand, if you |
 | `BASIC_AUTH_PASS`                  | `admin`              | use and modify the authentication of the *icinga-cert-service*  |
 |                                    |                      |                                                                 |
@@ -167,7 +169,6 @@ For Examples to create a Certificate with Commandline Tools look into `rootfs/in
 | `ICINGA_SSMTP_SMTPAUTH_PASS`       | -                    |                                                                 |
 | `ICINGA_SSMTP_ALIASES`             | -                    |                                                                 |
 |                                    |                      |                                                                 |
-| `DEMO_DATA`                        | `false`              | copy demo data from `/init/demo-data` into `/etc/icinga2`       |
-|                                    |                      | config path                                                     |
+| `DEMO_DATA`                        | `false`              | copy demo data from `/init/demo-data` into `/etc/icinga2` config path |
 |                                    |                      |                                                                 |
 
