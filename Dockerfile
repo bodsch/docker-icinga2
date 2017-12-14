@@ -55,6 +55,8 @@ RUN \
   bundle install --quiet && \
   cp -ar /tmp/ruby-icinga-cert-service/bin /usr/local/ && \
   cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/ && \
+  git clone https://github.com/nisabek/icinga2-slack-notifications.git && \
+  git clone https://github.com/lazyfrosch/icinga2-telegram.git && \
   apk del --quiet --purge .build-deps && \
   rm -rf \
     /tmp/* \
