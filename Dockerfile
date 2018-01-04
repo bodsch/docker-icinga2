@@ -1,20 +1,19 @@
 
 FROM alpine:3.7
 
-MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
-
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
-  BUILD_DATE="2017-12-05" \
+  BUILD_DATE="2018-01-04" \
   BUILD_TYPE="stable" \
-  CERT_SERVICE_VERSION="0.14.4" \
+  CERT_SERVICE_VERSION="0.14.5" \
   ICINGA_VERSION="2.8.0-r0"
 
-EXPOSE 5665 4567
+EXPOSE 5665 8080
 
 LABEL \
-  version="1712" \
+  version="1801" \
+  maintainer="Bodo Schulz <bodo@boone-schulz.de>" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Icinga2 Docker Image" \
   org.label-schema.description="Inofficial Icinga2 Docker Image" \
@@ -53,6 +52,8 @@ RUN \
     git checkout tags/${CERT_SERVICE_VERSION} 2> /dev/null ; \
   fi && \
   bundle install --quiet && \
+  gem uninstall --quiet \
+    io-console bundler && \
   cp -ar /tmp/ruby-icinga-cert-service/bin /usr/local/ && \
   cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/ && \
   git clone https://github.com/nisabek/icinga2-slack-notifications.git && \
