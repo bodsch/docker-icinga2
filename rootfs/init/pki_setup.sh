@@ -406,6 +406,11 @@ object Zone "master" {
   endpoints = [ "${ICINGA_MASTER}" ]
 }
 
+object Zone ZoneName {
+  endpoints = [ NodeName ]
+  parent = "master"
+}
+
 object Zone "global-templates" {
   global = true
 }
@@ -502,9 +507,21 @@ restore_old_zone_config() {
   if [ -d ${ICINGA_LIB_DIR}/backup/zones.d ]
   then
     echo " [i] restore older zone configurations"
-    [ -d /etc/icinga2/zones.d ] || mkdir -vp /etc/icinga2/zones.d
-    cp -ra ${ICINGA_LIB_DIR}/backup/zones.d/* /etc/icinga2/zones.d/
+
+    rsync \
+      --archive \
+      --recursive \
+      --delete \
+      --include="zones.d/***" \
+      --include="zones.*" \
+      --exclude='*' \
+      ${ICINGA_LIB_DIR}/backup/* /etc/icinga2/
+
+    #[ -d /etc/icinga2/zones.d ] || mkdir -vp /etc/icinga2/zones.d
+    #cp -ra ${ICINGA_LIB_DIR}/backup/zones.d/* /etc/icinga2/zones.d/
+#    [ -f cp -ra ${ICINGA_LIB_DIR}/backup/zones.d/* /etc/icinga2/zones.d/
   fi
+
 }
 
 # ----------------------------------------------------------------------

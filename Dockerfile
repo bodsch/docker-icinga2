@@ -33,7 +33,7 @@ RUN \
   apk add --quiet --no-cache --virtual .build-deps \
     libffi-dev g++ make git openssl-dev ruby-dev && \
   apk add --quiet --no-cache \
-    bash bind-tools curl expect fping inotify-tools icinga2 jq mailx monitoring-plugins mariadb-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby s6 ssmtp unzip && \
+    bash bind-tools curl expect fping inotify-tools icinga2 jq mailx monitoring-plugins mariadb-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby rsync s6 ssmtp unzip && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   ln -s /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command checker mainlog notification && \
@@ -49,6 +49,9 @@ RUN \
   if [ "${BUILD_TYPE}" == "stable" ] ; then \
     echo "switch to stable Tag v${CERT_SERVICE_VERSION}" && \
     git checkout tags/${CERT_SERVICE_VERSION} 2> /dev/null ; \
+  elif [ "${BUILD_TYPE}" == "development" ] ; then \
+    echo "switch to development Branch" && \
+    git checkout development 2> /dev/null ; \
   fi && \
   bundle install --quiet && \
   gem uninstall --quiet \
