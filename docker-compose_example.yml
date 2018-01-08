@@ -16,6 +16,31 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /tmp/docker-data/database:/srv
 
+  icinga-cert-service:
+    build: ./cert-service
+    container_name: icinga-cert-service
+    hostname: icinga-cert-service.matrix.lan
+    restart: always
+    privileged: true
+    ports:
+      - 8080:8080
+    environment:
+      # environment variables for the certificates service
+      - ICINGA_MASTER=icinga2-master.matrix.lan
+      - BASIC_AUTH_USER=foofoo
+      - BASIC_AUTH_PASS=barbar
+      - ICINGA_CERT_SERVICE_BA_USER=admin
+      - ICINGA_CERT_SERVICE_BA_PASSWORD=admin
+      - ICINGA_API_USER=root
+      - ICINGA_API_PASSWORD=icinga
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /tmp/docker-data/icinga2-master-etc:/etc/icinga2
+    depends_on:
+      - icinga2-master
+    links:
+      - icinga2-master:icinga2-master
+
   # the Icinga2 Master
   # includes a certificate service to create and provide a icinga certificate
   icinga2-master:
@@ -26,7 +51,6 @@ services:
     privileged: true
     ports:
       - 5665:5665
-      - 8080:8080
     environment:
       - ICINGA_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
       - MYSQL_HOST=database
@@ -51,6 +75,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /tmp/docker-data/icinga2-master:/var/lib/icinga2
+      - /tmp/docker-data/icinga2-master-etc:/etc/icinga2
     links:
       - database:database
 
