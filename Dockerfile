@@ -4,9 +4,9 @@ FROM alpine:3.7
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
-  BUILD_DATE="2018-01-04" \
-  BUILD_TYPE="stable" \
-  CERT_SERVICE_VERSION="0.14.5" \
+  BUILD_DATE="2018-01-06" \
+  BUILD_TYPE="development" \
+  CERT_SERVICE_VERSION="1.0.0" \
   ICINGA_VERSION="2.8.0-r0"
 
 EXPOSE 5665 8080
@@ -33,12 +33,11 @@ RUN \
   apk add --quiet --no-cache --virtual .build-deps \
     libffi-dev g++ make git openssl-dev ruby-dev && \
   apk add --quiet --no-cache \
-    bash bind-tools curl expect fping inotify-tools icinga2 jq mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby s6 ssmtp unzip && \
+    bash bind-tools curl expect fping inotify-tools icinga2 jq mailx monitoring-plugins mariadb-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby s6 ssmtp unzip && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
-  cp /usr/lib/nagios/plugins/*     /usr/lib/monitoring-plugins/ && \
+  ln -s /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command checker mainlog notification && \
   mkdir -p /etc/icinga2/objects.d && \
-  mkdir -p /etc/icinga2/automatic-zones.d && \
   mkdir -p /run/icinga2/cmd && \
   chmod u+s /bin/busybox && \
   echo 'gem: --no-document' >> /etc/gemrc && \

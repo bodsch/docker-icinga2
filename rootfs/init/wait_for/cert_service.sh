@@ -78,10 +78,10 @@ wait_for_icinga_cert_service() {
     fi
   else
     echo " [w] missing variables:"
-    echo "     '${ICINGA_CERT_SERVICE_BA_USER}'"
-    echo "     '${ICINGA_CERT_SERVICE_BA_PASSWORD}'"
-    echo "     '${ICINGA_CERT_SERVICE_API_USER}'"
-    echo "     '${ICINGA_CERT_SERVICE_API_PASSWORD}'"
+    echo "     ICINGA_CERT_SERVICE_BA_USER: '${ICINGA_CERT_SERVICE_BA_USER}'"
+    echo "     ICINGA_CERT_SERVICE_BA_PASSWORD: '${ICINGA_CERT_SERVICE_BA_PASSWORD}'"
+    echo "     ICINGA_CERT_SERVICE_API_USER: '${ICINGA_CERT_SERVICE_API_USER}'"
+    echo "     ICINGA_CERT_SERVICE_API_PASSWORD: '${ICINGA_CERT_SERVICE_API_PASSWORD}'"
   fi
 }
 

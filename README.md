@@ -142,7 +142,6 @@ For Examples to create a Certificate with Commandline Tools look into `rootfs/in
 | `CARBON_HOST`                      | -                    | hostname or IP address where Carbon/Graphite daemon is running  |
 | `CARBON_PORT`                      | `2003`               | Carbon port for graphite                                        |
 |                                    |                      |                                                                 |
-| `ICINGA_CLUSTER`                   | `false`              | Icinga2 Cluster Mode - enable a Master / Satellite Setup        |
 | `ICINGA_MASTER`                    | -                    | The Icinga2-Master FQDN for a Satellite Node                    |
 | `ICINGA_PARENT`                    | -                    | The Parent Node for an Cluster Setup                            |
 |                                    |                      |                                                                 |

@@ -3,10 +3,9 @@
 #
 wait_for_icinga_master() {
 
-  if [ ${ICINGA_CLUSTER} == false ]
-  then
-    return
-  fi
+  # I can't wait for myself.
+  #
+  [[ "${ICINGA_TYPE}" = "Master" ]] && return
 
   RETRY=50
 

@@ -18,8 +18,12 @@ PKI_CRT_FILE="${ICINGA_CERT_DIR}/${HOSTNAME}.crt"
 
 # -------------------------------------------------------------------------------------------------
 
-create_local_certificate() {
+# create a local CA
+#
+create_ca() {
 
+  # create the CA, when they not exist
+  #
   if [ ! -f ${ICINGA_LIB_DIR}/ca/ca.crt ]
   then
     echo " [i] create new CA"
@@ -29,10 +33,12 @@ create_local_certificate() {
       rm -rf ${ICINGA_CERT_DIR}/${HOSTNAME}*
     fi
 
-    icinga2 api setup  # > /dev/null
+    icinga2 api setup
 
-    # ${PKI_CMD} new-ca
-
+    # api setup has failed
+    # we remove all cert related directies and files and leave the container
+    # after an restart, we start from scratch
+    #
     if [ $? -gt 0 ]
     then
       echo " [E] API Setup has failed"
@@ -44,7 +50,8 @@ create_local_certificate() {
   fi
 
   # icinga2 API cert - regenerate new private key and certificate when running in a new container
-  if [ ! -f ${ICINGA_LIB_DIR}/certs/${HOSTNAME}.key ]
+  #
+  if [ ! -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ]
   then
     echo " [i] create new certificate"
 
@@ -64,9 +71,9 @@ create_local_certificate() {
       exit $?
     fi
 
-    chown -R icinga:icinga ${ICINGA_LIB_DIR}/certs
-    chmod 600 ${ICINGA_LIB_DIR}/certs/*.key
-    chmod 644 ${ICINGA_LIB_DIR}/certs/*.crt
+    chown -R icinga:icinga ${ICINGA_CERT_DIR}
+    chmod 600 ${ICINGA_CERT_DIR}/*.key
+    chmod 644 ${ICINGA_CERT_DIR}/*.crt
 
     echo " [i] Finished cert generation"
   fi
@@ -263,6 +270,8 @@ validate_cert() {
       --cacert ./ca.crt \
       https://${ICINGA_MASTER}:5665/v1/status/CIB)
 
+    echo ${code}
+
 #     if [[ $? -gt 0 ]]
 #     then
 #       cd /
@@ -276,11 +285,11 @@ validate_cert() {
 #
 configure_icinga2_master() {
 
-  echo " [i] we are the master .."
+#  echo " [i] we are the master .."
 
   enable_icinga_feature api
 
-  create_local_certificate
+  create_ca
 
   restore_old_zone_config
 }
@@ -289,32 +298,43 @@ configure_icinga2_master() {
 #
 configure_icinga2_satellite() {
 
-  echo " [i] we are an satellite .."
-
+#   echo " [i] we are an satellite .."
   export ICINGA_SATELLITE=true
 
   . /init/wait_for/cert_service.sh
   . /init/wait_for/icinga_master.sh
 
-  if [ -e /etc/icinga2/features-enabled/notification.conf ]
-  then
-    disable_icinga_feature notification
-  fi
+  # ONLY THE MASTER CREATES NOTIFICATIONS!
+  [ -e /etc/icinga2/features-enabled/notification.conf ] && disable_icinga_feature notification
 
+  # we have a certificate
+  # validate this against our icinga-master
+  #
   if ( [ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ] && [ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.crt ] )
   then
-    validate_cert
+    validate_local_ca
   fi
 
+  # we have a certificate
+  # restore our own zone configuration
+  # otherwise, we can't communication with the master
+  #
   if ( [ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ] && [ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.crt ] )
   then
-    [ -d ${ICINGA_LIB_DIR}/backup ] && cp -v ${ICINGA_LIB_DIR}/backup/zones.conf /etc/icinga2/zones.conf 2> /dev/null
+    :
+    # echo "" > /etc/icinga2/zones.conf
+    [ -d ${ICINGA_LIB_DIR}/backup ] && cp ${ICINGA_LIB_DIR}/backup/zones.conf /etc/icinga2/zones.conf 2> /dev/null
   else
 
+    # no certificate found
+    # use the node wizard to create a valid certificate request
+    #
     expect /init/node-wizard.expect 1> /dev/null
 
     sleep 5s
 
+    # and now we have to ask our master to confirm this certificate
+    #
     echo " [i] ask our cert-service to sign our certifiacte"
 
     code=$(curl \
@@ -333,15 +353,17 @@ configure_icinga2_satellite() {
       rm -f /tmp/sign_${HOSTNAME}.json
     fi
 
-    echo " [i] configure the endpoint: '${ICINGA_MASTER}'"
+    # nice, all fine
+    # create our zone config file
+    #
+    echo " [i] configure my endpoint: '${ICINGA_MASTER}'"
 
-    # now, we configure our satellite
     if ( [ $(grep -c "Endpoint \"${ICINGA_MASTER}\"" /etc/icinga2/zones.conf ) -eq 0 ] || [ $(grep -c "host = \"${ICINGA_MASTER}\"" /etc/icinga2/zones.conf) -eq 0 ] )
     then
       cat << EOF > /etc/icinga2/zones.conf
 
 object Endpoint "${ICINGA_MASTER}" {
-  ### Folgende Zeile legt fest, dass der Client die Verbindung zum Master aufbaut und nicht umgekehrt
+  ### the following line specifies that the client connects to the master and not vice versa
   host = "${ICINGA_MASTER}"
   port = "5665"
 }
@@ -365,22 +387,49 @@ object Zone "global-templates" {
 object Zone "director-global" {
   global = true
 }
+EOF
 
+      # create an second zone.conf
+      # here the endpoint and the own zone configuration are removed.
+      # This is created by the master via the API and stored under ${ICINGA_LIB_DIR}.
+      # restarting the containers would otherwise cause conflicts
+      #
+      cat << EOF > ${ICINGA_LIB_DIR}/backup/zones.conf
+
+object Endpoint "${ICINGA_MASTER}" {
+  ### the following line specifies that the client connects to the master and not vice versa
+  host = "${ICINGA_MASTER}"
+  port = "5665"
+}
+
+object Zone "master" {
+  endpoints = [ "${ICINGA_MASTER}" ]
+}
+
+object Zone "global-templates" {
+  global = true
+}
+
+object Zone "director-global" {
+  global = true
+}
 EOF
     fi
   fi
 
-
+  # rename the hosts.conf and service.conf
+  # this both comes now from the master
+  # yeah ... distributed monitoring rocks!
+  #
   for file in hosts.conf services.conf
   do
     [ -f /etc/icinga2/conf.d/${file} ]    && mv /etc/icinga2/conf.d/${file} /etc/icinga2/conf.d/${file}-SAVE
   done
 
-  cp -a /etc/icinga2/zones.conf ${ICINGA_LIB_DIR}/backup/zones.conf
-
   correct_rights
 
   # test the configuration
+  #
   /usr/sbin/icinga2 \
     daemon \
     --validate \
@@ -388,7 +437,8 @@ EOF
     --errorlog /dev/stderr
 }
 
-
+# configure a icinga2 agent instance
+#
 configure_icinga2_agent() {
 
   echo " [i] we are an agent .."
@@ -398,112 +448,79 @@ configure_icinga2_agent() {
 
 
 # create API config file
+# this is needed for all instance types (master, satellite or agent)
 #
 create_api_config() {
 
+  [ -f /etc/icinga2/features-available/api.conf ] || touch /etc/icinga2/features-available/api.conf
+
+  # create api config
+  #
+  cat << EOF > /etc/icinga2/features-available/api.conf
+
+object ApiListener "api" {
+  accept_config = true
+  accept_commands = true
+  ticket_salt = TicketSalt
+EOF
+
+  # version 2.8 has some changes for certifiacte configuration
+  #
   if [ "${ICINGA_VERSION}" == "2.8" ]
   then
     # look at https://www.icinga.com/docs/icinga2/latest/doc/16-upgrading-icinga-2/#upgrading-to-v28
-    if [ -f /etc/icinga2/features-available/api.conf ]
-    then
-      cat << EOF > /etc/icinga2/features-available/api.conf
-
-object ApiListener "api" {
-  accept_config = true
-  accept_commands = true
-  ticket_salt = TicketSalt
+    cat << EOF >> /etc/icinga2/features-available/api.conf
 }
 
 EOF
-    fi
+  # < version 2.8, we must add the path to the certificate
+  #
   else
 
-    if [ -f /etc/icinga2/features-available/api.conf ]
-    then
-      cat << EOF > /etc/icinga2/features-available/api.conf
-
-object ApiListener "api" {
+    cat << EOF >> /etc/icinga2/features-available/api.conf
   cert_path = SysconfDir + "/icinga2/pki/" + NodeName + ".crt"
   key_path = SysconfDir + "/icinga2/pki/" + NodeName + ".key"
   ca_path = SysconfDir + "/icinga2/pki/ca.crt"
-
-  accept_config = true
-  accept_commands = true
-
-  ticket_salt = TicketSalt
 }
-
 EOF
-    fi
   fi
 }
 
 
-# restore a ols zone file for automatic generated satellites
+# restore a old zone file for automatic generated satellites
 #
 restore_old_zone_config() {
 
+  # backwards compatibility
+  # in an older version, we create all zone config files in an serperate directory
+  #
   if [ -d ${ICINGA_LIB_DIR}/backup/automatic-zones.d ]
   then
+    mv ${ICINGA_LIB_DIR}/backup/automatic-zones.d ${ICINGA_LIB_DIR}/backup/zones.d
+  fi
+
+  if [ -d ${ICINGA_LIB_DIR}/backup/zones.d ]
+  then
     echo " [i] restore older zone configurations"
-
-    [ -d /etc/icinga2/automatic-zones.d ] || mkdir -vp /etc/icinga2/automatic-zones.d
-
-    cp -a ${ICINGA_LIB_DIR}/backup/automatic-zones.d/* /etc/icinga2/automatic-zones.d/
+    [ -d /etc/icinga2/zones.d ] || mkdir -vp /etc/icinga2/zones.d
+    cp -ra ${ICINGA_LIB_DIR}/backup/zones.d/* /etc/icinga2/zones.d/
   fi
 }
-
 
 # ----------------------------------------------------------------------
 
 create_api_config
 
-if [[ "${ICINGA_TYPE}" = "Master" ]]  # ( [ -z ${ICINGA_PARENT} ] && [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" == "${HOSTNAME}" ] )
+if [[ "${ICINGA_TYPE}" = "Master" ]]
 then
   configure_icinga2_master
 
-  nohup /init/inotify.sh > /tmp/inotify-automatic-zones.log 2>&1 &
-elif [[ "${ICINGA_TYPE}" = "Satellite" ]]  # ( [ ! -z ${ICINGA_PARENT} ] && [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" == "${ICINGA_PARENT}" ] )
+  # backup the generated zones
+  #
+  nohup /init/inotify.sh > /dev/stdout 2>&1 &
+elif [[ "${ICINGA_TYPE}" = "Satellite" ]]
 then
   configure_icinga2_satellite
 else
   configure_icinga2_agent
 fi
-
-
-# EOF
-
-
-# Supported commands for pki command:
-#   * pki new-ca (sets up a new CA)
-#   * pki new-cert (creates a new CSR)
-#     Command options:
-#       --cn arg                  Common Name
-#       --key arg                 Key file path (output
-#       --csr arg                 CSR file path (optional, output)
-#       --cert arg                Certificate file path (optional, output)
-#   * pki request (requests a certificate)
-#     Command options:
-#       --key arg                 Key file path (input)
-#       --cert arg                Certificate file path (input + output)
-#       --ca arg                  CA file path (output)
-#       --trustedcert arg         Trusted certificate file path (input)
-#       --host arg                Icinga 2 host
-#       --port arg                Icinga 2 port
-#       --ticket arg              Icinga 2 PKI ticket
-#   * pki save-cert (saves another Icinga 2 instance's certificate)
-#     Command options:
-#       --key arg                 Key file path (input), obsolete
-#       --cert arg                Certificate file path (input), obsolete
-#       --trustedcert arg         Trusted certificate file path (output)
-#       --host arg                Icinga 2 host
-#       --port arg (=5665)        Icinga 2 port
-#   * pki sign-csr (signs a CSR)
-#     Command options:
-#       --csr arg                 CSR file path (input)
-#       --cert arg                Certificate file path (output)
-#   * pki ticket (generates a ticket)
-#     Command options:
-#       --cn arg                  Certificate common name
-#       --salt arg                Ticket salt
-

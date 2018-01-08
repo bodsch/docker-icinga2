@@ -5,11 +5,15 @@ USER=
 GROUP=
 ICINGA_MASTER=${ICINGA_MASTER:-''}
 
+# prepare the system and icinga to run in the docker environment
+#
 prepare() {
 
   [ -d ${ICINGA_LIB_DIR}/backup ] || mkdir -p ${ICINGA_LIB_DIR}/backup
   [ -d ${ICINGA_CERT_DIR} ] || mkdir -p ${ICINGA_CERT_DIR}
 
+  # detect username
+  #
   for u in nagios icinga
   do
     if [ "$(getent passwd ${u})" ]
@@ -19,6 +23,8 @@ prepare() {
     fi
   done
 
+  # detect groupname
+  #
   for g in nagios icinga
   do
     if [ "$(getent group ${g})" ]
@@ -28,6 +34,9 @@ prepare() {
     fi
   done
 
+  # read (generated) icinga2.sysconfig and import environment
+  # otherwise define variables
+  #
   if [ -f /etc/icinga2/icinga2.sysconfig ]
   then
     . /etc/icinga2/icinga2.sysconfig
@@ -42,18 +51,26 @@ prepare() {
   fi
 
   # change var.os from 'Linux' to 'Docker' to disable ssh-checks
+  #
   if [ -f /etc/icinga2/conf.d/hosts.conf ]
   then
     sed -i -e "s,^.*\ vars.os\ \=\ .*,  vars.os = \"Docker\",g" /etc/icinga2/conf.d/hosts.conf
   fi
 
-  # set NodeName
+  [ -f /etc/icinga2/conf.d/services.conf ] && mv /etc/icinga2/conf.d/services.conf /etc/icinga2/conf.d/services.conf-distributed
+  [ -f /etc/icinga2/conf.d/services.conf.docker ] && mv /etc/icinga2/conf.d/services.conf.docker /etc/icinga2/conf.d/services.conf
+
+  # set NodeName (important for the cert feature!)
+  #
   sed -i "s,^.*\ NodeName\ \=\ .*,const\ NodeName\ \=\ \"${HOSTNAME}\",g" /etc/icinga2/constants.conf
 
-  # create global zone directories
+  # create global zone directories for distributed monitoring
+  #
   [ -d /etc/icinga2/zones.d/global-templates ] || mkdir -p /etc/icinga2/zones.d/global-templates
   [ -d /etc/icinga2/zones.d/director-global ] || mkdir -p /etc/icinga2/zones.d/director-global
 
+  # create directory for the logfile and change rights
+  #
   LOGDIR=$(dirname ${ICINGA2_LOG})
 
   [ -d ${LOGDIR} ] || mkdir -p ${LOGDIR}
@@ -63,6 +80,7 @@ prepare() {
   find ${LOGDIR} -type f -exec chmod ug+rw {} \;
 
   # install demo data
+  #
   if [ "${DEMO_DATA}" = "true" ]
   then
     cp -fua /init/demo /etc/icinga2/
@@ -72,10 +90,10 @@ prepare() {
       /etc/icinga2/icinga2.conf
   fi
 
+  # in first, we remove the startup script to start our cert-service
+  # they is only needed at a master instance
   if ( [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" != "${HOSTNAME}" ] )
   then
-    # in first, we remove the startup script to start our cert-service
-    # they is only needed at a master instance
     [ -d /etc/s6/icinga2-cert-service ] && rm -rf /etc/s6/icinga2-cert-service
   fi
 }

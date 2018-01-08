@@ -6,7 +6,7 @@
 
 HOSTNAME=$(hostname -f)
 
-ICINGA_CERT_DIR="/var/lib/icinga2/certs"
+ICINGA_CERT_DIR="/etc/icinga2/certs"
 ICINGA_LIB_DIR="/var/lib/icinga2"
 
 ICINGA_VERSION=$(icinga2 --version | head -n1 | awk -F 'version: ' '{printf $2}' | awk -F \. {'print $1 "." $2'} | sed 's|r||')
@@ -38,6 +38,7 @@ custom_scripts() {
     done
   fi
 }
+
 
 detect_type() {
 
@@ -76,6 +77,8 @@ run() {
   correct_rights
 
   custom_scripts
+
+  echo " [i] start init process ..."
 
   /bin/s6-svscan /etc/s6
 }

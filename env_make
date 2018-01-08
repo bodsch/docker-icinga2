@@ -1,13 +1,12 @@
 PORTS = \
   --publish=5665:5665 \
-  --publish=4567:4567
+  --publish=8080:8080
 
 VOLUMES = \
   --volume /var/log/docker:/var/log \
   --volume=/tmp/docker-data/icinga2-base:/var/lib/icinga2
 
 ENV = \
-  --env ICINGA_CLUSTER=true \
   --env ICINGA_MASTER=icinga2-default \
   --env ICINGA_PARENT= \
   --env ICINGA_API_USERS='root:icinga,dashing:dashing,cert:foo-bar' \

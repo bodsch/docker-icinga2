@@ -19,9 +19,9 @@ else
   then
     IDO_PASSWORD=$(pwgen -s 15 1)
 
-    echo " [W] NO IDO PASSWORD SET!"
-    echo " [W] DATABASE CONNECTIONS ARE NOT RESTART FIXED"
-    echo " [W] I CREATE THIS PASSWORD DYNAMIC: '${IDO_PASSWORD}'"
+    echo " [W] NO IDO PASSWORD HAS BEEN SET!"
+    echo " [W] DATABASE CONNECTIONS ARE NOT RESTART SECURE!"
+    echo " [W] DYNAMICALLY GENERATED PASSWORD: '${IDO_PASSWORD}' (ONLY VALID FOR THIS SESSION)"
   fi
 
   MYSQL_OPTS="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_ROOT_PASS} --port=${MYSQL_PORT}"
@@ -73,7 +73,7 @@ create_schema() {
     # Database isn't created
     # well, i do my job ...
     #
-    echo " [i] initializing databases and icinga2 configurations"
+    echo " [i] create IDO database '${IDO_DATABASE_NAME}'"
 
     (
       echo "--- create user '${IDO_DATABASE_NAME}'@'%' IDENTIFIED BY '${IDO_PASSWORD}';"
@@ -99,13 +99,15 @@ create_schema() {
 #
 insert_schema() {
 
+  echo " [i] import IDO database schema"
+
   # create the ido schema
   #
   mysql ${MYSQL_OPTS} --force ${IDO_DATABASE_NAME}  < /usr/share/icinga2-ido-mysql/schema/mysql.sql
 
   if [ $? -gt 0 ]
   then
-    echo " [E] can't insert the icinga2 database schema"
+    echo " [E] can't insert the IDO database schema"
     exit 1
   fi
 }
@@ -124,7 +126,7 @@ update_schema() {
 
   if [ -z "${db_version}" ]
   then
-    echo " [w] no database version found. skip database upgrade"
+    echo " [w] no database version found. skip database upgrade."
 
     insert_schema
     update_schema
@@ -132,7 +134,7 @@ update_schema() {
 
     upgrape_directory="/usr/share/icinga2-ido-mysql/schema/upgrade"
 
-    echo " [i] database version: ${db_version}"
+    echo " [i] IDO database version: ${db_version}"
 
     for DB_UPDATE_FILE in $(ls -1 ${upgrape_directory}/*.sql)
     do
@@ -152,13 +154,14 @@ update_schema() {
 
       fi
     done
-
   fi
 }
 
 # update database configuration
 #
 create_config() {
+
+  echo " [i] create IDO configuration"
 
   # create the IDO configuration
   #
@@ -169,7 +172,6 @@ create_config() {
     -e 's|//user =\ \".*\"|user =\ \"icinga2\"|g' \
     -e 's|//database =\ \".*\"|database =\ \"'${IDO_DATABASE_NAME}'\"|g' \
     /etc/icinga2/features-available/ido-mysql.conf
-
 }
 
 . /init/wait_for/mysql.sh
