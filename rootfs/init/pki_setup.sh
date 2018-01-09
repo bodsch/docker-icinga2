@@ -307,6 +307,10 @@ configure_icinga2_satellite() {
   # ONLY THE MASTER CREATES NOTIFICATIONS!
   [ -e /etc/icinga2/features-enabled/notification.conf ] && disable_icinga_feature notification
 
+  # all communications between master and satellite needs the API feature
+  #
+  enable_icinga_feature api
+
   # we have a certificate
   # validate this against our icinga-master
   #
