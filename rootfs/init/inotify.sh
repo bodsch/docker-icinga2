@@ -13,16 +13,13 @@ inotifywait \
   ${monitored_directory} |
   while read path action file
   do
-    echo -n " [i] The file '$file' appeared in directory '$path' via '$action'"
-
+    #echo -n " [i] The file '$file' appeared in directory '$path' via '$action'"
     if ( [[ -z "${file}" ]] || [[ ! ${file} =~ ^zones* ]] )
     then
-      echo " CONTINUE"
+#      echo " CONTINUE"
       continue
     fi
-
-    echo " DOING"
-
+#    echo " DOING"
     echo " [i] The file '$file' appeared in directory '$path' via '$action'"
     if [ "${action}" = "DELETE" ]
     then

@@ -33,11 +33,13 @@ RUN \
   apk add --quiet --no-cache --virtual .build-deps \
     libffi-dev g++ make git openssl-dev ruby-dev && \
   apk add --quiet --no-cache \
-    bash bind-tools curl expect fping inotify-tools icinga2 jq mailx monitoring-plugins mariadb-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby rsync s6 ssmtp unzip && \
+    bash bind-tools curl expect fping inotify-tools icinga2 jq mailx monitoring-plugins mariadb-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby rsync s6 ssmtp tzdata unzip && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   ln -s /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command checker mainlog notification && \
   mkdir -p /etc/icinga2/objects.d && \
+  mkdir -p /etc/icinga2/zones.d/global-templates && \
+  mkdir -p /etc/icinga2/zones.d/director-global && \
   mkdir -p /run/icinga2/cmd && \
   chmod u+s /bin/busybox && \
   echo 'gem: --no-document' >> /etc/gemrc && \

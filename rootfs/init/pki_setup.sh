@@ -292,6 +292,11 @@ configure_icinga2_master() {
   create_ca
 
   restore_old_zone_config
+
+  # copy master specific configurations
+  #
+  ( [ -d /etc/icinga2/zones.d/global-templates ] && [ -f /etc/icinga2/master.d/templates_services.conf ] ) && cp /etc/icinga2/master.d/templates_services.conf /etc/icinga2/zones.d/global-templates/
+  [ -f /etc/icinga2/master.d/satellite_services.conf ] && cp /etc/icinga2/master.d/satellite_services.conf /etc/icinga2/conf.d/
 }
 
 # configure a icinga2 satellite instance
@@ -311,6 +316,16 @@ configure_icinga2_satellite() {
   #
   enable_icinga_feature api
 
+  # remove myself from master
+  #
+  code=$(curl \
+    --user ${ICINGA_CERT_SERVICE_API_USER}:${ICINGA_CERT_SERVICE_API_PASSWORD} \
+    --silent \
+    --header 'Accept: application/json'\
+    --request DELETE \
+    --insecure \
+    https://${ICINGA_MASTER}:5665/v1/objects/hosts/$(hostname -f)?cascade=1 )
+
   # we have a certificate
   # validate this against our icinga-master
   #
@@ -327,7 +342,7 @@ configure_icinga2_satellite() {
   then
     :
     # echo "" > /etc/icinga2/zones.conf
-    [ -d ${ICINGA_LIB_DIR}/backup ] && cp ${ICINGA_LIB_DIR}/backup/zones.conf /etc/icinga2/zones.conf 2> /dev/null
+    [ -f ${ICINGA_LIB_DIR}/backup/zones.conf ] && cp -v ${ICINGA_LIB_DIR}/backup/zones.conf /etc/icinga2/zones.conf 2> /dev/null
   else
 
     # no certificate found
@@ -335,7 +350,7 @@ configure_icinga2_satellite() {
     #
     expect /init/node-wizard.expect 1> /dev/null
 
-    sleep 5s
+    sleep 8s
 
     # and now we have to ask our master to confirm this certificate
     #
@@ -435,6 +450,9 @@ EOF
     [ -f /etc/icinga2/conf.d/${file} ]    && mv /etc/icinga2/conf.d/${file} /etc/icinga2/conf.d/${file}-SAVE
   done
 
+  ( [ -d /etc/icinga2/zones.d/global-templates ] && [ -f /etc/icinga2/master.d/templates_services.conf ] ) && cp /etc/icinga2/master.d/templates_services.conf /etc/icinga2/zones.d/global-templates/
+  [ -f /etc/icinga2/satellite.d/services.conf ] && cp /etc/icinga2/satellite.d/services.conf /etc/icinga2/conf.d/
+
   correct_rights
 
   # test the configuration
@@ -444,6 +462,56 @@ EOF
     --validate \
     --config /etc/icinga2/icinga2.conf \
     --errorlog /dev/stderr
+
+  # validation are not successful
+  #
+  if [ $? -gt 0 ]
+  then
+    echo " [E] the validation of our configuration was not successful."
+    echo " [E] clean up and restart."
+
+    rm -rf ${ICINGA_LIB_DIR}/*
+
+    echo " [E] headshot ..."
+    s6_pid=$(ps ax | grep s6-svscan | grep -v grep | awk '{print $1}')
+
+    [ -z "${s6_pid}" ] || kill -15 ${s6_pid} > /dev/null 2> /dev/null
+
+  fi
+
+  sleep 5s
+
+  # helper function to create json for the curl commando below
+  #
+  api_satellite_host() {
+
+cat << EOF
+{
+  "templates": [ "satellite-host" ],
+  "attrs": {
+    "vars.os": "Docker",
+    "vars.remote_endpoint": "$(hostname -f)",
+    "vars.satellite": "true",
+    "zone": "$(hostname -f)",
+    "command_endpoint": "$(hostname -f)",
+    "groups": ["icinga-satellites"]
+  }
+}
+EOF
+  }
+
+  # add myself as host
+  #
+  code=$(curl \
+    --user ${ICINGA_CERT_SERVICE_API_USER}:${ICINGA_CERT_SERVICE_API_PASSWORD} \
+    --silent \
+    --header 'Accept: application/json' \
+    --request PUT \
+    --insecure \
+    --data "$(api_satellite_host)" \
+    https://${ICINGA_MASTER}:5665/v1/objects/hosts/$(hostname -f) )
+
+  echo "${code}"
 }
 
 # configure a icinga2 agent instance
