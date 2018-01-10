@@ -58,7 +58,7 @@ prepare() {
   fi
 
   [ -f /etc/icinga2/conf.d/services.conf ] && mv /etc/icinga2/conf.d/services.conf /etc/icinga2/conf.d/services.conf-distributed
-  [ -f /etc/icinga2/conf.d/services.conf.docker ] && mv /etc/icinga2/conf.d/services.conf.docker /etc/icinga2/conf.d/services.conf
+  [ -f /etc/icinga2/conf.d/services.conf.docker ] && cp /etc/icinga2/conf.d/services.conf.docker /etc/icinga2/conf.d/services.conf
 
   # set NodeName (important for the cert feature!)
   #

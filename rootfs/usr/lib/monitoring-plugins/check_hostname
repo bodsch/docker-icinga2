@@ -1,0 +1,8 @@
+#!/bin/sh
+#
+# dummy check host check
+
+echo $(hostname -f)
+
+exit 0
+

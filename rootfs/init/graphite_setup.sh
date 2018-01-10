@@ -1,5 +1,5 @@
-#
-# Script to Configure the Graphite Support
+
+# configure the Graphite Support
 #
 
 CARBON_HOST=${CARBON_HOST:-""}
@@ -9,7 +9,8 @@ CARBON_PORT=${CARBON_PORT:-2003}
 if ( [ -z ${CARBON_HOST} ] || [ -z ${CARBON_PORT} ] )
 then
   echo " [i] no settings for graphite feature found"
-
+  unset CARBON_HOST
+  unset CARBON_PORT
   return
 fi
 

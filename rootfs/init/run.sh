@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #
 
@@ -6,11 +6,11 @@
 
 HOSTNAME=$(hostname -f)
 
-ICINGA_CERT_DIR="/etc/icinga2/certs"
+export ICINGA_CERT_DIR="/etc/icinga2/certs"
 ICINGA_LIB_DIR="/var/lib/icinga2"
 
 ICINGA_VERSION=$(icinga2 --version | head -n1 | awk -F 'version: ' '{printf $2}' | awk -F \. {'print $1 "." $2'} | sed 's|r||')
-[ "${ICINGA_VERSION}" = "2.8" ] && ICINGA_CERT_DIR="/var/lib/icinga2/certs"
+[ "${ICINGA_VERSION}" = "2.8" ] && export ICINGA_CERT_DIR="/var/lib/icinga2/certs"
 
 export ICINGA_VERSION
 export ICINGA_CERT_DIR
@@ -19,6 +19,9 @@ export HOSTNAME
 
 # -------------------------------------------------------------------------------------------------
 
+# side channel to inject some wild-style customized scripts
+# THIS CAN BREAK THE COMPLETE ICINGA2 CONFIGURATION!
+#
 custom_scripts() {
 
   if [ -d /init/custom.d ]
@@ -27,11 +30,15 @@ custom_scripts() {
     do
       case "$f" in
         *.sh)
-          echo " [i] start $f";
-          nohup "${f}" > /tmp/$(basename ${f} .sh).log 2>&1 &
+          echo " [W] ------------------------------------------------------"
+          echo " [W] YOU SHOULD KNOW WHAT YOU'RE DOING."
+          echo " [W] THIS CAN BREAK THE COMPLETE ICINGA2 CONFIGURATION!"
+          echo " [W] RUN SCRIPT: ${f}";
+          nohup "${f}" > /dev/stdout 2>&1 &
+          echo " [W] ------------------------------------------------------"
           ;;
         *)
-          echo " [w] ignoring $f"
+          echo " [w] ignoring file ${f}"
           ;;
       esac
       echo
@@ -69,7 +76,7 @@ run() {
   prepare
 
   . /init/database/mysql.sh
-  . /init/pki_setup.sh
+  . /init/configure_icinga.sh
   . /init/api_user.sh
   . /init/graphite_setup.sh
   . /init/configure_ssmtp.sh
@@ -80,7 +87,21 @@ run() {
 
   echo " [i] start init process ..."
 
-  /bin/s6-svscan /etc/s6
+  if [[ "${ICINGA_TYPE}" = "Master" ]]
+  then
+    export RAILS_ENV="production"
+    # backup the generated zones
+    #
+    nohup /init/runtime/inotify.sh > /dev/stdout 2>&1 &
+    nohup /usr/local/bin/rest-service.rb > /dev/stdout 2>&1 &
+  else
+    nohup /init/runtime/ca_validator.sh > /dev/stdout 2>&1 &
+  fi
+
+  /usr/sbin/icinga2 \
+    daemon \
+      --config /etc/icinga2/icinga2.conf \
+      --errorlog /dev/stdout
 }
 
 

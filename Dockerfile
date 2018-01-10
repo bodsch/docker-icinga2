@@ -4,8 +4,7 @@ FROM alpine:3.7
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
-  RAILS_ENV="production" \
-  BUILD_DATE="2018-01-06" \
+  BUILD_DATE="2018-01-10" \
   BUILD_TYPE="development" \
   CERT_SERVICE_VERSION="1.0.0" \
   ICINGA_VERSION="2.8.0-r0"
@@ -34,13 +33,11 @@ RUN \
   apk add --quiet --no-cache --virtual .build-deps \
     libffi-dev g++ make git openssl-dev ruby-dev && \
   apk add --quiet --no-cache \
-    bash bind-tools curl expect fping inotify-tools icinga2 jq mailx monitoring-plugins mariadb-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby rsync s6 ssmtp tzdata unzip && \
+    bash bind-tools curl expect fping inotify-tools icinga2 jq mailx monitoring-plugins mariadb-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby rsync ssmtp tzdata unzip && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   ln -s /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command checker mainlog notification && \
   mkdir -p /etc/icinga2/objects.d && \
-  mkdir -p /etc/icinga2/zones.d/global-templates && \
-  mkdir -p /etc/icinga2/zones.d/director-global && \
   mkdir -p /run/icinga2/cmd && \
   cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
   chmod u+s /bin/busybox && \
@@ -62,8 +59,6 @@ RUN \
     io-console bundler && \
   cp -ar /tmp/ruby-icinga-cert-service/bin /usr/local/ && \
   cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/ && \
-  git clone https://github.com/nisabek/icinga2-slack-notifications.git && \
-  git clone https://github.com/lazyfrosch/icinga2-telegram.git && \
   apk del --quiet --purge .build-deps && \
   rm -rf \
     /tmp/* \

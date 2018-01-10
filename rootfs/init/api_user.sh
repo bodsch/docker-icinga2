@@ -1,5 +1,5 @@
-#
-# Script to Create API USERS
+
+# create API users
 #
 create_api_user() {
 
@@ -48,7 +48,4 @@ EOF
 
 }
 
-
 create_api_user
-
-# EOF
