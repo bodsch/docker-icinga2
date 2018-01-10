@@ -201,11 +201,11 @@ get_certificate() {
 #
 validate_local_ca() {
 
-  # TODO
-  # we need this part?
-
   if [ -f ${ICINGA_CERT_DIR}/ca.crt ]
   then
+
+    echo " [i] validate our CA file against our master"
+
     checksum=$(sha256sum ${ICINGA_CERT_DIR}/ca.crt | cut -f 1 -d ' ')
 
     # validate our ca file
@@ -248,37 +248,37 @@ validate_local_ca() {
 #
 # if this failed, the PKI schould be removed
 #
-validate_cert() {
-
-  if [ -d ${ICINGA_CERT_DIR}/ ]
-  then
-    cd ${ICINGA_CERT_DIR}
-
-    if [ ! -f ${HOSTNAME}.pem ]
-    then
-      cat ${HOSTNAME}.crt ${HOSTNAME}.key >> ${HOSTNAME}.pem
-    fi
-
-    echo " [i] validate our certifiacte"
-
-    code=$(curl \
-      --silent \
-      --insecure \
-      --user ${ICINGA_CERT_SERVICE_API_USER}:${ICINGA_CERT_SERVICE_API_PASSWORD} \
-      --capath . \
-      --cert ./${HOSTNAME}.pem \
-      --cacert ./ca.crt \
-      https://${ICINGA_MASTER}:5665/v1/status/CIB)
-
-    echo ${code}
-
-#     if [[ $? -gt 0 ]]
+# validate_cert() {
+#
+#   if [ -d ${ICINGA_CERT_DIR}/ ]
+#   then
+#     cd ${ICINGA_CERT_DIR}
+#
+#     if [ ! -f ${HOSTNAME}.pem ]
 #     then
-#       cd /
-#       rm -rf ${ICINGA_CERT_DIR}/*
+#       cat ${HOSTNAME}.crt ${HOSTNAME}.key >> ${HOSTNAME}.pem
 #     fi
-  fi
-}
+#
+#     echo " [i] validate our certifiacte"
+#
+#     code=$(curl \
+#       --silent \
+#       --insecure \
+#       --user ${ICINGA_CERT_SERVICE_API_USER}:${ICINGA_CERT_SERVICE_API_PASSWORD} \
+#       --capath . \
+#       --cert ./${HOSTNAME}.pem \
+#       --cacert ./ca.crt \
+#       https://${ICINGA_MASTER}:5665/v1/status/CIB)
+#
+#     echo ${code}
+#
+# #     if [[ $? -gt 0 ]]
+# #     then
+# #       cd /
+# #       rm -rf ${ICINGA_CERT_DIR}/*
+# #     fi
+#   fi
+# }
 
 
 # configure a icinga2 master instance
@@ -310,6 +310,7 @@ configure_icinga2_satellite() {
   . /init/wait_for/icinga_master.sh
 
   # ONLY THE MASTER CREATES NOTIFICATIONS!
+  #
   [ -e /etc/icinga2/features-enabled/notification.conf ] && disable_icinga_feature notification
 
   # all communications between master and satellite needs the API feature
@@ -340,8 +341,6 @@ configure_icinga2_satellite() {
   #
   if ( [ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ] && [ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.crt ] )
   then
-    :
-    # echo "" > /etc/icinga2/zones.conf
     [ -f ${ICINGA_LIB_DIR}/backup/zones.conf ] && cp -v ${ICINGA_LIB_DIR}/backup/zones.conf /etc/icinga2/zones.conf 2> /dev/null
   else
 
@@ -366,6 +365,8 @@ configure_icinga2_satellite() {
       --output /tmp/sign_${HOSTNAME}.json \
       http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}${ICINGA_CERT_SERVICE_PATH}v2/sign/${HOSTNAME})
 
+    cat /tmp/sign_${HOSTNAME}.json
+
     if [[ $? -gt 0 ]]
     then
       cat /tmp/sign_${HOSTNAME}.json
@@ -379,33 +380,12 @@ configure_icinga2_satellite() {
 
     if ( [ $(grep -c "Endpoint \"${ICINGA_MASTER}\"" /etc/icinga2/zones.conf ) -eq 0 ] || [ $(grep -c "host = \"${ICINGA_MASTER}\"" /etc/icinga2/zones.conf) -eq 0 ] )
     then
-      cat << EOF > /etc/icinga2/zones.conf
+      cat << EOF > /etc/icinga2/master_zone.conf
 
-object Endpoint "${ICINGA_MASTER}" {
-  ### the following line specifies that the client connects to the master and not vice versa
-  host = "${ICINGA_MASTER}"
-  port = "5665"
-}
-
-object Zone "master" {
-  endpoints = [ "${ICINGA_MASTER}" ]
-}
-
-object Endpoint NodeName {
-}
-
-object Zone ZoneName {
-  endpoints = [ NodeName ]
-  parent = "master"
-}
-
-object Zone "global-templates" {
-  global = true
-}
-
-object Zone "director-global" {
-  global = true
-}
+### the following line specifies that the client connects to the master and not vice versa
+object Endpoint "${ICINGA_MASTER}" { host = "${ICINGA_MASTER}" ; port = "5665" }
+object Zone "master" { endpoints = [ "${ICINGA_MASTER}" ] }
+object Endpoint NodeName {}
 EOF
 
       # create an second zone.conf
@@ -415,28 +395,12 @@ EOF
       #
       cat << EOF > ${ICINGA_LIB_DIR}/backup/zones.conf
 
-object Endpoint "${ICINGA_MASTER}" {
-  ### the following line specifies that the client connects to the master and not vice versa
-  host = "${ICINGA_MASTER}"
-  port = "5665"
-}
-
-object Zone "master" {
-  endpoints = [ "${ICINGA_MASTER}" ]
-}
-
-object Zone ZoneName {
-  endpoints = [ NodeName ]
-  parent = "master"
-}
-
-object Zone "global-templates" {
-  global = true
-}
-
-object Zone "director-global" {
-  global = true
-}
+### the following line specifies that the client connects to the master and not vice versa
+object Endpoint "${ICINGA_MASTER}" { host = "${ICINGA_MASTER}" ; port = "5665" }
+object Zone "master" { endpoints = [ "${ICINGA_MASTER}" ] }
+object Zone ZoneName { endpoints = [ NodeName ]; parent = "master" }
+object Zone "global-templates" { global = true }
+object Zone "director-global" { global = true }
 EOF
     fi
   fi
@@ -469,14 +433,16 @@ EOF
   then
     echo " [E] the validation of our configuration was not successful."
     echo " [E] clean up and restart."
-
+set -x
     rm -rf ${ICINGA_LIB_DIR}/*
 
     echo " [E] headshot ..."
     s6_pid=$(ps ax | grep s6-svscan | grep -v grep | awk '{print $1}')
+    icinga_pid=$(ps ax | grep icinga2 | grep -v grep | awk '{print $1}')
 
-    [ -z "${s6_pid}" ] || kill -15 ${s6_pid} > /dev/null 2> /dev/null
-
+    [ -z "${s6_pid}" ] || kill -9 ${s6_pid} > /dev/null 2> /dev/null
+    [ -z "${icinga2_pid}" ] || killall icinga2 > /dev/null 2> /dev/null
+set +x
   fi
 
   sleep 5s
@@ -499,6 +465,8 @@ cat << EOF
 }
 EOF
   }
+
+  . /init/wait_for/icinga_master.sh
 
   # add myself as host
   #

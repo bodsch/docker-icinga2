@@ -4,6 +4,7 @@ FROM alpine:3.7
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
+  RAILS_ENV="production" \
   BUILD_DATE="2018-01-06" \
   BUILD_TYPE="development" \
   CERT_SERVICE_VERSION="1.0.0" \
@@ -41,6 +42,7 @@ RUN \
   mkdir -p /etc/icinga2/zones.d/global-templates && \
   mkdir -p /etc/icinga2/zones.d/director-global && \
   mkdir -p /run/icinga2/cmd && \
+  cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
   chmod u+s /bin/busybox && \
   echo 'gem: --no-document' >> /etc/gemrc && \
   gem install --quiet --no-rdoc --no-ri \
