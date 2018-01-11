@@ -317,7 +317,11 @@ configure_icinga2_satellite() {
   if [ "${RESTART_NEEDED}" = "true" ]
   then
     restart_master
+
+    # i think, the restart must be come later, when more than one satellite are connected
+    #
     sleep 2
+
     echo " [i] restart myself"
     exit 1
   fi
