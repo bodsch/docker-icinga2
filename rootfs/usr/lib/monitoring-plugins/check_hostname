@@ -2,7 +2,6 @@
 #
 # dummy check host check
 
-echo $(hostname -f)
+echo -e "$(date +"%Y-%m-%d %H:%M:%S") $(hostname -f)"
 
 exit 0
-
