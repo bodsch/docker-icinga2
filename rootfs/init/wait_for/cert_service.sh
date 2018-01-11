@@ -8,7 +8,7 @@ wait_for_icinga_cert_service() {
   if [ ${ICINGA_CERT_SERVICE} ]
   then
 
-    echo " [i] waiting for our cert-service on '${ICINGA_CERT_SERVICE_SERVER}' to come up"
+    log_info "waiting for our cert-service on '${ICINGA_CERT_SERVICE_SERVER}' to come up"
 
     # use the new Cert Service to create and get a valide certificat for distributed icinga services
     if (
@@ -34,7 +34,7 @@ wait_for_icinga_cert_service() {
 
       if [ $RETRY -le 0 ]
       then
-        echo " [E] Could not connect to the Certificate-Service '${ICINGA_CERT_SERVICE_SERVER}'"
+        log_error "Could not connect to the Certificate-Service '${ICINGA_CERT_SERVICE_SERVER}'"
         exit 1
       fi
 
@@ -63,21 +63,21 @@ wait_for_icinga_cert_service() {
 
         health=
 
-        echo " [i] wait for the health check for the cert-service on '${ICINGA_CERT_SERVICE_SERVER}'"
+        log_info "wait for the health check for the cert-service on '${ICINGA_CERT_SERVICE_SERVER}'"
         sleep 5s
         RETRY=$(expr ${RETRY} - 1)
       done
 
       if [ $RETRY -le 0 ]
       then
-        echo " [E] Could not a Health Check from the Certificate-Service '${ICINGA_CERT_SERVICE_SERVER}'"
+        log_error "Could not a Health Check from the Certificate-Service '${ICINGA_CERT_SERVICE_SERVER}'"
         exit 1
       fi
 
       sleep 5s
     fi
   else
-    echo " [w] missing variables:"
+    log_warn "missing variables:"
     echo "     ICINGA_CERT_SERVICE_BA_USER: '${ICINGA_CERT_SERVICE_BA_USER}'"
     echo "     ICINGA_CERT_SERVICE_BA_PASSWORD: '${ICINGA_CERT_SERVICE_BA_PASSWORD}'"
     echo "     ICINGA_CERT_SERVICE_API_USER: '${ICINGA_CERT_SERVICE_API_USER}'"

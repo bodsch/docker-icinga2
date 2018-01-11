@@ -2,7 +2,7 @@
 
 remove_satellite_from_master() {
 
-  echo " [i] remove myself from my master '${ICINGA_MASTER}'"
+  log_info "remove myself from my master '${ICINGA_MASTER}'"
   # remove myself from master
   #
   code=$(curl \
@@ -46,7 +46,7 @@ EOF
 
   # add myself as host
   #
-  echo " [i] add myself to my master '${ICINGA_MASTER}'"
+  log_info "add myself to my master '${ICINGA_MASTER}'"
 
   code=$(curl \
     --user ${ICINGA_CERT_SERVICE_API_USER}:${ICINGA_CERT_SERVICE_API_PASSWORD} \
@@ -66,7 +66,7 @@ EOF
     status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
     message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
 
-    echo " [E] ${message}"
+    log_error "${message}"
 
     add_satellite_to_master
   fi
@@ -81,7 +81,7 @@ restart_master() {
 
   # restart the master to activate the zone
   #
-  echo " [i] restart the master '${ICINGA_MASTER}' to activate the zone"
+  log_info "restart the master '${ICINGA_MASTER}' to activate the zone"
   code=$(curl \
     --user ${ICINGA_CERT_SERVICE_API_USER}:${ICINGA_CERT_SERVICE_API_PASSWORD} \
     --silent \
@@ -98,12 +98,12 @@ restart_master() {
 #    status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
 #    message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
 #
-#    echo " [i] ${message}"
+#    log_info "${message}"
   else
     status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
     message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
 
-    echo " [E] ${message}"
+    log_error "${message}"
   fi
 
 }
@@ -111,7 +111,7 @@ restart_master() {
 
 create_endpoint_config() {
 
-  echo " [i] configure my endpoint: '${ICINGA_MASTER}'"
+  log_info "configure my endpoint: '${ICINGA_MASTER}'"
 
     # curl -k  -uroot:icinga -H 'Accept: application/json' \
     # -X PUT --header 'Content-Type: application/json;charset=UTF-8' \
@@ -185,7 +185,7 @@ EOF
 #
 configure_icinga2_satellite() {
 
-#   echo " [i] we are an satellite .."
+#   log_info "we are an satellite .."
   export ICINGA_SATELLITE=true
 
   # randomized sleep to avoid timing problems
@@ -257,7 +257,7 @@ configure_icinga2_satellite() {
 
     # and now we have to ask our master to confirm this certificate
     #
-    echo " [i] ask our cert-service to sign our certifiacte"
+    log_info "ask our cert-service to sign our certifiacte"
 
     . /init/wait_for/cert_service.sh
 
@@ -282,7 +282,7 @@ configure_icinga2_satellite() {
       status=$(echo "${code}" | jq --raw-output .status 2> /dev/null)
       message=$(echo "${code}" | jq --raw-output .message 2> /dev/null)
 
-      echo " [E] ${message}"
+      log_error "${message}"
 
       # TODO
       # wat nu?
@@ -322,7 +322,7 @@ configure_icinga2_satellite() {
     #
     sleep 2
 
-    echo " [i] restart myself"
+    log_info "restart myself"
     exit 1
   fi
 
@@ -336,12 +336,12 @@ configure_icinga2_satellite() {
   #
   if [ $? -gt 0 ]
   then
-    echo " [E] the validation of our configuration was not successful."
-#    echo " [E] clean up and restart."
+    log_error "the validation of our configuration was not successful."
+#    log_error "clean up and restart."
 #     cp -v /etc/icinga2/zones.conf-distributed /etc/icinga2/zones.conf
 #     rm -rfv ${ICINGA_LIB_DIR}/backup/*
 #
-#     echo " [E] headshot ..."
+#     log_error "headshot ..."
 #
 # #    ps ax
 #

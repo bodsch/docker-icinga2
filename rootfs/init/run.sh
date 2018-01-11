@@ -17,6 +17,8 @@ export ICINGA_CERT_DIR
 export ICINGA_LIB_DIR
 export HOSTNAME
 
+. /init/output.sh
+
 # -------------------------------------------------------------------------------------------------
 
 # side channel to inject some wild-style customized scripts
@@ -30,15 +32,15 @@ custom_scripts() {
     do
       case "$f" in
         *.sh)
-          echo " [W] ------------------------------------------------------"
-          echo " [W] YOU SHOULD KNOW WHAT YOU'RE DOING."
-          echo " [W] THIS CAN BREAK THE COMPLETE ICINGA2 CONFIGURATION!"
-          echo " [W] RUN SCRIPT: ${f}";
+          log_warn "------------------------------------------------------"
+          log_warn "YOU SHOULD KNOW WHAT YOU'RE DOING."
+          log_warn "THIS CAN BREAK THE COMPLETE ICINGA2 CONFIGURATION!"
+          log_warn "RUN SCRIPT: ${f}";
           nohup "${f}" > /dev/stdout 2>&1 &
-          echo " [W] ------------------------------------------------------"
+          log_warn "------------------------------------------------------"
           ;;
         *)
-          echo " [w] ignoring file ${f}"
+          log_warn "ignoring file ${f}"
           ;;
       esac
       echo
@@ -85,7 +87,7 @@ run() {
 
   custom_scripts
 
-  echo " [i] start init process ..."
+  log_info "start init process ..."
 
   if [[ "${ICINGA_TYPE}" = "Master" ]]
   then

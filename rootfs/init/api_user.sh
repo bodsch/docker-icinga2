@@ -13,10 +13,10 @@ create_api_user() {
 
   if [ -z "${api_users}" ]
   then
-    echo " [i] no API users found"
+    log_info "no API users found"
     return
   else
-    echo " [i] create configuration for API users ..."
+    log_info "create configuration for API users ..."
 
     # DESTROY the old entrys
     #

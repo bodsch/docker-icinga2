@@ -3,7 +3,7 @@
 #
 configure_icinga2_agent() {
 
-  echo " [i] we are an agent .."
+  log_info "we are an agent .."
 
   # TODO
 }

@@ -10,7 +10,7 @@ IDO_DATABASE_NAME=${IDO_DATABASE_NAME:-"icinga2core"}
 
 if [ -z ${MYSQL_HOST} ]
 then
-  echo " [i] no MYSQL_HOST set ..."
+  log_info "no MYSQL_HOST set ..."
 
   return
 else
@@ -19,9 +19,9 @@ else
   then
     IDO_PASSWORD=$(pwgen -s 15 1)
 
-    echo " [W] NO IDO PASSWORD HAS BEEN SET!"
-    echo " [W] DATABASE CONNECTIONS ARE NOT RESTART SECURE!"
-    echo " [W] DYNAMICALLY GENERATED PASSWORD: '${IDO_PASSWORD}' (ONLY VALID FOR THIS SESSION)"
+    log_warn "NO IDO PASSWORD HAS BEEN SET!"
+    log_warn "DATABASE CONNECTIONS ARE NOT RESTART SECURE!"
+    log_warn "DYNAMICALLY GENERATED PASSWORD: '${IDO_PASSWORD}' (ONLY VALID FOR THIS SESSION)"
   fi
 
   MYSQL_OPTS="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_ROOT_PASS} --port=${MYSQL_PORT}"
@@ -73,7 +73,7 @@ create_schema() {
     # Database isn't created
     # well, i do my job ...
     #
-    echo " [i] create IDO database '${IDO_DATABASE_NAME}'"
+    log_info "create IDO database '${IDO_DATABASE_NAME}'"
 
     (
       echo "--- create user '${IDO_DATABASE_NAME}'@'%' IDENTIFIED BY '${IDO_PASSWORD}';"
@@ -87,7 +87,7 @@ create_schema() {
 
     if [ $? -eq 1 ]
     then
-      echo " [E] can't create database '${IDO_DATABASE_NAME}'"
+      log_error "can't create database '${IDO_DATABASE_NAME}'"
       exit 1
     fi
 
@@ -99,7 +99,7 @@ create_schema() {
 #
 insert_schema() {
 
-  echo " [i] import IDO database schema"
+  log_info "import IDO database schema"
 
   # create the ido schema
   #
@@ -107,7 +107,7 @@ insert_schema() {
 
   if [ $? -gt 0 ]
   then
-    echo " [E] can't insert the IDO database schema"
+    log_error "can't insert the IDO database schema"
     exit 1
   fi
 }
@@ -126,7 +126,7 @@ update_schema() {
 
   if [ -z "${db_version}" ]
   then
-    echo " [w] no database version found. skip database upgrade."
+    log_warn "no database version found. skip database upgrade."
 
     insert_schema
     update_schema
@@ -134,7 +134,7 @@ update_schema() {
 
     upgrape_directory="/usr/share/icinga2-ido-mysql/schema/upgrade"
 
-    echo " [i] IDO database version: ${db_version}"
+    log_info "IDO database version: ${db_version}"
 
     for DB_UPDATE_FILE in $(ls -1 ${upgrape_directory}/*.sql)
     do
@@ -142,13 +142,13 @@ update_schema() {
 
       if [ "$(version_compare ${db_version} ${FILE_VER})" = "<" ]
       then
-        echo " [i] apply database update '${FILE_VER}' from '${DB_UPDATE_FILE}'"
+        log_info "apply database update '${FILE_VER}' from '${DB_UPDATE_FILE}'"
 
         mysql ${MYSQL_OPTS} --force ${IDO_DATABASE_NAME}  < ${DB_UPDATE_FILE}
 
         if [ $? -gt 0 ]
         then
-          echo " [E] database update ${DB_UPDATE_FILE} failed"
+          log_error "database update ${DB_UPDATE_FILE} failed"
           exit 1
         fi
 
@@ -161,7 +161,7 @@ update_schema() {
 #
 create_config() {
 
-  echo " [i] create IDO configuration"
+  log_info "create IDO configuration"
 
   # create the IDO configuration
   #

@@ -10,6 +10,8 @@
 # IT'S JUST A FIX FOR A FAULTY USE.
 #
 
+. /init/output.sh
+
 . /init/cert/certificate_handler.sh
 
 while true
@@ -22,9 +24,9 @@ do
   if [ ! -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ]
   then
 
-    echo " [E] the validation of our CA was not successful."
-    echo " [E] clean up and restart."
-    echo " [E] headshot ..."
+    log_error "the validation of our CA was not successful."
+    log_error "clean up and restart."
+    log_error "headshot ..."
 
     icinga_pid=$(ps ax | grep icinga2 | grep -v grep | awk '{print $1}')
 

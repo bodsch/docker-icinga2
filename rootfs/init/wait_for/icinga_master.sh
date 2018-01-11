@@ -11,7 +11,7 @@ wait_for_icinga_master() {
 
   until [ ${RETRY} -le 0 ]
   do
-    echo " [i] waiting for our icinga master '${ICINGA_MASTER}' to come up"
+    log_info "waiting for our icinga master '${ICINGA_MASTER}' to come up"
     sleep 5s
 
     nc -z ${ICINGA_MASTER} 5665 < /dev/null > /dev/null
@@ -24,7 +24,7 @@ wait_for_icinga_master() {
 
   if [ $RETRY -le 0 ]
   then
-    echo " [E] could not connect to the icinga2 master instance '${ICINGA_MASTER}'"
+    log_error "could not connect to the icinga2 master instance '${ICINGA_MASTER}'"
     exit 1
   fi
 

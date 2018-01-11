@@ -8,7 +8,7 @@ create_ca() {
   #
   if [ ! -f ${ICINGA_LIB_DIR}/ca/ca.crt ]
   then
-    echo " [i] create new CA"
+    log_info "create new CA"
 
     if [ -f ${PKI_KEY_FILE} ]
     then
@@ -23,7 +23,7 @@ create_ca() {
     #
     if [ $? -gt 0 ]
     then
-      echo " [E] API Setup has failed"
+      log_error "API Setup has failed"
       rm -rf ${ICINGA_LIB_DIR}/ca 2> /dev/null
       rm -rf ${ICINGA_CERT_DIR}/${HOSTNAME}* 2> /dev/null
 
@@ -35,7 +35,7 @@ create_ca() {
   #
   if [ ! -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ]
   then
-    echo " [i] create new certificate"
+    log_info "create new certificate"
 
     ${PKI_CMD} new-cert --cn ${HOSTNAME} --key ${PKI_KEY_FILE} --csr ${PKI_CSR_FILE}
     ${PKI_CMD} sign-csr --csr ${PKI_CSR_FILE} --cert ${PKI_CRT_FILE}
@@ -57,7 +57,7 @@ create_ca() {
     chmod 600 ${ICINGA_CERT_DIR}/*.key
     chmod 644 ${ICINGA_CERT_DIR}/*.crt
 
-    echo " [i] Finished cert generation"
+    log_info "Finished cert generation"
   fi
 }
 
@@ -80,7 +80,7 @@ get_certificate() {
   if [ ${ICINGA_CERT_SERVICE} ]
   then
     echo ""
-    echo " [i] we ask our cert-service for a certificate .."
+    log_info "we ask our cert-service for a certificate .."
 
     code=$(curl \
       --user ${ICINGA_CERT_SERVICE_BA_USER}:${ICINGA_CERT_SERVICE_BA_PASSWORD} \
@@ -88,7 +88,7 @@ get_certificate() {
       --request GET \
       http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}${ICINGA_CERT_SERVICE_PATH}v2/icinga-version)
 
-    echo " [i] remote icinga version: ${code}"
+    log_info "remote icinga version: ${code}"
 
     # generate a certificate request
     #
@@ -105,8 +105,8 @@ get_certificate() {
     if ( [ $? -eq 0 ] && [ ${code} -eq 200 ] )
     then
 
-      echo " [i] certifiacte request was successful"
-      echo " [i] download and install the certificate"
+      log_info "certifiacte request was successful"
+      log_info "download and install the certificate"
 
       master_name=$(jq --raw-output .master_name /tmp/request_${HOSTNAME}.json)
       checksum=$(jq --raw-output .checksum /tmp/request_${HOSTNAME}.json)
@@ -138,7 +138,7 @@ get_certificate() {
         #
         if [ ! -f ${HOSTNAME}.tgz ]
         then
-          echo " [E] Cert File '${HOSTNAME}.tgz' not found!"
+          log_error "Cert File '${HOSTNAME}.tgz' not found!"
           exit 1
         fi
 
@@ -156,7 +156,7 @@ get_certificate() {
         create_api_config
 
       else
-        echo " [E] can't download out certificate!"
+        log_error "can't download out certificate!"
 
         rm -rf ${WORK_DIR}/pki 2> /dev/null
 
@@ -166,8 +166,8 @@ get_certificate() {
 
       error=$(cat /tmp/request_${HOSTNAME}.json)
 
-      echo " [E] ${code} - the cert-service tell us a problem: '${error}'"
-      echo " [E] exit ..."
+      log_error "${code} - the cert-service tell us a problem: '${error}'"
+      log_error "exit ..."
 
       rm -f /tmp/request_${HOSTNAME}.json
       exit 1
@@ -186,7 +186,7 @@ validate_local_ca() {
   if [ -f ${ICINGA_CERT_DIR}/ca.crt ]
   then
 
-    echo " [i] validate our CA file against our master"
+    log_info "validate our CA file against our master"
 
     checksum=$(sha256sum ${ICINGA_CERT_DIR}/ca.crt | cut -f 1 -d ' ')
 
@@ -210,7 +210,7 @@ validate_local_ca() {
       status=$(echo "${code}" | jq --raw-output .status 2> /dev/null)
       message=$(echo "${code}" | jq --raw-output .message 2> /dev/null)
 
-      echo " [W] our master has a new CA"
+      log_warn "our master has a new CA"
 
       rm -f /tmp/validate_ca_${HOSTNAME}.json
 
@@ -252,7 +252,7 @@ create_certificate_pem() {
 #       cat ${HOSTNAME}.crt ${HOSTNAME}.key >> ${HOSTNAME}.pem
 #     fi
 #
-#     echo " [i] validate our certifiacte"
+#     log_info "validate our certifiacte"
 #
 #     code=$(curl \
 #       --silent \

@@ -72,7 +72,7 @@ EOF
 
   if [ -z "${aliases}" ]
   then
-    echo " [i] no SMTP Aliases found"
+    log_info "no SMTP Aliases found"
   else
 
     # add more aliases

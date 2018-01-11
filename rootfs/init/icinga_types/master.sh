@@ -13,7 +13,7 @@ restore_old_zone_config() {
 
   if [ -d ${ICINGA_LIB_DIR}/backup/zones.d ]
   then
-    echo " [i] restore older zone configurations"
+    log_info "restore older zone configurations"
 
     rsync \
       --archive \
@@ -32,7 +32,7 @@ restore_old_zone_config() {
 #
 configure_icinga2_master() {
 
-#  echo " [i] we are the master .."
+#  log_info "we are the master .."
 
   enable_icinga_feature api
 
