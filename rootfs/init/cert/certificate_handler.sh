@@ -202,9 +202,7 @@ validate_local_ca() {
       --output /tmp/validate_ca_${HOSTNAME}.json \
       http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}${ICINGA_CERT_SERVICE_PATH}v2/validate/${checksum})
 
-    echo "${code}"
-
-    if ( [ $? -eq 0 ] && [ ${code} == 200 ] )
+    if ( [ $? -eq 0 ] && [ "${code}" = "200" ] )
     then
       rm -f /tmp/validate_ca_${HOSTNAME}.json
     else
@@ -212,7 +210,7 @@ validate_local_ca() {
       status=$(echo "${code}" | jq --raw-output .status 2> /dev/null)
       message=$(echo "${code}" | jq --raw-output .message 2> /dev/null)
 
-      echo " [w] our master has a new CA"
+      echo " [W] our master has a new CA"
 
       rm -f /tmp/validate_ca_${HOSTNAME}.json
 
@@ -227,6 +225,16 @@ validate_local_ca() {
   fi
 }
 
+
+create_certificate_pem() {
+
+  if ( [ -d ${ICINGA_CERT_DIR} ] && [ ! -f ${ICINGA_CERT_DIR}/${HOSTNAME}.pem ] )
+  then
+    cd ${ICINGA_CERT_DIR}
+
+    cat ${HOSTNAME}.crt ${HOSTNAME}.key >> ${HOSTNAME}.pem
+  fi
+}
 
 # validate our lokal certificate against our icinga-master
 # with an API Request against https://${ICINGA_HOST}:${ICINGA_API_PORT}/v1/status/CIB
