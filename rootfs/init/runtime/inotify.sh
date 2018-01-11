@@ -8,6 +8,8 @@
 # in this case, we need only a sync of all 'zones.*' files/directory
 #
 
+. /init/output.sh
+
 monitored_directory="/etc/icinga2"
 backup_directory="/var/lib/icinga2/backup"
 
@@ -27,14 +29,15 @@ inotifywait \
       continue
     fi
 
-    log_info "The file '$file' appeared in directory '$path' via '$action'"
+    log_info "service zone monitor - The file '$file' appeared in directory '$path' via '$action'"
     if [ "${action}" = "DELETE" ]
     then
       rm -f ${backup_directory}/$(basename ${path})/${file}
     elif [ "${action}" = "DELETE,ISDIR" ]
     then
       rm -rf ${backup_directory}/${file}
-    else
+    elif [[ "${action}" = "CLOSE_WRITE,CLOSE" ]]
+    then
       # cp -r ${monitored_directory}/$(basename ${path}) ${backup_directory}/
       rsync \
         --archive \

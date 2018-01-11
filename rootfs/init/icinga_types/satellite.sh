@@ -40,7 +40,7 @@ cat << EOF
 EOF
   }
 
-  sleep $(shuf -i 1-10 -n 1)s
+  sleep $(random)s
 
   . /init/wait_for/icinga_master.sh
 
@@ -75,7 +75,7 @@ EOF
 
 restart_master() {
 
-  sleep $(shuf -i 10-25 -n 1)s
+  sleep $(random)s
 
   . /init/wait_for/icinga_master.sh
 
@@ -90,22 +90,14 @@ restart_master() {
     --insecure \
     https://${ICINGA_MASTER}:5665/v1/actions/restart-process )
 
-#  echo "${code}"
-
-  if [ $? -eq 0 ]
+  if [ $? -gt 0 ]
   then
-    :
-#    status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
-#    message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
-#
-#    log_info "${message}"
-  else
     status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
     message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
 
+    log_error "${code}"
     log_error "${message}"
   fi
-
 }
 
 
@@ -185,12 +177,20 @@ EOF
 #
 configure_icinga2_satellite() {
 
-#   log_info "we are an satellite .."
   export ICINGA_SATELLITE=true
+
+  if [ -e /tmp/stage_3 ]
+  then
+    rm -f /tmp/stage_3
+    . /init/wait_for/icinga_master.sh
+    add_satellite_to_master
+
+    return
+  fi
 
   # randomized sleep to avoid timing problems
   #
-  sleep $(shuf -i 1-30 -n 1)s
+  sleep $(random)s
 
   . /init/wait_for/cert_service.sh
   . /init/wait_for/icinga_master.sh
@@ -205,7 +205,7 @@ configure_icinga2_satellite() {
 
   # remove myself from master
   #
-#   remove_satellite_from_master
+  remove_satellite_from_master
 
   # we have a certificate
   # validate this against our icinga-master
@@ -320,9 +320,9 @@ configure_icinga2_satellite() {
 
     # i think, the restart must be come later, when more than one satellite are connected
     #
-    sleep 2
-
+    sleep 2m
     log_info "restart myself"
+
     exit 1
   fi
 
@@ -356,9 +356,8 @@ configure_icinga2_satellite() {
 #     exit 1
   fi
 
-  add_satellite_to_master
-
-  sleep 8s
+#  add_satellite_to_master
+#  sleep 8s
 }
 
 configure_icinga2_satellite

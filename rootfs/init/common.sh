@@ -140,3 +140,7 @@ correct_rights() {
     chown -R ${USER}:${GROUP} ${ICINGA_CERT_DIR}
   fi
 }
+
+random() {
+  echo $(shuf -i 5-30 -n 1)
+}

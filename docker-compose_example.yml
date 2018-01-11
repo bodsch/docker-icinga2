@@ -106,33 +106,33 @@ services:
       - icinga2-master:icinga2-master.matrix.lan
 
 
-  # the second icinga2 satellite
-  # ask the master above for an certificate
-  #
-  # this satellite should fail, because the BA is faulty
-  icinga2-satellite-2:
-    build: .
-    container_name: icinga2-satellite-2
-    hostname: icinga2-satellite-2.matrix.lan
-    restart: always
-    privileged: true
-    environment:
-      - ICINGA_MASTER=icinga2-master.matrix.lan
-      - ICINGA_PARENT=icinga2-master.matrix.lan
-      - ICINGA_CERT_SERVICE=true
-      - ICINGA_CERT_SERVICE_BA_USER=foofoo
-      - ICINGA_CERT_SERVICE_BA_PASSWORD=barbar
-      - ICINGA_CERT_SERVICE_API_USER=root
-      - ICINGA_CERT_SERVICE_API_PASSWORD=icinga
-      - ICINGA_CERT_SERVICE_SERVER=icinga2-master
-      - ICINGA_CERT_SERVICE_PORT=8080
-      - ICINGA_CERT_SERVICE_PATH=/
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /tmp/docker-data/icinga2-satellite-2:/var/lib/icinga2
-    links:
-      - icinga2-master:icinga2-master.matrix.lan
-
+#  # the second icinga2 satellite
+#  # ask the master above for an certificate
+#  #
+#  # this satellite should fail, because the BA is faulty
+#  icinga2-satellite-2:
+#    build: .
+#    container_name: icinga2-satellite-2
+#    hostname: icinga2-satellite-2.matrix.lan
+#    restart: always
+#    privileged: true
+#    environment:
+#      - ICINGA_MASTER=icinga2-master.matrix.lan
+#      - ICINGA_PARENT=icinga2-master.matrix.lan
+#      - ICINGA_CERT_SERVICE=true
+#      - ICINGA_CERT_SERVICE_BA_USER=foofoo
+#      - ICINGA_CERT_SERVICE_BA_PASSWORD=barbar
+#      - ICINGA_CERT_SERVICE_API_USER=root
+#      - ICINGA_CERT_SERVICE_API_PASSWORD=icinga
+#      - ICINGA_CERT_SERVICE_SERVER=icinga2-master
+#      - ICINGA_CERT_SERVICE_PORT=8080
+#      - ICINGA_CERT_SERVICE_PATH=/
+#    volumes:
+#      - /etc/localtime:/etc/localtime:ro
+#      - /tmp/docker-data/icinga2-satellite-2:/var/lib/icinga2
+#    links:
+#      - icinga2-master:icinga2-master.matrix.lan
+#
 #  # the third icinga2 satellite
 #  # ask the master above for an certificate
 #  #

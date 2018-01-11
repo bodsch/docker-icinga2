@@ -68,10 +68,9 @@ run() {
 
   detect_type
 
-  echo " ---------------------------------------------------"
-  echo "   Icinga ${ICINGA_TYPE} Version ${ICINGA_VERSION} - build: ${BUILD_DATE}"
-  echo " ---------------------------------------------------"
-  echo ""
+  log_info "---------------------------------------------------"
+  log_info "   Icinga ${ICINGA_TYPE} Version ${ICINGA_VERSION} - build: ${BUILD_DATE}"
+  log_info " ---------------------------------------------------"
 
   . /init/common.sh
 
@@ -97,7 +96,9 @@ run() {
     nohup /init/runtime/inotify.sh > /dev/stdout 2>&1 &
     nohup /usr/local/bin/rest-service.rb > /dev/stdout 2>&1 &
   else
-    nohup /init/runtime/ca_validator.sh > /dev/stdout 2>&1 &
+    # nohup /init/runtime/ca_validator.sh > /dev/stdout 2>&1 &
+
+    nohup /init/runtime/zone_watcher.sh > /dev/stdout 2>&1 &
   fi
 
   /usr/sbin/icinga2 \
