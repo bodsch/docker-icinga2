@@ -69,8 +69,9 @@ validate_local_ca() {
 
   if [[ -f ${ICINGA_CERT_DIR}/ca.crt ]]
   then
-
     log_info "validate our CA file against our master"
+
+    . /init/wait_for/cert_service.sh
 
     checksum=$(sha256sum ${ICINGA_CERT_DIR}/ca.crt | cut -f 1 -d ' ')
 
