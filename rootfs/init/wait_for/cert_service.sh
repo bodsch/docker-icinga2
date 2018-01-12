@@ -31,7 +31,11 @@ wait_for_icinga_cert_service() {
         RETRY=$(expr ${RETRY} - 1)
       done
 
+<<<<<<< HEAD
       if [[ ${RETRY} -le 0 ]]
+=======
+      if [[ $RETRY -le 0 ]]
+>>>>>>> 4227dcece413b6dcdd8013ae6d1b490572a1d41d
       then
         log_error "Could not connect to the Certificate-Service '${ICINGA_CERT_SERVICE_SERVER}'"
         exit 1
