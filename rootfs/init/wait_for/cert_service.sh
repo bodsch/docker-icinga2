@@ -8,7 +8,7 @@ wait_for_icinga_cert_service() {
   if [ ${ICINGA_CERT_SERVICE} ]
   then
 
-    log_info "waiting for our cert-service on '${ICINGA_CERT_SERVICE_SERVER}' to come up"
+#    log_info "waiting for our cert-service on '${ICINGA_CERT_SERVICE_SERVER}' to come up"
 
     # use the new Cert Service to create and get a valide certificat for distributed icinga services
     if (

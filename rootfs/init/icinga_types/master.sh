@@ -32,8 +32,6 @@ restore_old_zone_config() {
 #
 configure_icinga2_master() {
 
-#  log_info "we are the master .."
-
   enable_icinga_feature api
 
   create_ca

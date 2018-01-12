@@ -18,6 +18,7 @@ export ICINGA_LIB_DIR
 export HOSTNAME
 
 . /init/output.sh
+. /init/runtime/service_handler.sh
 
 # -------------------------------------------------------------------------------------------------
 
@@ -96,9 +97,12 @@ run() {
     nohup /init/runtime/inotify.sh > /dev/stdout 2>&1 &
     nohup /usr/local/bin/rest-service.rb > /dev/stdout 2>&1 &
   else
-    # nohup /init/runtime/ca_validator.sh > /dev/stdout 2>&1 &
-
-    nohup /init/runtime/zone_watcher.sh > /dev/stdout 2>&1 &
+    :
+    nohup /init/runtime/ca_validator.sh > /dev/stdout 2>&1 &
+    if [[ ! -e /tmp/final ]]
+    then
+      nohup /init/runtime/zone_watcher.sh > /dev/stdout 2>&1 &
+    fi
   fi
 
   /usr/sbin/icinga2 \

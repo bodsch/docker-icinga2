@@ -106,7 +106,8 @@ enable_icinga_feature() {
 
   if [ $(icinga2 feature list | grep Enabled | grep -c ${feature}) -eq 0 ]
   then
-    icinga2 feature enable ${feature}
+    log_info "feature ${feature} enabled"
+    icinga2 feature enable ${feature} > /dev/null
   fi
 }
 
@@ -118,7 +119,8 @@ disable_icinga_feature() {
 
   if [ $(icinga2 feature list | grep Enabled | grep -c ${feature}) -eq 1 ]
   then
-    icinga2 feature disable ${feature}
+    log_info "feature ${feature} disabled"
+    icinga2 feature disable ${feature} > /dev/null
   fi
 }
 
@@ -150,7 +152,7 @@ curl_opts() {
   opts=""
   opts="${opts} --user ${ICINGA_CERT_SERVICE_API_USER}:${ICINGA_CERT_SERVICE_API_PASSWORD}"
   opts="${opts} --silent"
-  opts="${opts} --header 'Accept: application/json'"
+#  opts="${opts} --header 'Accept: application/json'"
   opts="${opts} --insecure"
 
 #  if [ -e ${ICINGA_CERT_DIR}/${HOSTNAME}.pem ]

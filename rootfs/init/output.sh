@@ -21,11 +21,11 @@ log_info() {
 
 log_warn() {
   message="${1}"
-  log_output " [${BOLD}WARNING${NC}]" "${message}"
+  log_output " [${BLUE}${BOLD}WARNING${NC}]" "${message}"
 }
 
 log_error() {
   message="${1}"
-  log_output " [${BOLD}${RED}ERROR${NC}]" "${message}"
+  log_output " [${RED}ERROR${NC}]" "${message}"
 }
 

@@ -11,8 +11,8 @@ wait_for_icinga_master() {
 
   until [ ${RETRY} -le 0 ]
   do
-    log_info "waiting for our icinga master '${ICINGA_MASTER}' to come up"
-    sleep 5s
+#    log_info "waiting for our icinga master '${ICINGA_MASTER}' to come up"
+#    sleep 5s
 
     nc -z ${ICINGA_MASTER} 5665 < /dev/null > /dev/null
 
