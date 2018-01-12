@@ -2,7 +2,7 @@
 #
 #
 
-[ ${DEBUG} ] && set -x
+[[ ${DEBUG} ]] && set -x
 
 HOSTNAME=$(hostname -f)
 
@@ -10,7 +10,7 @@ export ICINGA_CERT_DIR="/etc/icinga2/certs"
 ICINGA_LIB_DIR="/var/lib/icinga2"
 
 ICINGA_VERSION=$(icinga2 --version | head -n1 | awk -F 'version: ' '{printf $2}' | awk -F \. {'print $1 "." $2'} | sed 's|r||')
-[ "${ICINGA_VERSION}" = "2.8" ] && export ICINGA_CERT_DIR="/var/lib/icinga2/certs"
+[[ "${ICINGA_VERSION}" = "2.8" ]] && export ICINGA_CERT_DIR="/var/lib/icinga2/certs"
 
 export ICINGA_VERSION
 export ICINGA_CERT_DIR
@@ -27,18 +27,18 @@ export HOSTNAME
 #
 custom_scripts() {
 
-  if [ -d /init/custom.d ]
+  if [[ -d /init/custom.d ]]
   then
     for f in /init/custom.d/*
     do
       case "$f" in
         *.sh)
-          log_warn "------------------------------------------------------"
-          log_warn "YOU SHOULD KNOW WHAT YOU'RE DOING."
-          log_warn "THIS CAN BREAK THE COMPLETE ICINGA2 CONFIGURATION!"
-          log_warn "RUN SCRIPT: ${f}";
+          log_WARN "------------------------------------------------------"
+          log_WARN "YOU SHOULD KNOW WHAT YOU'RE DOING."
+          log_WARN "THIS CAN BREAK THE COMPLETE ICINGA2 CONFIGURATION!"
+          log_WARN "RUN SCRIPT: ${f}";
           nohup "${f}" > /dev/stdout 2>&1 &
-          log_warn "------------------------------------------------------"
+          log_WARN "------------------------------------------------------"
           ;;
         *)
           log_warn "ignoring file ${f}"
@@ -52,10 +52,10 @@ custom_scripts() {
 
 detect_type() {
 
-  if ( [ -z ${ICINGA_PARENT} ] && [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" == "${HOSTNAME}" ] )
+  if ( [[ -z ${ICINGA_PARENT} ]] && [[ ! -z ${ICINGA_MASTER} ]] && [[ "${ICINGA_MASTER}" == "${HOSTNAME}" ]] )
   then
     ICINGA_TYPE="Master"
-  elif ( [ ! -z ${ICINGA_PARENT} ] && [ ! -z ${ICINGA_MASTER} ] && [ "${ICINGA_MASTER}" == "${ICINGA_PARENT}" ] )
+  elif ( [[ ! -z ${ICINGA_PARENT} ]] && [[ ! -z ${ICINGA_MASTER} ]] && [[ "${ICINGA_MASTER}" == "${ICINGA_PARENT}" ]] )
   then
     ICINGA_TYPE="Satellite"
   else
@@ -71,7 +71,7 @@ run() {
 
   log_info "---------------------------------------------------"
   log_info "   Icinga ${ICINGA_TYPE} Version ${ICINGA_VERSION} - build: ${BUILD_DATE}"
-  log_info " ---------------------------------------------------"
+  log_info "---------------------------------------------------"
 
   . /init/common.sh
 

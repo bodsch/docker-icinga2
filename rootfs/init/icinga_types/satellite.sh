@@ -44,56 +44,60 @@ EOF
 
   curl_opts=$(curl_opts)
 
+  # first, check if we already added!
+  #
   code=$(curl \
     ${curl_opts} \
     --header "Accept: application/json" \
     --request GET \
     https://${ICINGA_MASTER}:5665/v1/objects/hosts/$(hostname -f))
 
-  if [ $? -eq 0 ]
+  if [[ $? -eq 0 ]]
   then
+
     status=$(echo "${code}" | jq --raw-output '.error' 2> /dev/null)
     message=$(echo "${code}" | jq --raw-output '.status' 2> /dev/null)
 
-    log_info "${status}"
-    log_info "${message}"
+#    log_info "${status}"
+#    log_info "${message}"
 
-    # TODO
-    # errorhandling, when host already added
-    #
-    # add myself as host
-    #
-    log_info "add myself to my master '${ICINGA_MASTER}'"
-
-    code=$(curl \
-      ${curl_opts} \
-      --header "Accept: application/json" \
-      --request PUT \
-      --data "$(api_satellite_host)" \
-      https://${ICINGA_MASTER}:5665/v1/objects/hosts/$(hostname -f))
-
-    log_info "${code}"
-
-    if [ $? -eq 0 ]
+    if [[ "${status}" = "404" ]]
     then
-      status=$(echo "${code}" | jq --raw-output '.error' 2> /dev/null)
-      message=$(echo "${code}" | jq --raw-output '.status' 2> /dev/null)
 
-      log_info "${message}"
+      # add myself as host
+      #
+      log_info "add myself to my master '${ICINGA_MASTER}'"
 
+      code=$(curl \
+        ${curl_opts} \
+        --header "Accept: application/json" \
+        --request PUT \
+        --data "$(api_satellite_host)" \
+        https://${ICINGA_MASTER}:5665/v1/objects/hosts/$(hostname -f))
+
+#       log_info "${code}"
+
+      if [[ $? -eq 0 ]]
+      then
+        status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
+        message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
+
+        log_info "${message}"
+      else
+        status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
+        message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
+
+        log_error "${message}"
+
+        add_satellite_to_master
+      fi
     else
-      status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
-      message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
 
-      log_error "${message}"
-
-      add_satellite_to_master
+      log_info "update host"
+      log_info "missing implementation"
     fi
-
-
   else
     :
-
   fi
 }
 
@@ -115,7 +119,7 @@ restart_master() {
     --insecure \
     https://${ICINGA_MASTER}:5665/v1/actions/restart-process )
 
-  if [ $? -gt 0 ]
+  if [[ $? -gt 0 ]]
   then
     status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
     message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
@@ -126,7 +130,6 @@ restart_master() {
 }
 
 
-# NG
 endpoint_configuration() {
 
   log_info "configure our endpoint"
@@ -140,25 +143,26 @@ endpoint_configuration() {
 
   # restore zone backup
   #
-  if [ -f ${backup_zones_file} ]
+  if [[ -f ${backup_zones_file} ]]
   then
     log_info "restore old zones.conf"
     cp ${backup_zones_file} ${zones_file}
-#    sed -i '/^object Endpoint NodeName.*/d' ${zones_file}
-#    sed -i 's|^object Zone ZoneName.*}$|object Zone ZoneName { endpoints = [ NodeName ]; parent = "master" }|g' ${zones_file}
-#    return
   fi
 
   if [[ $(grep -c "initial zones.conf" ${zones_file} ) -eq 1 ]]
   then
     log_info "first run"
     # first run
-
+    #
     # remove default endpoint and zone configuration for 'NodeName' / 'ZoneName'
-    sed -i '/^object Endpoint NodeName.*/d' ${zones_file}
-    sed -i '/^object Zone ZoneName.*/d' ${zones_file}
+    #
+    sed -i \
+      -e '/^object Endpoint NodeName.*/d' \
+      -e '/^object Zone ZoneName.*/d' \
+      ${zones_file}
 
     # add our real icinga master
+    #
     cat << EOF >> ${zones_file}
 /** added Endpoint for icinga2-master '${ICINGA_MASTER}' - $(date) */
 /* the following line specifies that the client connects to the master and not vice versa */
@@ -170,7 +174,10 @@ object Endpoint NodeName { host = NodeName }
 object Zone ZoneName { endpoints = [ NodeName ] }
 EOF
     # remove the initial keyword
-    sed -i '/^ \* initial zones.conf/d' ${zones_file}
+    #
+    sed -i \
+      -e '/^ \* initial zones.conf/d' \
+      ${zones_file}
   fi
 
   if [[ -e ${api_endpoint} ]]
@@ -185,12 +192,16 @@ EOF
     #  'Endpoint NodeName' are double!
     # we remove this definition from the static config file
     log_info "  remove the static endpoint config"
-    sed -i '/^object Endpoint NodeName.*/d' ${zones_file}
+    sed -i \
+      -e '/^object Endpoint NodeName.*/d' \
+      ${zones_file}
 
     # we must also replace the zone configuration
     # with our icinga-master as parent to report checks
     log_info "  replace the static zone config"
-    sed -i 's|^object Zone ZoneName.*}$|object Zone ZoneName { endpoints = [ NodeName ]; parent = "master" }|g' ${zones_file}
+    sed -i \
+      -e 's|^object Zone ZoneName.*}$|object Zone ZoneName { endpoints = [ NodeName ]; parent = "master" }|g' \
+      ${zones_file}
   fi
 
   if [[ -e ${ca_file} ]]
@@ -200,27 +211,28 @@ EOF
     # we must also replace the zone configuration
     # with our icinga-master as parent to report checks
     log_info "  replace the static zone config"
-    sed -i 's|^object Zone ZoneName.*}$|object Zone ZoneName { endpoints = [ NodeName ]; parent = "master" }|g' ${zones_file}
+    sed -i \
+      -e 's|^object Zone ZoneName.*}$|object Zone ZoneName { endpoints = [ NodeName ]; parent = "master" }|g' \
+      ${zones_file}
   fi
 
   # finaly, we create the backup
+  #
   log_info "create backup of our zones.conf"
-#   cat ${zones_file}
   cp ${zones_file} ${backup_zones_file}
 }
 
-# NG
+
 request_certificate_from_master() {
 
   # we have a certificate
   # restore our own zone configuration
   # otherwise, we can't communication with the master
   #
-  if ( [ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ] && [ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.crt ] )
+  if ( [[ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ]] && [[ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.crt ]] )
   then
     :
   else
-
     # no certificate found
     # use the node wizard to create a valid certificate request
     #
@@ -244,9 +256,8 @@ request_certificate_from_master() {
       --output /tmp/sign_${HOSTNAME}.json \
       http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}${ICINGA_CERT_SERVICE_PATH}v2/sign/${HOSTNAME})
 
-    if ( [ $? -eq 0 ] && [ ${code} == 200 ] )
+    if ( [[ $? -eq 0 ]] && [[ ${code} == 200 ]] )
     then
-
       message=$(jq --raw-output .message /tmp/sign_${HOSTNAME}.json 2> /dev/null)
       rm -f /tmp/sign_${HOSTNAME}.json
       log_info "${message}"
@@ -263,7 +274,6 @@ request_certificate_from_master() {
       # wat nu?
     fi
 
-
     endpoint_configuration
   fi
 }
@@ -279,7 +289,7 @@ configure_icinga2_satellite() {
 
   # ONLY THE MASTER CREATES NOTIFICATIONS!
   #
-  [ -e /etc/icinga2/features-enabled/notification.conf ] && disable_icinga_feature notification
+  [[ -e /etc/icinga2/features-enabled/notification.conf ]] && disable_icinga_feature notification
 
   # all communications between master and satellite needs the API feature
   #
@@ -291,13 +301,14 @@ configure_icinga2_satellite() {
   #
   for file in hosts.conf services.conf
   do
-    [ -f /etc/icinga2/conf.d/${file} ] && mv /etc/icinga2/conf.d/${file} /etc/icinga2/conf.d/${file}-SAVE
+    [[ -f /etc/icinga2/conf.d/${file} ]] && mv /etc/icinga2/conf.d/${file} /etc/icinga2/conf.d/${file}-SAVE
   done
 
   # we have a certificate
   # validate this against our icinga-master
   #
-  if ( [ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ] && [ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.crt ] ) ; then
+  if ( [[ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ]] && [[ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.crt ]] )
+  then
     validate_local_ca
     # create the certificate pem for later use
     #
@@ -323,19 +334,21 @@ configure_icinga2_satellite() {
 
   request_certificate_from_master
 
-  ( [ -d /etc/icinga2/zones.d/global-templates ] && [ -f /etc/icinga2/master.d/templates_services.conf ] ) && cp /etc/icinga2/master.d/templates_services.conf /etc/icinga2/zones.d/global-templates/
-  [ -f /etc/icinga2/satellite.d/services.conf ] && cp /etc/icinga2/satellite.d/services.conf /etc/icinga2/conf.d/
-  [ -f /etc/icinga2/satellite.d/commands.conf ] && cp /etc/icinga2/satellite.d/commands.conf /etc/icinga2/conf.d/satellite_commands.conf
+  ( [[ -d /etc/icinga2/zones.d/global-templates ]] && [[ -f /etc/icinga2/master.d/templates_services.conf ]] ) && cp /etc/icinga2/master.d/templates_services.conf /etc/icinga2/zones.d/global-templates/
+  [[ -f /etc/icinga2/satellite.d/services.conf ]] && cp /etc/icinga2/satellite.d/services.conf /etc/icinga2/conf.d/
+  [[ -f /etc/icinga2/satellite.d/commands.conf ]] && cp /etc/icinga2/satellite.d/commands.conf /etc/icinga2/conf.d/satellite_commands.conf
 
   correct_rights
 
   # wee need an restart?
   #
-  if [ "${RESTART_NEEDED}" = "true" ]
+  if [[ "${RESTART_NEEDED}" = "true" ]]
   then
     restart_master
 
-    sed -i 's|^object Zone ZoneName.*}$|object Zone ZoneName { endpoints = [ NodeName ]; parent = "master" }|g' /etc/icinga2/zones.conf
+    sed -i \
+      -e 's|^object Zone ZoneName.*}$|object Zone ZoneName { endpoints = [ NodeName ]; parent = "master" }|g' \
+      /etc/icinga2/zones.conf
 
     log_warn "waiting for reconnecting and certifiacte signing"
 
@@ -344,6 +357,8 @@ configure_icinga2_satellite() {
     # start icinga to retrieve the data from our master
     # the zone watcher will kill this instance, when all datas ready!
     #
+    nohup /init/runtime/zone_watcher.sh > /dev/stdout 2>&1 &
+    sleep 2s
     start_icinga
   fi
 
@@ -355,10 +370,9 @@ configure_icinga2_satellite() {
 
   # validation are not successful
   #
-  if [ $? -gt 0 ]
+  if [[ $? -gt 0 ]]
   then
     log_error "the validation of our configuration was not successful."
-
     exit 1
   fi
 

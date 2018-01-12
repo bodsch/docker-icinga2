@@ -11,5 +11,5 @@ start_icinga() {
 kill_icinga() {
   log_warn "headshot ..."
   icinga_pid=$(ps ax | grep icinga2 | grep -v grep | awk '{print $1}')
-  [ -z "${icinga_pid}" ] || killall icinga2 > /dev/null 2> /dev/null
+  [[ -z "${icinga_pid}" ]] || killall icinga2 > /dev/null 2> /dev/null
 }

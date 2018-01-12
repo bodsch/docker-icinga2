@@ -23,7 +23,7 @@ export PKI_CRT_FILE="${ICINGA_CERT_DIR}/${HOSTNAME}.crt"
 #
 create_api_config() {
 
-  [ -f /etc/icinga2/features-available/api.conf ] || touch /etc/icinga2/features-available/api.conf
+  [[ -f /etc/icinga2/features-available/api.conf ]] || touch /etc/icinga2/features-available/api.conf
 
   # create api config
   #
@@ -37,12 +37,11 @@ EOF
 
   # version 2.8 has some changes for certifiacte configuration
   #
-  if [ "${ICINGA_VERSION}" == "2.8" ]
+  if [[ "${ICINGA_VERSION}" == "2.8" ]]
   then
     # look at https://www.icinga.com/docs/icinga2/latest/doc/16-upgrading-icinga-2/#upgrading-to-v28
     cat << EOF >> /etc/icinga2/features-available/api.conf
 }
-
 EOF
   # < version 2.8, we must add the path to the certificate
   #

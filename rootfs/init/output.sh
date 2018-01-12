@@ -1,7 +1,7 @@
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
+RED='\033[38;5;202m'
+GREEN='\033[38;5;70m'
+BLUE='\033[38;5;141m'
 WHITE='\033[0;37m'
 NC='\033[0m' # No Color
 BOLD='\033[1m'
@@ -11,21 +11,27 @@ log_output() {
   level="${1}"
   message="${2}"
 
-  echo -e $(date +"[%Y-%m-%d %H:%M:%S %z] ${level}  ${message}")
+  # echo -e $(date +"[%Y-%m-%d %H:%M:%S %z] ${level}  ${message}")
+  printf "$(date +"[%Y-%m-%d %H:%M:%S %z]") %b %s\n" "${level}"  "${message}"
 }
 
 log_info() {
   message="${1}"
-  log_output "    " "${message}"
+  log_output "" "${message}"
 }
 
 log_warn() {
   message="${1}"
-  log_output " [${BLUE}${BOLD}WARNING${NC}]" "${message}"
+  log_output "[${BLUE}${BOLD}WARNING${NC}]" "${message}"
+}
+
+log_WARN() {
+  message="${1}"
+  log_output "[${RED}${BOLD}WARNING${NC}]" "${message}"
 }
 
 log_error() {
   message="${1}"
-  log_output " [${RED}ERROR${NC}]" "${message}"
+  log_output "[${RED}${BOLD}ERROR${NC}]" "${message}"
 }
 
