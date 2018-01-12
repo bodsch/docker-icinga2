@@ -13,6 +13,8 @@
 monitored_directory="/etc/icinga2"
 backup_directory="/var/lib/icinga2/backup"
 
+log_info "start the service zone monitor"
+
 inotifywait \
   --monitor \
   --recursive \

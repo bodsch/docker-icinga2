@@ -144,3 +144,21 @@ correct_rights() {
 random() {
   echo $(shuf -i 5-30 -n 1)
 }
+
+curl_opts() {
+
+  opts=""
+  opts="${opts} --user ${ICINGA_CERT_SERVICE_API_USER}:${ICINGA_CERT_SERVICE_API_PASSWORD}"
+  opts="${opts} --silent"
+  opts="${opts} --header 'Accept: application/json'"
+  opts="${opts} --insecure"
+
+#  if [ -e ${ICINGA_CERT_DIR}/${HOSTNAME}.pem ]
+#  then
+#    opts="${opts} --capath ${ICINGA_CERT_DIR}"
+#    opts="${opts} --cert ${ICINGA_CERT_DIR}/${HOSTNAME}.pem"
+#    opts="${opts} --cacert ${ICINGA_CERT_DIR}/ca.crt"
+#  fi
+
+  echo ${opts}
+}

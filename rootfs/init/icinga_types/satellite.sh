@@ -3,14 +3,14 @@
 remove_satellite_from_master() {
 
   log_info "remove myself from my master '${ICINGA_MASTER}'"
+
+  curl_opts=$(curl_opts)
+
   # remove myself from master
   #
   code=$(curl \
-    --user ${ICINGA_CERT_SERVICE_API_USER}:${ICINGA_CERT_SERVICE_API_PASSWORD} \
-    --silent \
-    --header 'Accept: application/json'\
+    ${curl_opts} \
     --request DELETE \
-    --insecure \
     https://${ICINGA_MASTER}:5665/v1/objects/hosts/$(hostname -f)?cascade=1 )
 }
 
@@ -48,12 +48,10 @@ EOF
   #
   log_info "add myself to my master '${ICINGA_MASTER}'"
 
+  curl_opts=$(curl_opts)
   code=$(curl \
-    --user ${ICINGA_CERT_SERVICE_API_USER}:${ICINGA_CERT_SERVICE_API_PASSWORD} \
-    --silent \
-    --header 'Accept: application/json' \
+    ${curl_opts} \
     --request PUT \
-    --insecure \
     --data "$(api_satellite_host)" \
     https://${ICINGA_MASTER}:5665/v1/objects/hosts/$(hostname -f) )
 
@@ -103,7 +101,7 @@ restart_master() {
 
 create_endpoint_config() {
 
-  log_info "configure my endpoint: '${ICINGA_MASTER}'"
+  log_info "create my endpoint configuration for: '${ICINGA_MASTER}'"
 
     # curl -k  -uroot:icinga -H 'Accept: application/json' \
     # -X PUT --header 'Content-Type: application/json;charset=UTF-8' \
@@ -129,6 +127,9 @@ create_endpoint_config() {
 #     --insecure \
 #     https://${ICINGA_MASTER}:5665/v1//objects/endpoints/christemppc.example.info )
 
+  # check, if we need exact this
+  #
+
   if ( [ $(grep -c "Endpoint \"${ICINGA_MASTER}\"" /etc/icinga2/zones.conf ) -eq 0 ] || [ $(grep -c "host = \"${ICINGA_MASTER}\"" /etc/icinga2/zones.conf) -eq 0 ] )
   then
     cat << EOF > /etc/icinga2/zones.conf
@@ -148,12 +149,14 @@ object Zone "director-global" { global = true }
 
 EOF
 
-    # create an second zone.conf
-    # here the endpoint and the own zone configuration are removed.
-    # This is created by the master via the API and stored under ${ICINGA_LIB_DIR}.
-    # restarting the containers would otherwise cause conflicts
-    #
-    cat << EOF > ${ICINGA_LIB_DIR}/backup/zones.conf
+    if [[ ! -e ${ICINGA_LIB_DIR}/backup/zones.conf ]]
+    then
+      # create an second zone.conf
+      # here the endpoint and the own zone configuration are removed.
+      # This is created by the master via the API and stored under ${ICINGA_LIB_DIR}.
+      # restarting the containers would otherwise cause conflicts
+      #
+      cat << EOF > ${ICINGA_LIB_DIR}/backup/zones.conf
 /*
  * created at $(date)
  */
@@ -169,6 +172,32 @@ object Zone "global-templates" { global = true }
 object Zone "director-global" { global = true }
 
 EOF
+    fi
+  fi
+
+  handle_zone_endpoint
+}
+
+
+# after the TLS certifacte exchange, our zone zonfig comes from the master!
+# we must remove the pre TLS written Endpoint from to zones.conf
+#
+handle_zone_endpoint() {
+
+  # check our endpoint
+  #
+  hostname_f=$(hostname -f)
+  api_endpoint="${ICINGA_LIB_DIR}/api/zones/${hostname_f}/_etc/${hostname_f}.conf"
+  local_endpoint="/etc/icinga2/zones.conf"
+
+  if [ -f ${api_endpoint} ]
+  then
+    # remove local Endpoint Configuration
+    #
+    if [ $(grep -c "^object Endpoint" ${local_endpoint}) -gt 0 ]
+    then
+      sed -i 's|^object Endpoint NodeName.*||' ${local_endpoint}
+    fi
   fi
 }
 
@@ -181,11 +210,14 @@ configure_icinga2_satellite() {
 
   if [ -e /tmp/stage_3 ]
   then
-    rm -f /tmp/stage_3
+    mv -f /tmp/stage_3 /tmp/stage_4
+
     . /init/wait_for/icinga_master.sh
     add_satellite_to_master
 
-    return
+    sleep 10s
+
+    exit 1
   fi
 
   # randomized sleep to avoid timing problems
@@ -205,7 +237,10 @@ configure_icinga2_satellite() {
 
   # remove myself from master
   #
-  remove_satellite_from_master
+  if [ ! -e /tmp/stage_4 ]
+  then
+    remove_satellite_from_master
+  fi
 
   # we have a certificate
   # validate this against our icinga-master
@@ -220,21 +255,7 @@ configure_icinga2_satellite() {
   then
     cp ${ICINGA_LIB_DIR}/backup/zones.conf /etc/icinga2/zones.conf
 
-    # check our endpoint
-    #
-    hostname_f=$(hostname -f)
-    api_endpoint="${ICINGA_LIB_DIR}/api/zones/${hostname_f}/_etc/${hostname_f}.conf"
-    local_endpoint="/etc/icinga2/zones.conf"
-
-    if [ -f ${api_endpoint} ]
-    then
-      # remove local Endpoint Configuration
-      #
-      if [ $(grep -c "^object Endpoint" ${local_endpoint}) -gt 0 ]
-      then
-        sed -i 's|^object Endpoint NodeName.*||' ${local_endpoint}
-      fi
-    fi
+    handle_zone_endpoint
   fi
 
   # we have a certificate

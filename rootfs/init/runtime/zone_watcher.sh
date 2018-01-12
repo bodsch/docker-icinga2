@@ -14,19 +14,21 @@ monitored_directory="/var/lib/icinga2"
 hostname_f=$(hostname -f)
 
 restart_myself() {
-  touch /tmp/stage_3
-  log_error "headshot ..."
-  ps ax
+  log_warn "headshot ..."
+
   icinga_pid=$(ps ax | grep icinga2 | grep -v grep | awk '{print $1}')
   [ -z "${icinga_pid}" ] || killall icinga2 > /dev/null 2> /dev/null
   kill -9 1
   exit 1
 }
 
+log_info "start the api zone monitor"
 
 inotifywait \
   --monitor \
   --recursive \
+  --event create \
+  --event attrib \
   --event close_write \
   ${monitored_directory} |
   while read path action file
@@ -48,6 +50,35 @@ inotifywait \
         log_info "we need an restart for reloading."
         sleep 15s
         restart_myself
+      fi
+    elif [[ "${action}" = "CREATE" ]]
+    then
+      if [[ $(basename ${path}) =~ ${hostname_f} ]]
+      then
+        log_info "the zone configuration for myself has changed."
+        log_info "we must remove the old endpoint configuration from the static zones.conf"
+
+        if [ $(grep -c "^object Endpoint" /etc/icinga2/zones.conf) -gt 0 ]
+        then
+          sed -i 's|^object Endpoint NodeName.*||' /etc/icinga2/zones.conf
+        fi
+
+        cp /etc/icinga2/zones.conf ${ICINGA_LIB_DIR}/backup/zones.conf
+
+        touch /tmp/stage_3
+      fi
+    elif [[ "${action}" = "CREATE,ISDIR" ]]
+    then
+      if [[ ${path} =~ ${hostname_f} ]] && [[ "${file}" = ".timestamp" ]]
+      then
+        log_info "the zone configuration for myself has changed."
+        log_info "we need an restart for reloading."
+
+        if [ $(grep -c "^object Endpoint" /etc/icinga2/zones.conf) -gt 0 ]
+        then
+          sed -i 's|^object Endpoint NodeName.*||' /etc/icinga2/zones.conf
+        fi
+
       fi
     fi
   done
