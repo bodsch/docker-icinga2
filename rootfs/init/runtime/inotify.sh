@@ -32,15 +32,31 @@ inotifywait \
     fi
 
     log_info "service zone monitor - The file '$file' appeared in directory '$path' via '$action'"
-    if [ "${action}" = "DELETE" ]
+
+    # monitor DELETE
+    #
+    if [[ "${action}" = "DELETE" ]]
     then
+      # remove file
+      #
       rm -f ${backup_directory}/$(basename ${path})/${file}
-    elif [ "${action}" = "DELETE,ISDIR" ]
+
+    # monitor DELETE,ISDIR
+    #
+    elif [[ "${action}" = "DELETE,ISDIR" ]]
     then
+      # remove directory
+      #
       rm -rf ${backup_directory}/${file}
+
+    # monitor CLOSE_WRITE,CLOSE
+    #
     elif [[ "${action}" = "CLOSE_WRITE,CLOSE" ]]
     then
-      # cp -r ${monitored_directory}/$(basename ${path}) ${backup_directory}/
+      # use rsync for an backup
+      # we need only zones.conf and the complete zones.d directory
+      # all others are irrelevant
+      #
       rsync \
         --archive \
         --recursive \

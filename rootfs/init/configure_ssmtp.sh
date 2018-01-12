@@ -4,10 +4,8 @@
 
 # a satellite or agent don't need this
 #
-if [ "${ICINGA_TYPE}" != "Master" ]
-then
-  return
-fi
+[[ "${ICINGA_TYPE}" != "Master" ]] && return
+
 
 ICINGA_SSMTP_RELAY_SERVER=${ICINGA_SSMTP_RELAY_SERVER:-}
 ICINGA_SSMTP_REWRITE_DOMAIN=${ICINGA_SSMTP_REWRITE_DOMAIN:-}
@@ -43,7 +41,7 @@ UseSTARTTLS=YES
 EOF
   fi
 
-  if ( [ ! -z ${ICINGA_SSMTP_SMTPAUTH_USER} ] && [ ! -z ${ICINGA_SSMTP_SMTPAUTH_PASS} ] )
+  if ( [[ ! -z ${ICINGA_SSMTP_SMTPAUTH_USER} ]] && [[ ! -z ${ICINGA_SSMTP_SMTPAUTH_PASS} ]] )
   then
     cat << EOF >> ${file}
 AuthUser=${ICINGA_SSMTP_SMTPAUTH_USER}
@@ -56,7 +54,7 @@ create_smtp_aliases() {
 
   file=/etc/ssmtp/revaliases
 
-  [ -f ${file} ] && mv ${file} ${file}-SAVE
+  [[ -f ${file} ]] && mv ${file} ${file}-SAVE
 
   # our default mail-sender
   #
@@ -65,16 +63,10 @@ root:${ICINGA_SSMTP_SENDER_EMAIL}@${ICINGA_SSMTP_REWRITE_DOMAIN}:${ICINGA_SSMTP_
 EOF
 
 
-  if [ -n "${ICINGA_SSMTP_ALIASES}" ]
-  then
-    aliases=$(echo ${ICINGA_SSMTP_ALIASES} | sed -e 's/,/ /g' -e 's/\s+/\n/g' | uniq)
-  fi
+  [[ -n "${ICINGA_SSMTP_ALIASES}" ]] && aliases=$(echo ${ICINGA_SSMTP_ALIASES} | sed -e 's/,/ /g' -e 's/\s+/\n/g' | uniq)
 
-  if [ -z "${aliases}" ]
+  if [[ ! -z "${aliases}" ]]
   then
-    log_info "no SMTP Aliases found"
-  else
-
     # add more aliases
     #
     for u in ${aliases}

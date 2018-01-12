@@ -6,14 +6,11 @@ create_ca() {
 
   # create the CA, when they not exist
   #
-  if [ ! -f ${ICINGA_LIB_DIR}/ca/ca.crt ]
+  if [[ ! -f ${ICINGA_LIB_DIR}/ca/ca.crt ]]
   then
     log_info "create new CA"
 
-    if [ -f ${PKI_KEY_FILE} ]
-    then
-      rm -rf ${ICINGA_CERT_DIR}/${HOSTNAME}*
-    fi
+    [[ -f ${PKI_KEY_FILE} ]] && rm -rf ${ICINGA_CERT_DIR}/${HOSTNAME}*
 
     icinga2 api setup
 
@@ -21,7 +18,7 @@ create_ca() {
     # we remove all cert related directies and files and leave the container
     # after an restart, we start from scratch
     #
-    if [ $? -gt 0 ]
+    if [[ $? -gt 0 ]]
     then
       log_error "API Setup has failed"
       rm -rf ${ICINGA_LIB_DIR}/ca 2> /dev/null
@@ -33,7 +30,7 @@ create_ca() {
 
   # icinga2 API cert - regenerate new private key and certificate when running in a new container
   #
-  if [ ! -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ]
+  if [[ ! -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ]]
   then
     log_info "create new certificate"
 
@@ -48,7 +45,7 @@ create_ca() {
       --config /etc/icinga2/icinga2.conf \
       --errorlog /var/log/icinga2/error.log
 
-    if [ $? -gt 0 ]
+    if [[ $? -gt 0 ]]
     then
       exit $?
     fi
@@ -70,7 +67,7 @@ create_ca() {
 #
 validate_local_ca() {
 
-  if [ -f ${ICINGA_CERT_DIR}/ca.crt ]
+  if [[ -f ${ICINGA_CERT_DIR}/ca.crt ]]
   then
 
     log_info "validate our CA file against our master"
@@ -89,7 +86,7 @@ validate_local_ca() {
       --output /tmp/validate_ca_${HOSTNAME}.json \
       http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}${ICINGA_CERT_SERVICE_PATH}v2/validate/${checksum})
 
-    if ( [ $? -eq 0 ] && [ "${code}" = "200" ] )
+    if ( [[ $? -eq 0 ]] && [[ "${code}" = "200" ]] )
     then
       rm -f /tmp/validate_ca_${HOSTNAME}.json
     else
@@ -117,7 +114,7 @@ validate_local_ca() {
 
 create_certificate_pem() {
 
-  if ( [ -d ${ICINGA_CERT_DIR} ] && [ ! -f ${ICINGA_CERT_DIR}/${HOSTNAME}.pem ] )
+  if ( [[ -d ${ICINGA_CERT_DIR} ]] && [[ ! -f ${ICINGA_CERT_DIR}/${HOSTNAME}.pem ]] )
   then
     cd ${ICINGA_CERT_DIR}
 
