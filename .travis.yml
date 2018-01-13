@@ -24,6 +24,8 @@ cache:
 
 after_success:
   - |
-    [ "${TRAVIS_BRANCH}" == "master" ] && curl --request POST --header "Content-Type: application/json"  \
-      --data '{"docker_tag_name":"latest"}' \
+    [ "${TRAVIS_BRANCH}" == "master" ] && curl \
+      --request POST \
+      --header "Content-Type: application/json"  \
+      --data '{"source_type":"Branch","source_name":"master"}' \
       https://registry.hub.docker.com/u/bodsch/docker-icinga2/trigger/$DOCKER_HUB_TOKEN/
