@@ -4,7 +4,7 @@ FROM alpine:3.7
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
-  BUILD_DATE="2018-01-10" \
+  BUILD_DATE="2018-01-18" \
   BUILD_TYPE="development" \
   CERT_SERVICE_VERSION="1.0.0" \
   ICINGA_VERSION="2.8.0-r0"

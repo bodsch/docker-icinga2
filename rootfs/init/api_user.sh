@@ -28,7 +28,7 @@ create_api_user() {
 
       [[ -z ${pass} ]] && pass=${user}
 
-      log_info "      - '${user}'"
+      log_info "  - '${user}'"
 
       if [[ $(grep -c "object ApiUser \"${user}\"" ${api_file}) -eq 0 ]]
       then

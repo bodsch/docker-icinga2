@@ -10,28 +10,26 @@ log_output() {
 
   level="${1}"
   message="${2}"
-
-  # echo -e $(date +"[%Y-%m-%d %H:%M:%S %z] ${level}  ${message}")
-  printf "$(date +"[%Y-%m-%d %H:%M:%S %z]") %b %s\n" "${level}"  "${message}"
+  printf "$(date +"[%Y-%m-%d %H:%M:%S %z]") %b %b\n" "${level}"  "${message}"
 }
 
 log_info() {
   message="${1}"
-  log_output "" "${message}"
+  log_output "${NC}" "${message}"
 }
 
 log_warn() {
   message="${1}"
-  log_output "[${BLUE}${BOLD}WARNING${NC}]" "${message}"
+  log_output "${BLUE}${BOLD}WARNING${NC}" "${message}"
 }
 
 log_WARN() {
   message="${1}"
-  log_output "[${RED}${BOLD}WARNING${NC}]" "${message}"
+  log_output "${RED}${BOLD}WARNING${NC}" "${RED}${BOLD}${message}${NC}"
 }
 
 log_error() {
   message="${1}"
-  log_output "[${RED}${BOLD}ERROR${NC}]" "${message}"
+  log_output "${RED}${BOLD}ERROR${NC}" "${message}"
 }
 

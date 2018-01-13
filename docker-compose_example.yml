@@ -101,7 +101,6 @@ services:
       - ICINGA_CERT_SERVICE_PATH=/
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /tmp/docker-data/icinga2-satellite-1:/var/lib/icinga2
     links:
       - icinga2-master:icinga2-master.matrix.lan
 

@@ -34,9 +34,9 @@ custom_scripts() {
       case "$f" in
         *.sh)
           log_WARN "------------------------------------------------------"
+          log_WARN "RUN SCRIPT: ${f}"
           log_WARN "YOU SHOULD KNOW WHAT YOU'RE DOING."
           log_WARN "THIS CAN BREAK THE COMPLETE ICINGA2 CONFIGURATION!"
-          log_WARN "RUN SCRIPT: ${f}";
           nohup "${f}" > /dev/stdout 2>&1 &
           log_WARN "------------------------------------------------------"
           ;;
