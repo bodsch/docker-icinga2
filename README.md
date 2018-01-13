@@ -40,7 +40,7 @@ The `master` Branch is my *Working Horse* includes the "latest, hot shit" and ca
 If you want to use something stable, please use a [Taged Version](https://github.com/bodsch/docker-icinga2/tags) or an [Branch](https://github.com/bodsch/docker-icinga2/branches) like `1712` or `1801`
 
 # side-channel / custom scripts
-if use need some enhancements, you can add some (bash) scripts and add them via volume to the conatiner:
+if use need some enhancements, you can add some (bash) scripts and add them via volume to the container:
 
 ```bash
 --volume=/${PWD}/tmp/test.sh:/init/custom.d/test.sh
@@ -76,7 +76,7 @@ the graphite feature is **experimentally** and not conclusively tested.
 - checker
 - mainlog
 - notification
-- graphite (only with API User and with )
+- graphite (only available if the environment variables are set)
 
 
 # certificate service (**EXPERIMENTAL**)
@@ -154,7 +154,7 @@ Download the created certificate:
        http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}/v2/cert/${HOSTNAME}
 
 
-**The generated Certificate has an Timeout from 10 Minutes between beginning of creation and download.**
+**The generated certificate has an timeout from 10 minutes between beginning of creation and download.**
 
 You can also look into `rootfs/init/examples/use_cert-service.sh`
 
@@ -180,8 +180,7 @@ For Examples to create a certificate with commandline tools look into `rootfs/in
 
 | Environmental Variable             | Default Value        | Description                                                     |
 | :--------------------------------- | :-------------       | :-----------                                                    |
-| `ICINGA_API_USERS`                 | -                    | comma separated List to create API Users. The Format are `username:password` |
-|                                    |                      | (e.g. `admin:admin,dashing:dashing` and so on)                  |
+| `ICINGA_API_USERS`                 | -                    | comma separated List to create API Users.<br>The Format are `username:password`<br>(e.g. `admin:admin,dashing:dashing` and so on)                  |
 
 ## support Carbon/Graphite
 
