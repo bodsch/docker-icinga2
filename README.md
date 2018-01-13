@@ -35,10 +35,22 @@ Your can use the included Makefile.
 Please read [Contribution](CONTRIBUTIONG.md)
 
 # Development,  Branches (Github Tags)
-
 The `master` Branch is my *Working Horse* includes the "latest, hot shit" and can be complete broken!
 
 If you want to use something stable, please use a [Taged Version](https://github.com/bodsch/docker-icinga2/tags) or an [Branch](https://github.com/bodsch/docker-icinga2/branches) like `1712` or `1801`
+
+# side-channel / custom scripts
+if use need some enhancements, you can add some (bash) scripts and add them via volume to the conatiner:
+
+```bash
+--volume=/${PWD}/tmp/test.sh:/init/custom.d/test.sh
+```
+
+***This scripts will be started before everything else!***
+
+***YOU SHOULD KNOW WHAT YOU'RE DOING.***
+
+***THIS CAN BREAK THE COMPLETE ICINGA2 CONFIGURATION!***
 
 
 # Availability
