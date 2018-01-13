@@ -4,9 +4,9 @@ FROM alpine:3.7
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
-  BUILD_DATE="2018-01-04" \
-  BUILD_TYPE="stable" \
-  CERT_SERVICE_VERSION="0.14.5" \
+  BUILD_DATE="2018-01-18" \
+  BUILD_TYPE="development" \
+  CERT_SERVICE_VERSION="1.0.0" \
   ICINGA_VERSION="2.8.0-r0"
 
 EXPOSE 5665 8080
@@ -33,13 +33,13 @@ RUN \
   apk add --quiet --no-cache --virtual .build-deps \
     libffi-dev g++ make git openssl-dev ruby-dev && \
   apk add --quiet --no-cache \
-    bash bind-tools curl expect fping inotify-tools icinga2 jq mailx monitoring-plugins mysql-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby s6 ssmtp unzip && \
+    bash bind-tools curl expect fping inotify-tools icinga2 jq mailx monitoring-plugins mariadb-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby rsync ssmtp tzdata unzip && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
-  cp /usr/lib/nagios/plugins/*     /usr/lib/monitoring-plugins/ && \
+  ln -s /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command checker mainlog notification && \
   mkdir -p /etc/icinga2/objects.d && \
-  mkdir -p /etc/icinga2/automatic-zones.d && \
   mkdir -p /run/icinga2/cmd && \
+  cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
   chmod u+s /bin/busybox && \
   echo 'gem: --no-document' >> /etc/gemrc && \
   gem install --quiet --no-rdoc --no-ri \
@@ -50,14 +50,15 @@ RUN \
   if [ "${BUILD_TYPE}" == "stable" ] ; then \
     echo "switch to stable Tag v${CERT_SERVICE_VERSION}" && \
     git checkout tags/${CERT_SERVICE_VERSION} 2> /dev/null ; \
+  elif [ "${BUILD_TYPE}" == "development" ] ; then \
+    echo "switch to development Branch" && \
+    git checkout development 2> /dev/null ; \
   fi && \
   bundle install --quiet && \
   gem uninstall --quiet \
     io-console bundler && \
   cp -ar /tmp/ruby-icinga-cert-service/bin /usr/local/ && \
   cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/ && \
-  git clone https://github.com/nisabek/icinga2-slack-notifications.git && \
-  git clone https://github.com/lazyfrosch/icinga2-telegram.git && \
   apk del --quiet --purge .build-deps && \
   rm -rf \
     /tmp/* \

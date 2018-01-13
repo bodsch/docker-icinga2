@@ -2,12 +2,10 @@
 #
 #
 
-# a satellite don't need this
+# a satellite or agent don't need this
 #
-if [ "${ICINGA_TYPE}" != "Master" ]
-then
-  return
-fi
+[[ "${ICINGA_TYPE}" != "Master" ]] && return
+
 
 ICINGA_SSMTP_RELAY_SERVER=${ICINGA_SSMTP_RELAY_SERVER:-}
 ICINGA_SSMTP_REWRITE_DOMAIN=${ICINGA_SSMTP_REWRITE_DOMAIN:-}
@@ -18,8 +16,8 @@ ICINGA_SSMTP_SMTPAUTH_USER=${ICINGA_SSMTP_SMTPAUTH_USER:-}
 ICINGA_SSMTP_SMTPAUTH_PASS=${ICINGA_SSMTP_SMTPAUTH_PASS:-}
 ICINGA_SSMTP_ALIASES=${ICINGA_SSMTP_ALIASES:-}
 
+# configure the ssmtp tool to create notification emails
 #
-
 configure_ssmtp() {
 
   file=/etc/ssmtp/ssmtp.conf
@@ -43,23 +41,20 @@ UseSTARTTLS=YES
 EOF
   fi
 
-  if ( [ ! -z ${ICINGA_SSMTP_SMTPAUTH_USER} ] && [ ! -z ${ICINGA_SSMTP_SMTPAUTH_PASS} ] )
+  if ( [[ ! -z ${ICINGA_SSMTP_SMTPAUTH_USER} ]] && [[ ! -z ${ICINGA_SSMTP_SMTPAUTH_PASS} ]] )
   then
-
     cat << EOF >> ${file}
 AuthUser=${ICINGA_SSMTP_SMTPAUTH_USER}
 AuthPass=${ICINGA_SSMTP_SMTPAUTH_PASS}
 EOF
   fi
-
-
 }
 
 create_smtp_aliases() {
 
   file=/etc/ssmtp/revaliases
 
-  [ -f ${file} ] && mv ${file} ${file}-SAVE
+  [[ -f ${file} ]] && mv ${file} ${file}-SAVE
 
   # our default mail-sender
   #
@@ -68,29 +63,20 @@ root:${ICINGA_SSMTP_SENDER_EMAIL}@${ICINGA_SSMTP_REWRITE_DOMAIN}:${ICINGA_SSMTP_
 EOF
 
 
-  if [ -n "${ICINGA_SSMTP_ALIASES}" ]
+  [[ -n "${ICINGA_SSMTP_ALIASES}" ]] && aliases=$(echo ${ICINGA_SSMTP_ALIASES} | sed -e 's/,/ /g' -e 's/\s+/\n/g' | uniq)
+
+  if [[ ! -z "${aliases}" ]]
   then
-    aliases=$(echo ${ICINGA_SSMTP_ALIASES} | sed -e 's/,/ /g' -e 's/\s+/\n/g' | uniq)
-  fi
-
-  if [ -z "${aliases}" ]
-  then
-
-    echo " [i] no SMTP Aliases found"
-  else
-
     # add more aliases
     #
     for u in ${aliases}
     do
-
       local=$(echo "${u}" | cut -d: -f1)
       email=$(echo "${u}" | cut -d: -f2)
 
       cat << EOF >> ${file}
 ${local}:${email}:${ICINGA_SSMTP_RELAY_SERVER}
 EOF
-
     done
   fi
 

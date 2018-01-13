@@ -1,13 +1,13 @@
 docker-icinga2
 ==============
 
-Installs an working icinga2 Master or Satellite based on alpine-linux.
+Installs an working icinga2 Master or Satellite based on [alpine-linux](https://www.alpinelinux.org/about/).
 
 This Version includes also an small REST-Service to generate the Certificates for a Satellite via REST Service.
 
-It also include an docker-compose example to create a set of one Master and 2 Satellites with automatich Certificate Exchange.
+It also include an docker-compose **example** to create a set of one Master and 2 Satellites with automatich Certificate Exchange.
 
-More then one API User can also be created over one Environment Var.
+More then one API User can also be created over one Environment Variables.
 
 
 # Status
@@ -22,60 +22,96 @@ More then one API User can also be created over one Environment Var.
 
 
 # Build
-
 Your can use the included Makefile.
+- To build the Container: `make`
+- To remove the builded Docker Image: `make clean`
+- Starts the Container: `make run`
+- Starts the Container with Login Shell: `make shell`
+- Entering the Container: `make exec`
+- Stop (but **not kill**): `make stop`
+- History `make history`
 
-To build the Container: `make build`
+# Contribution
+Please read [Contribution](CONTRIBUTIONG.md)
 
-To remove the builded Docker Image: `make clean`
+# Development,  Branches (Github Tags)
+The `master` Branch is my *Working Horse* includes the "latest, hot shit" and can be complete broken!
 
-Starts the Container: `make run`
+If you want to use something stable, please use a [Taged Version](https://github.com/bodsch/docker-icinga2/tags) or an [Branch](https://github.com/bodsch/docker-icinga2/branches) like `1712` or `1801`
 
-Starts the Container with Login Shell: `make shell`
+# side-channel / custom scripts
+if use need some enhancements, you can add some (bash) scripts and add them via volume to the container:
 
-Entering the Container: `make exec`
+```bash
+--volume=/${PWD}/tmp/test.sh:/init/custom.d/test.sh
+```
 
-Stop (but **not kill**): `make stop`
+***This scripts will be started before everything else!***
 
-History `make history`
+***YOU SHOULD KNOW WHAT YOU'RE DOING.***
 
-Starts a *docker-compose*: `make compose-up`
+***THIS CAN BREAK THE COMPLETE ICINGA2 CONFIGURATION!***
 
-Remove the *docker-compose* images: `make compose-down`
+
+# Availability
+I use the official [Icinga2 packages](https://pkgs.alpinelinux.org/packages?name=icinga2&branch=&repo=&arch=&maintainer=) from Apline.
+
+If one of them is removed, please contact Alpine and don't complain here!
+
+I remove branches as soon as they are disfunctional (e. g. if a package is no longer available at Alpine). Not immediately, but certainly after 2 months.
 
 
 # Docker Hub
-
 You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/docker-icinga2/)
 
 
 # Notices
-
 The actuall Container Supports a stable MySQL Backand to store all needed Datas into it.
 
-The graphite Support are **experimental**.
+the graphite feature is **experimentally** and not conclusively tested.
 
-The dashing Supports create only an API User.
 
-The Cluster and Cert-Service are **experimental**.
-
-## activated Features
-
+## activated Icinga2 Features
 - command
 - checker
-- livestatus
 - mainlog
 - notification
-- graphite (only with API User)
+- graphite (only available if the environment variables are set)
 
 
-# certificate Service
-
-**EXPERIMENTAL**
+# certificate service (**EXPERIMENTAL**)
 
 [Sourcecode](https://github.com/bodsch/ruby-icinga-cert-service)
 
-### new way (since 2.8)
+To connect a satellite to a master you need a certificate, which is issued by the master and signed by its CA.
+
+The Icinga2 documentation provides more information about [Distributed Monitoring and Certificates](https://github.com/Icinga/icinga2/blob/master/doc/06-distributed-monitoring.md#signing-certificates-on-the-master-).
+
+**I strongly recommend a study of the documentation!**
+
+Within a docker environment this is a bit more difficult, so an external service is used to simplify this.
+This service is constantly being developed further, but is integrated into the docker container in a stable version.
+
+**The certificate service is only available at an Icinga2 Master!**
+
+## usage
+
+Certificate exchange is automated within the docker containers.
+If you want to issue your own certificate, you can use the following API calls.
+
+**You need a valid and configured API User in Icinga2.**
+
+The certificate service requires the following environment variables:
+
+- `ICINGA_MASTER` (default: ``)
+- `BASIC_AUTH_USER` (default: `admin`)
+- `BASIC_AUTH_PASS` (default: `admin`)
+- `ICINGA_API_PORT` (default: `5665`)
+- `ICINGA_API_USER` (default: `root`)
+- `ICINGA_API_PASSWORD` (default: `icinga`)
+
+
+### new way (since Icinga2 2.8)
 
 You can use `expect` on a *satellite* or *agent* to create an certificate request with the *icinga2 node wizard*:
 
@@ -93,8 +129,10 @@ After this, you can use the *cert-service* to sign this request:
       --output /tmp/sign_${HOSTNAME}.json \
       http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}/v2/sign/${HOSTNAME}
 
+After a restart of the Icinga2 Master the certificate is active and a secure connection can be established.
 
-### old way (pre 2.8)
+
+### old way (pre Icinga2 2.8)
 
 To create a certificate:
 
@@ -106,6 +144,10 @@ To create a certificate:
       --header "X-API-PASSWORD: ${ICINGA_CERT_SERVICE_API_PASSWORD}" \
       --output /tmp/request_${HOSTNAME}.json \
       http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}/v2/request/${HOSTNAME}
+
+Extract the session checksum from the request above.
+
+    checksum=$(jq --raw-output .checksum /tmp/request_${HOSTNAME}.json)
 
 Download the created certificate:
 
@@ -119,16 +161,19 @@ Download the created certificate:
       --output /tmp/${HOSTNAME}/${HOSTNAME}.tgz \
        http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}/v2/cert/${HOSTNAME}
 
-You need a valid and configured API User in Icinga2 and the created Checksum above.
 
-The generated Certificate has an Timeout from 10 Minutes between beginning of creation and download.
+**The generated certificate has an timeout from 10 minutes between beginning of creation and download.**
 
-You can also look into `rootfs/init/pki_setup.sh`
-For Examples to create a Certificate with Commandline Tools look into `rootfs/init/examples/cert-manager.sh`
+You can also look into `rootfs/init/examples/use_cert-service.sh`
 
+For Examples to create a certificate with commandline tools look into `rootfs/init/examples/cert-manager.sh`
 
 
 # supported Environment Vars
+
+**make sure you only use the environment variable you need!**
+
+## database support
 
 | Environmental Variable             | Default Value        | Description                                                     |
 | :--------------------------------- | :-------------       | :-----------                                                    |
@@ -138,21 +183,31 @@ For Examples to create a Certificate with Commandline Tools look into `rootfs/in
 | `MYSQL_ROOT_PASS`                  | *randomly generated* | MySQL root password                                             |
 | `IDO_DATABASE_NAME`                | `icinga2core`        | Schema Name for IDO                                             |
 | `IDO_PASSWORD`                     | *randomly generated* | MySQL password for IDO                                          |
+
+## create API User
+
+| Environmental Variable             | Default Value        | Description                                                     |
+| :--------------------------------- | :-------------       | :-----------                                                    |
+| `ICINGA_API_USERS`                 | -                    | comma separated List to create API Users.<br>The Format are `username:password`<br>(e.g. `admin:admin,dashing:dashing` and so on)                  |
+
+## support Carbon/Graphite
+
+| Environmental Variable             | Default Value        | Description                                                     |
+| :--------------------------------- | :-------------       | :-----------                                                    |
 |                                    |                      |                                                                 |
 | `CARBON_HOST`                      | -                    | hostname or IP address where Carbon/Graphite daemon is running  |
 | `CARBON_PORT`                      | `2003`               | Carbon port for graphite                                        |
-|                                    |                      |                                                                 |
-| `ICINGA_CLUSTER`                   | `false`              | Icinga2 Cluster Mode - enable a Master / Satellite Setup        |
+
+## support the Icinga Cert-Service
+
+| Environmental Variable             | Default Value        | Description                                                     |
+| :--------------------------------- | :-------------       | :-----------                                                    |
 | `ICINGA_MASTER`                    | -                    | The Icinga2-Master FQDN for a Satellite Node                    |
 | `ICINGA_PARENT`                    | -                    | The Parent Node for an Cluster Setup                            |
 |                                    |                      |                                                                 |
 | `BASIC_AUTH_USER`                  | `admin`              | both `BASIC_AUTH_*` and the `ICINGA_MASTER` are importand, if you |
 | `BASIC_AUTH_PASS`                  | `admin`              | use and modify the authentication of the *icinga-cert-service*  |
 |                                    |                      |                                                                 |
-| `ICINGA_API_USERS`                 | -                    | comma separated List to create API Users. The Format are `username:password` |
-|                                    |                      | (e.g. `admin:admin,dashing:dashing` and so on)                  |
-|                                    |                      |                                                                 |
-| `ICINGA_CERT_SERVICE`              | `false`              | enable the Icinga2 Certificate Service                          |
 | `ICINGA_CERT_SERVICE_BA_USER`      | `admin`              | The Basic Auth User for the certicate Service                   |
 | `ICINGA_CERT_SERVICE_BA_PASSWORD`  | `admin`              | The Basic Auth Password for the certicate Service               |
 | `ICINGA_CERT_SERVICE_API_USER`     | -                    | The Certificate Service needs also an API Users                 |
@@ -160,7 +215,11 @@ For Examples to create a Certificate with Commandline Tools look into `rootfs/in
 | `ICINGA_CERT_SERVICE_SERVER`       | `localhost`          | Certificate Service Host                                        |
 | `ICINGA_CERT_SERVICE_PORT`         | `80`                 | Certificate Service Port                                        |
 | `ICINGA_CERT_SERVICE_PATH`         | `/`                  | Certificate Service Path (needful, when they run behind a Proxy |
-|                                    |                      |                                                                 |
+
+## notifications over SMTP
+
+| Environmental Variable             | Default Value        | Description                                                     |
+| :--------------------------------- | :-------------       | :-----------                                                    |
 | `ICINGA_SSMTP_RELAY_SERVER`        | -                    | SMTP Service to send Notifications                              |
 | `ICINGA_SSMTP_REWRITE_DOMAIN`      | -                    |                                                                 |
 | `ICINGA_SSMTP_RELAY_USE_STARTTLS`  | -                    |                                                                 |
@@ -168,7 +227,130 @@ For Examples to create a Certificate with Commandline Tools look into `rootfs/in
 | `ICINGA_SSMTP_SMTPAUTH_USER`       | -                    |                                                                 |
 | `ICINGA_SSMTP_SMTPAUTH_PASS`       | -                    |                                                                 |
 | `ICINGA_SSMTP_ALIASES`             | -                    |                                                                 |
-|                                    |                      |                                                                 |
+
+## activate some Demodata (taken from the official Icinga-Vagrant repository)
+
+| Environmental Variable             | Default Value        | Description                                                     |
+| :--------------------------------- | :-------------       | :-----------                                                    |
 | `DEMO_DATA`                        | `false`              | copy demo data from `/init/demo-data` into `/etc/icinga2` config path |
-|                                    |                      |                                                                 |
+
+
+
+# Icinga2 Master and Satellite
+
+To connect a satellite to a master, the master must have activated the Cert service and the satellite must know how to reach it.
+
+A docker-compose **example** could look like this:
+
+```bash
+---
+version: '3.3'
+
+services:
+
+  database:
+    image: bodsch/docker-mysql:10.1.28-r1
+    container_name: database
+    hostname: database
+    environment:
+      - MYSQL_SYSTEM_USER=root
+      - MYSQL_ROOT_PASS=v3rysycr3t
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /tmp/docker-data/database:/srv
+
+  icingaweb2:
+    image: bodsch/docker-icingaweb2:2.5.0-r4
+    container_name: icingaweb2
+    hostname: icingaweb2.matrix.lan
+    ports:
+      - 80:80
+    environment:
+      - ICINGA_HOST=icinga2-master.matrix.lan
+      - MYSQL_HOST=database
+      - MYSQL_ROOT_USER=root
+      - MYSQL_ROOT_PASS=v3rysycr3t
+      - ICINGA2_CMD_API_USER=root
+      - ICINGA2_CMD_API_PASS=icinga
+      - ICINGAWEB2_USERS='icinga:icinga'
+      - IDO_DATABASE_NAME=icinga2core
+      - IDO_PASSWORD=id0pass
+    volumes:
+      - /tmp/docker-data/icingaweb2:/srv
+    links:
+      - icinga2-master:icinga2-master.matrix.lan
+      - database:database
+
+  # the Icinga2 Master
+  # includes a certificate service to create and provide a icinga certificate
+  icinga2-master:
+    image: bodsch/docker-icinga2:1801.1-r1
+    container_name: icinga2-master
+    hostname: icinga2-master.matrix.lan
+    restart: always
+    privileged: true
+    ports:
+      - 5665:5665
+      - 8080
+    environment:
+      # database settings
+      - MYSQL_HOST=database
+      - MYSQL_ROOT_USER=root
+      - MYSQL_ROOT_PASS=v3rysycr3t
+      - IDO_PASSWORD=id0pass
+      # add api user
+      - ICINGA_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
+      # environment variables for the certificates service
+      - ICINGA_MASTER=icinga2-master.matrix.lan
+      - BASIC_AUTH_USER=foofoo
+      - BASIC_AUTH_PASS=barbar
+      - ICINGA_CERT_SERVICE_API_USER=cert
+      - ICINGA_CERT_SERVICE_API_PASSWORD=foo-bar
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /tmp/docker-data/icinga2-master:/var/lib/icinga2
+    links:
+      - database:database
+
+  # the first icinga2 satellite
+  # ask the master above for an certificate
+  #
+  # this satellite should work, the BA is correct
+  icinga2-satellite-1:
+    image: bodsch/docker-icinga2:1801.1-r1
+    container_name: icinga2-satellite-1
+    hostname: icinga2-satellite-1.matrix.lan
+    restart: always
+    privileged: true
+    environment:
+      - ICINGA_MASTER=icinga2-master.matrix.lan
+      - ICINGA_CERT_SERVICE_BA_USER=foofoo
+      - ICINGA_CERT_SERVICE_BA_PASSWORD=barbar
+      - ICINGA_CERT_SERVICE_API_USER=cert
+      - ICINGA_CERT_SERVICE_API_PASSWORD=foo-bar
+      - ICINGA_CERT_SERVICE_SERVER=icinga2-master
+      - ICINGA_CERT_SERVICE_PORT=8080
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    links:
+      - icinga2-master:icinga2-master.matrix.lan
+```
+
+In this example I use my own docker containers:
+
+- [database](https://hub.docker.com/r/bodsch/docker-mysql/builds/)
+- [Icinga2](https://hub.docker.com/r/bodsch/docker-icinga2/builds/)
+- [Icinga Web2](https://hub.docker.com/r/bodsch/docker-icingaweb2/builds/)
+
+Please check for deviating tags at Docker Hub!
+
+This example can be used as follows:
+
+- `docker-compose up --build`
+
+Afterwards you can see Icinga Web2 in your local browser at http://localhost.
+
+![master-satellite](doc/assets/master-satellite.jpg)
+
+
 

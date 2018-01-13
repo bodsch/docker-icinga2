@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# ----------------------------------------------------------------------------------------
+
 STATE_OK=0
 STATE_WARNING=1
 STATE_CRITICAL=2
@@ -13,19 +15,23 @@ while [ $# -gt 0 ]
 do
   case "${1}" in
     -H|--host) shift
-      HOST="${1}"
-      ;;
+      HOST="${1}"       ;;
   esac
 shift
 done
 
-PING_RESPONSE=$( (fping --ipv4 --count=1 --elapsed --unreach --name --stats "$HOST") 2>&1)
+[ -z $WRTA ] && WRTA=100
+[ -z $CRTA ] && CRTA=200
+[ -z $WPL ] && WPL=5
+[ -z $CPL ] && CPL=2
+
+PING_RESPONSE=$( (/usr/sbin/fping --ipv4 --count=2 --elapsed --unreach --name --stats "$HOST") 2>&1)
+
 ALIVE=$(echo -e "${PING_RESPONSE}" | grep "alive" | awk '{print $1}')
 UNREACHABLE=$(echo -e "${PING_RESPONSE}" | grep "unreachable" | awk '{print $1}')
 RTA_MIN=$(echo -e "${PING_RESPONSE}" | grep "min round trip time" | awk '{print $1}')
 RTA_AVG=$(echo -e "${PING_RESPONSE}" | grep "avg round trip time" | awk '{print $1}')
 RTA_MAX=$(echo -e "${PING_RESPONSE}" | grep "max round trip time" | awk '{print $1}')
-
 
 if [ ${ALIVE} -eq 1 ]
 then
@@ -39,4 +45,4 @@ then
   exit ${STATE_CRITICAL}
 fi
 
-exit ${STATE_UNKNOWN}
+exit $?
