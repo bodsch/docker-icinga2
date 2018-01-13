@@ -101,6 +101,14 @@ If you want to issue your own certificate, you can use the following API calls.
 
 **You need a valid and configured API User in Icinga2.**
 
+The certificate service requires the following environment variables:
+
+- `ICINGA_MASTER` (default: ``)
+- `BASIC_AUTH_USER` (default: `admin`)
+- `BASIC_AUTH_PASS` (default: `admin`)
+- `ICINGA_API_PORT` (default: `5665`)
+- `ICINGA_API_USER` (default: `root`)
+- `ICINGA_API_PASSWORD` (default: `icinga`)
 
 
 ### new way (since Icinga2 2.8)
@@ -225,4 +233,124 @@ For Examples to create a certificate with commandline tools look into `rootfs/in
 | Environmental Variable             | Default Value        | Description                                                     |
 | :--------------------------------- | :-------------       | :-----------                                                    |
 | `DEMO_DATA`                        | `false`              | copy demo data from `/init/demo-data` into `/etc/icinga2` config path |
+
+
+
+# Icinga2 Master and Satellite
+
+To connect a satellite to a master, the master must have activated the Cert service and the satellite must know how to reach it.
+
+A docker-compose **example** could look like this:
+
+```bash
+---
+version: '3.3'
+
+services:
+
+  database:
+    image: bodsch/docker-mysql:10.1.28-r1
+    container_name: database
+    hostname: database
+    environment:
+      - MYSQL_SYSTEM_USER=root
+      - MYSQL_ROOT_PASS=v3rysycr3t
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /tmp/docker-data/database:/srv
+
+  icingaweb2:
+    image: bodsch/docker-icingaweb2:2.5.0-r4
+    container_name: icingaweb2
+    hostname: icingaweb2.matrix.lan
+    ports:
+      - 80:80
+    environment:
+      - ICINGA_HOST=icinga2-master.matrix.lan
+      - MYSQL_HOST=database
+      - MYSQL_ROOT_USER=root
+      - MYSQL_ROOT_PASS=v3rysycr3t
+      - ICINGA2_CMD_API_USER=root
+      - ICINGA2_CMD_API_PASS=icinga
+      - ICINGAWEB2_USERS='icinga:icinga'
+      - IDO_DATABASE_NAME=icinga2core
+      - IDO_PASSWORD=id0pass
+    volumes:
+      - /tmp/docker-data/icingaweb2:/srv
+    links:
+      - icinga2-master:icinga2-master.matrix.lan
+      - database:database
+
+  # the Icinga2 Master
+  # includes a certificate service to create and provide a icinga certificate
+  icinga2-master:
+    image: bodsch/docker-icinga2:1801.1-r1
+    container_name: icinga2-master
+    hostname: icinga2-master.matrix.lan
+    restart: always
+    privileged: true
+    ports:
+      - 5665:5665
+      - 8080
+    environment:
+      # database settings
+      - MYSQL_HOST=database
+      - MYSQL_ROOT_USER=root
+      - MYSQL_ROOT_PASS=v3rysycr3t
+      - IDO_PASSWORD=id0pass
+      # add api user
+      - ICINGA_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
+      # environment variables for the certificates service
+      - ICINGA_MASTER=icinga2-master.matrix.lan
+      - BASIC_AUTH_USER=foofoo
+      - BASIC_AUTH_PASS=barbar
+      - ICINGA_CERT_SERVICE_API_USER=cert
+      - ICINGA_CERT_SERVICE_API_PASSWORD=foo-bar
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /tmp/docker-data/icinga2-master:/var/lib/icinga2
+    links:
+      - database:database
+
+  # the first icinga2 satellite
+  # ask the master above for an certificate
+  #
+  # this satellite should work, the BA is correct
+  icinga2-satellite-1:
+    image: bodsch/docker-icinga2:1801.1-r1
+    container_name: icinga2-satellite-1
+    hostname: icinga2-satellite-1.matrix.lan
+    restart: always
+    privileged: true
+    environment:
+      - ICINGA_MASTER=icinga2-master.matrix.lan
+      - ICINGA_CERT_SERVICE_BA_USER=foofoo
+      - ICINGA_CERT_SERVICE_BA_PASSWORD=barbar
+      - ICINGA_CERT_SERVICE_API_USER=cert
+      - ICINGA_CERT_SERVICE_API_PASSWORD=foo-bar
+      - ICINGA_CERT_SERVICE_SERVER=icinga2-master
+      - ICINGA_CERT_SERVICE_PORT=8080
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    links:
+      - icinga2-master:icinga2-master.matrix.lan
+```
+
+In this example I use my own docker containers:
+
+- [database](https://hub.docker.com/r/bodsch/docker-mysql/builds/)
+- [Icinga2](https://hub.docker.com/r/bodsch/docker-icinga2/builds/)
+- [Icinga Web2](https://hub.docker.com/r/bodsch/docker-icingaweb2/builds/)
+
+Please check for deviating tags at Docker Hub!
+
+This example can be used as follows:
+
+- `docker-compose up --build`
+
+Afterwards you can see Icinga Web2 in your local browser at http://localhost.
+
+![img](doc/assets/master-satellite.png)
+
+
 
