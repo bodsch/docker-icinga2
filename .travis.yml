@@ -21,3 +21,9 @@ notifications:
 cache:
   directories:
     - $HOME/docker
+
+after_success:
+  - |
+    [ "${TRAVIS_BRANCH}" == "master" ] && curl --request POST --header "Content-Type: application/json"  \
+      --data '{"docker_tag_name":"latest"}' \
+      https://registry.hub.docker.com/u/bodsch/docker-icinga2/trigger/$DOCKER_HUB_TOKEN/
