@@ -350,7 +350,7 @@ This example can be used as follows:
 
 Afterwards you can see Icinga Web2 in your local browser at http://localhost.
 
-![img](doc/assets/master-satellite.png)
+![master-satellite](doc/assets/master-satellite.jpg)
 
 
 
