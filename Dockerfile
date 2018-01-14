@@ -5,8 +5,8 @@ ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
   BUILD_DATE="2018-01-18" \
-  BUILD_TYPE="development" \
-  CERT_SERVICE_VERSION="1.0.0" \
+  BUILD_TYPE="stable" \
+  CERT_SERVICE_VERSION="0.15.12" \
   ICINGA_VERSION="2.8.0-r0"
 
 EXPOSE 5665 8080

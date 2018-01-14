@@ -5,9 +5,6 @@ group: edge
 services:
   - docker
 
-before_install:
-  - docker pull alpine:3.6
-
 install:
   - travis_retry docker build --tag bodsch/docker-icinga2 .
   - docker run --detach --name icinga2 bodsch/docker-icinga2
@@ -15,17 +12,10 @@ install:
 script:
   - docker ps | grep -q icinga2
 
-notifications:
-  email: false
-
-cache:
-  directories:
-    - $HOME/docker
-
 after_success:
   - |
     [ "${TRAVIS_BRANCH}" == "master" ] && curl \
       --request POST \
       --header "Content-Type: application/json"  \
       --data '{"source_type":"Branch","source_name":"master"}' \
-      https://registry.hub.docker.com/u/bodsch/docker-icinga2/trigger/$DOCKER_HUB_TOKEN/
+      https://registry.hub.docker.com/u/bodsch/docker-icinga2/trigger/${DOCKER_HUB_TOKEN}/
