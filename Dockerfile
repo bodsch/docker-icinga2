@@ -5,7 +5,7 @@ ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
   BUILD_DATE="2018-01-18" \
-  BUILD_TYPE="stable" \
+  BUILD_TYPE="local" \
   CERT_SERVICE_VERSION="0.15.12" \
   ICINGA_VERSION="2.8.0-r0"
 
@@ -27,6 +27,8 @@ LABEL \
 
 # ---------------------------------------------------------------------------------------
 
+ADD build/ /
+
 RUN \
   apk update --quiet --no-cache  && \
   apk upgrade --quiet --no-cache && \
@@ -43,22 +45,34 @@ RUN \
   chmod u+s /bin/busybox && \
   echo 'gem: --no-document' >> /etc/gemrc && \
   gem install --quiet --no-rdoc --no-ri \
-    io-console bundler && \
+    io-console bundler
+
+RUN \
+  set -x && \
   cd /tmp && \
-  git clone https://github.com/bodsch/ruby-icinga-cert-service.git && \
-  cd ruby-icinga-cert-service && \
-  if [ "${BUILD_TYPE}" == "stable" ] ; then \
-    echo "switch to stable Tag v${CERT_SERVICE_VERSION}" && \
-    git checkout tags/${CERT_SERVICE_VERSION} 2> /dev/null ; \
-  elif [ "${BUILD_TYPE}" == "development" ] ; then \
-    echo "switch to development Branch" && \
-    git checkout development 2> /dev/null ; \
+  if [ "${BUILD_TYPE}" == "local" ] ; then \
+    echo "use local sources" && \
+    mv /ruby-icinga-cert-service /tmp/ && \
+    cd ruby-icinga-cert-service ; \
+  else \
+    git clone https://github.com/bodsch/ruby-icinga-cert-service.git && \
+    cd ruby-icinga-cert-service && \
+    if [ "${BUILD_TYPE}" == "stable" ] ; then \
+      echo "switch to stable Tag v${CERT_SERVICE_VERSION}" && \
+      git checkout tags/${CERT_SERVICE_VERSION} 2> /dev/null ; \
+    elif [ "${BUILD_TYPE}" == "development" ] ; then \
+      echo "switch to development Branch" && \
+      git checkout development 2> /dev/null ; \
+    fi \
   fi && \
+  set +x && \
   bundle install --quiet && \
   gem uninstall --quiet \
     io-console bundler && \
   cp -ar /tmp/ruby-icinga-cert-service/bin /usr/local/ && \
-  cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/ && \
+  cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/
+
+RUN \
   apk del --quiet --purge .build-deps && \
   rm -rf \
     /tmp/* \

@@ -95,6 +95,8 @@ run() {
     # backup the generated zones
     #
     nohup /init/runtime/inotify.sh > /dev/stdout 2>&1 &
+
+    env | grep ICINGA | sort
     nohup /usr/local/bin/rest-service.rb > /dev/stdout 2>&1 &
   else
     :
