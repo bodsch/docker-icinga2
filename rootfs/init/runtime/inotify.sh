@@ -26,7 +26,7 @@ inotifywait \
   while read path action file
   do
 
-    if ( [[ -z "${file}" ]] || [[ ! ${file} =~ ^zones* ]] || [[ "${file}" != "api-users.conf" ]] )
+    if ( [[ -z "${file}" ]] || [[ ! ${file} =~ ^zones* ]] && [[ "${file}" != "api-users.conf" ]] )
     then
       continue
     fi
@@ -64,6 +64,7 @@ inotifywait \
         --verbose \
         --include="zones.d/***" \
         --include="zones.*" \
+        --include="conf.d" \
         --include="conf.d/api-users.conf" \
         --exclude='*' \
         ${monitored_directory}/* ${backup_directory}/

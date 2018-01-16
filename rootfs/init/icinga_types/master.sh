@@ -18,10 +18,10 @@ restore_old_zone_config() {
       --delete \
       --include="zones.d/***" \
       --include="zones.*" \
+      # TODO api-users.conf
       --exclude='*' \
       ${ICINGA_LIB_DIR}/backup/* /etc/icinga2/
   fi
-
 }
 
 
