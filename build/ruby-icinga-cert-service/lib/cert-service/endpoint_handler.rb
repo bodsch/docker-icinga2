@@ -73,6 +73,8 @@ module IcingaCertService
         f << "object Endpoint \"#{host}\" {}\n"
       end
 
+      create_backup
+
       { status: 200, message: format('configuration for endpoint %s has been created', host) }
     end
 

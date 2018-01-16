@@ -18,6 +18,7 @@ require_relative 'cert-service/certificate_handler'
 require_relative 'cert-service/endpoint_handler'
 require_relative 'cert-service/zone_handler'
 require_relative 'cert-service/in-memory-cache'
+require_relative 'cert-service/backup'
 
 # -----------------------------------------------------------------------------
 
@@ -37,6 +38,7 @@ module IcingaCertService
     include IcingaCertService::EndpointHandler
     include IcingaCertService::ZoneHandler
     include IcingaCertService::InMemoryDataCache
+    include IcingaCertService::Backup
 
     attr_accessor :icinga_version
 
@@ -207,8 +209,6 @@ module IcingaCertService
     # @return nil if successful
     #
     def add_api_user(params)
-
-      logger.debug("add_api_user(#{params})")
 
       host = params.dig(:host)
 

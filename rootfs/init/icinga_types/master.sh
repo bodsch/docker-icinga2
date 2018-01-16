@@ -1,26 +1,20 @@
 
 # restore a old zone file for automatic generated satellites
 #
-restore_old_zone_config() {
+restore_backup() {
 
   # backwards compatibility
   # in an older version, we create all zone config files in an seperate directory
   #
   [[ -d ${ICINGA_LIB_DIR}/backup/automatic-zones.d ]] && mv ${ICINGA_LIB_DIR}/backup/automatic-zones.d ${ICINGA_LIB_DIR}/backup/zones.d
 
-  if [[ -d ${ICINGA_LIB_DIR}/backup/zones.d ]]
+  if [[ -d ${ICINGA_LIB_DIR}/backup ]]
   then
-    log_info "restore older zone configurations"
+    log_info "restore backup"
 
-    rsync \
-      --archive \
-      --recursive \
-      --delete \
-      --include="zones.d/***" \
-      --include="zones.*" \
-      # TODO api-users.conf
-      --exclude='*' \
-      ${ICINGA_LIB_DIR}/backup/* /etc/icinga2/
+    [[ -f ${ICINGA_LIB_DIR}/backup/zones.conf ]] && cp -a ${ICINGA_LIB_DIR}/backup/zones.conf /etc/icinga2/zones.conf
+    [[ -d ${ICINGA_LIB_DIR}/backup/zones.d ]]    && cp -ar ${ICINGA_LIB_DIR}/backup/zones.d/* /etc/icinga2/zones.d/
+    [[ -f ${ICINGA_LIB_DIR}/backup/conf.d/api-users.conf ]] && cp -a ${ICINGA_LIB_DIR}/backup/conf.d/api-users.conf /etc/icinga2/conf.d/api-users.conf
   fi
 }
 
@@ -33,7 +27,7 @@ configure_icinga2_master() {
 
   create_ca
 
-  restore_old_zone_config
+  restore_backup
 
   # copy master specific configurations
   #

@@ -76,6 +76,7 @@ run() {
   . /init/common.sh
 
   prepare
+  validate_cert-service_environment
 
   . /init/database/mysql.sh
   . /init/configure_icinga.sh
@@ -96,11 +97,12 @@ run() {
     #
     nohup /init/runtime/inotify.sh > /dev/stdout 2>&1 &
 
-    env | grep ICINGA | sort
+    # env | grep ICINGA | sort
     nohup /usr/local/bin/rest-service.rb > /dev/stdout 2>&1 &
   else
     :
     nohup /init/runtime/ca_validator.sh > /dev/stdout 2>&1 &
+
     if [[ ! -e /tmp/final ]]
     then
       nohup /init/runtime/zone_watcher.sh > /dev/stdout 2>&1 &

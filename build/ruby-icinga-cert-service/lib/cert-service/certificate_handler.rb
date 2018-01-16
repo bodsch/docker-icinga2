@@ -347,12 +347,13 @@ module IcingaCertService
       # add_api_user(params)
 
       # add Endpoint (and API User)
+      # and create a backup of the generated files
       #
       add_endpoint(params)
 
       # restart service to activate the new certificate
       #
-      reload_icinga_config(params)
+      # reload_icinga_config(params)
 
       { status: 200, file_name: format('%s.tgz', host), path: @tmp_directory }
     end
