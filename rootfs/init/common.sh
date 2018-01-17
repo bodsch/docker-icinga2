@@ -158,7 +158,7 @@ curl_opts() {
 }
 
 
-validate_cert-service_environment() {
+validate_certservice_environment() {
 
   ICINGA_CERT_SERVICE_BA_USER=${ICINGA_CERT_SERVICE_BA_USER:-"admin"}
   ICINGA_CERT_SERVICE_BA_PASSWORD=${ICINGA_CERT_SERVICE_BA_PASSWORD:-"admin"}

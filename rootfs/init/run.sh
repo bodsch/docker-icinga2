@@ -76,7 +76,7 @@ run() {
   . /init/common.sh
 
   prepare
-  validate_cert-service_environment
+  validate_certservice_environment
 
   . /init/database/mysql.sh
   . /init/configure_icinga.sh
