@@ -4,6 +4,7 @@ DEMO_DATA=${DEMO_DATA:-'false'}
 USER=
 GROUP=
 ICINGA_MASTER=${ICINGA_MASTER:-''}
+ICINGA_HOST=${ICINGA_HOST:-${ICINGA_MASTER}}
 
 # prepare the system and icinga to run in the docker environment
 #
@@ -154,4 +155,38 @@ curl_opts() {
 #  fi
 
   echo ${opts}
+}
+
+
+validate_certservice_environment() {
+
+  ICINGA_CERT_SERVICE_BA_USER=${ICINGA_CERT_SERVICE_BA_USER:-"admin"}
+  ICINGA_CERT_SERVICE_BA_PASSWORD=${ICINGA_CERT_SERVICE_BA_PASSWORD:-"admin"}
+  ICINGA_CERT_SERVICE_API_USER=${ICINGA_CERT_SERVICE_API_USER:-""}
+  ICINGA_CERT_SERVICE_API_PASSWORD=${ICINGA_CERT_SERVICE_API_PASSWORD:-""}
+  ICINGA_CERT_SERVICE_SERVER=${ICINGA_CERT_SERVICE_SERVER:-"localhost"}
+  ICINGA_CERT_SERVICE_PORT=${ICINGA_CERT_SERVICE_PORT:-"80"}
+  ICINGA_CERT_SERVICE_PATH=${ICINGA_CERT_SERVICE_PATH:-"/"}
+  ICINGA_CERT_SERVICE=false
+
+  # use the new Cert Service to create and get a valide certificat for distributed icinga services
+  #
+  if (
+    [[ ! -z ${ICINGA_CERT_SERVICE_BA_USER} ]] &&
+    [[ ! -z ${ICINGA_CERT_SERVICE_BA_PASSWORD} ]] &&
+    [[ ! -z ${ICINGA_CERT_SERVICE_API_USER} ]] &&
+    [[ ! -z ${ICINGA_CERT_SERVICE_API_PASSWORD} ]]
+  )
+  then
+    ICINGA_CERT_SERVICE=true
+
+    export ICINGA_CERT_SERVICE_BA_USER
+    export ICINGA_CERT_SERVICE_BA_PASSWORD
+    export ICINGA_CERT_SERVICE_API_USER
+    export ICINGA_CERT_SERVICE_API_PASSWORD
+    export ICINGA_CERT_SERVICE_SERVER
+    export ICINGA_CERT_SERVICE_PORT
+    export ICINGA_CERT_SERVICE_PATH
+    export ICINGA_CERT_SERVICE
+  fi
 }

@@ -15,24 +15,28 @@ create_api_user() {
 
   if [[ ! -z "${api_users}" ]]
   then
-    log_info "create configuration for API users ..."
 
-    # DESTROY the old entrys
-    #
-    echo "" > ${api_file}
+    if [[ $(cat ${api_file} | wc -l) -eq 6 ]]
+    then
+      log_info "create configuration for API users ..."
 
-    for u in ${api_users}
-    do
-      user=$(echo "${u}" | cut -d: -f1)
-      pass=$(echo "${u}" | cut -d: -f2)
+      # the initial configuration
+      # make it blank and create our default users
+      #
+      echo "" > ${api_file}
 
-      [[ -z ${pass} ]] && pass=${user}
+      for u in ${api_users}
+      do
+        user=$(echo "${u}" | cut -d: -f1)
+        pass=$(echo "${u}" | cut -d: -f2)
 
-      log_info "  - '${user}'"
+        [[ -z ${pass} ]] && pass=${user}
 
-      if [[ $(grep -c "object ApiUser \"${user}\"" ${api_file}) -eq 0 ]]
-      then
-        cat << EOF >> ${api_file}
+        if [[ $(grep -c "object ApiUser \"${user}\"" ${api_file}) -eq 0 ]]
+        then
+          log_info "  add user '${user}'"
+
+          cat << EOF >> ${api_file}
 
 object ApiUser "${user}" {
   password    = "${pass}"
@@ -41,8 +45,9 @@ object ApiUser "${user}" {
 }
 
 EOF
-      fi
-    done
+        fi
+      done
+    fi
   fi
 
 }
