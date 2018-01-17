@@ -5,7 +5,7 @@ wait_for_icinga_cert_service() {
 
   # the CERT-Service API use an Basic-Auth as first Authentication *AND*
   # use an own API Userr
-  if [[ ${ICINGA_CERT_SERVICE} ]]
+  if [[ "${ICINGA_CERT_SERVICE}" = "true" ]]
   then
 
     # use the new Cert Service to create and get a valide certificat for distributed icinga services
@@ -77,10 +77,10 @@ wait_for_icinga_cert_service() {
     fi
   else
     log_warn "missing variables:"
-    log_warn"     ICINGA_CERT_SERVICE_BA_USER: '${ICINGA_CERT_SERVICE_BA_USER}'"
-    log_warn"     ICINGA_CERT_SERVICE_BA_PASSWORD: '${ICINGA_CERT_SERVICE_BA_PASSWORD}'"
-    log_warn"     ICINGA_CERT_SERVICE_API_USER: '${ICINGA_CERT_SERVICE_API_USER}'"
-    log_warn"     ICINGA_CERT_SERVICE_API_PASSWORD: '${ICINGA_CERT_SERVICE_API_PASSWORD}'"
+    log_warn "     ICINGA_CERT_SERVICE_BA_USER: '${ICINGA_CERT_SERVICE_BA_USER}'"
+    log_warn "     ICINGA_CERT_SERVICE_BA_PASSWORD: '${ICINGA_CERT_SERVICE_BA_PASSWORD}'"
+    log_warn "     ICINGA_CERT_SERVICE_API_USER: '${ICINGA_CERT_SERVICE_API_USER}'"
+    log_warn "     ICINGA_CERT_SERVICE_API_PASSWORD: '${ICINGA_CERT_SERVICE_API_PASSWORD}'"
   fi
 }
 

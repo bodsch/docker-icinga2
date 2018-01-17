@@ -26,7 +26,7 @@ inotifywait \
   while read path action file
   do
 
-    if ( [[ -z "${file}" ]] || [[ ! ${file} =~ ^zones* ]] )
+    if ( [[ -z "${file}" ]] || [[ ! ${file} =~ ^zones* ]] && [[ "${file}" != "api-users.conf" ]] )
     then
       continue
     fi
@@ -48,22 +48,26 @@ inotifywait \
       # remove directory
       #
       rm -rf ${backup_directory}/${file}
-
-    # monitor CLOSE_WRITE,CLOSE
-    #
-    elif [[ "${action}" = "CLOSE_WRITE,CLOSE" ]]
-    then
-      # use rsync for an backup
-      # we need only zones.conf and the complete zones.d directory
-      # all others are irrelevant
-      #
-      rsync \
-        --archive \
-        --recursive \
-        --delete \
-        --include="zones.d/***" \
-        --include="zones.*" \
-        --exclude='*' \
-        ${monitored_directory}/* ${backup_directory}/
     fi
+
+#     # monitor CLOSE_WRITE,CLOSE
+#     #
+#     elif [[ "${action}" = "CLOSE_WRITE,CLOSE" ]]
+#     then
+#       # use rsync for an backup
+#       # we need only zones.conf and the complete zones.d directory
+#       # all others are irrelevant
+#       #
+#       rsync \
+#         --archive \
+#         --recursive \
+#         --delete \
+#         --verbose \
+#         --include="zones.d/***" \
+#         --include="zones.*" \
+#         --include="conf.d" \
+#         --include="conf.d/api-users.conf" \
+#         --exclude='*' \
+#         ${monitored_directory}/* ${backup_directory}/
+#     fi
   done

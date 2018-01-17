@@ -27,6 +27,8 @@ LABEL \
 
 # ---------------------------------------------------------------------------------------
 
+ADD build/ /
+
 RUN \
   apk update --quiet --no-cache  && \
   apk upgrade --quiet --no-cache && \
@@ -43,7 +45,9 @@ RUN \
   chmod u+s /bin/busybox && \
   echo 'gem: --no-document' >> /etc/gemrc && \
   gem install --quiet --no-rdoc --no-ri \
-    io-console bundler && \
+    io-console bundler
+
+RUN \
   cd /tmp && \
   if [ "${BUILD_TYPE}" == "local" ] ; then \
     echo "use local sources" && \
@@ -64,7 +68,9 @@ RUN \
   gem uninstall --quiet \
     io-console bundler && \
   cp -ar /tmp/ruby-icinga-cert-service/bin /usr/local/ && \
-  cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/ && \
+  cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/
+
+RUN \
   apk del --quiet --purge .build-deps && \
   rm -rf \
     /tmp/* \
