@@ -1,0 +1,59 @@
+#!/sbin/openrc-run
+# Copyright 1999-2016 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+: CFGFILE=${CFGFILE:=/etc/conf.d/icinga2-cert-service}
+
+depend() {
+  use net
+  config ${CFGFILE}
+}
+
+get_config() {
+  x=$1
+  test -e ${CFGFILE} || return 1
+  . ${CFGFILE}
+}
+
+extra_started_commands='reload'
+command=${CERT_SERVICE_BIN:-/usr/local/bin/icinga2-cert-service.rb}
+command_args=
+pidfile=/var/run/icinga2-cert-service.pid
+description="Icinga2 certificate service"
+
+checkconfig() {
+  get_config
+  DAEMON=${CERT_SERVICE_BIN:-/usr/local/bin/icinga2-cert-service.rb}
+  pidfile="/var/run/icinga2-cert-service.pid"
+  LOGFILE="/var/log/icinga2-cert-service.log"
+}
+
+start() {
+  checkconfig || return 1
+
+  ebegin "Starting icinga2 certificate service"
+  start-stop-daemon \
+    ${DEBUG:+"--verbose"} \
+    --start \
+    --exec "${DAEMON}" \
+    --make-pidfile \
+    --pidfile "${pidfile}" \
+    --background \
+    -- > $LOGFILE 2>&1
+
+  local retval=$?
+  if [ $retval -ne 0 ]; then
+    ewarn "Error starting icinga2 certificate service. '$LOGFILE' for details."
+  fi
+  eend $retval
+}
+
+stop() {
+  ebegin "Stopping icinga2 certificate service"
+  start-stop-daemon \
+      --stop \
+      --pidfile "${pidfile}" \
+      --retry "SIGTERM/15 SIGKILL/30" \
+      --progress
+  eend $?
+}
