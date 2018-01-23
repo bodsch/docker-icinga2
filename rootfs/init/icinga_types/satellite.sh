@@ -149,35 +149,22 @@ endpoint_configuration() {
 
     cp ${backup_zones_file} ${zones_file}
 
-set -x
-    local icinga_master_name=${ICINGA_MASTER}
-    local icinga_master_ip=${ICINGA_MASTER}
-
     if [[ ! -z ${ICINGA_MASTER_NAME} ]]
     then
       log_info "use remote master name '${ICINGA_MASTER_NAME}'"
 
-      icinga_master_name=${ICINGA_MASTER_NAME}
-
-      # TODO
       # locate the Endpoint and the Zone for our Master and replace the original
       # entrys with the new one
       sed -i \
-        -e 's|object Endpoint "${ICINGA_MASTER}"|object Endpoint "${icinga_master_name}"|' \
-        -e 's|endpoints = [ "${ICINGA_MASTER}" ]|endpoints = [ "${icinga_master_name}" ]|' \
+        -e 's/^\(object Endpoint\) "[^"]*"/\1 \"'$ICINGA_MASTER_NAME'\"/' \
+        -e 's/\(\[\) "[^"]*" \(\]\)/\1 \"'$ICINGA_MASTER_NAME'\" \2/' \
       ${zones_file}
     fi
-set +x
   fi
 
   if [[ $(grep -c "initial zones.conf" ${zones_file} ) -eq 1 ]]
   then
     log_info "first run"
-
-    local icinga_master_name=${ICINGA_MASTER}
-    local icinga_master_ip=${ICINGA_MASTER}
-
-    [[ -z ${ICINGA_MASTER_NAME} ]] || icinga_master_name=${ICINGA_MASTER_NAME}
 
     # first run
     #
@@ -193,8 +180,8 @@ set +x
     cat << EOF >> ${zones_file}
 /** added Endpoint for icinga2-master '${ICINGA_MASTER}' - $(date) */
 /* the following line specifies that the client connects to the master and not vice versa */
-object Endpoint "${icinga_master_name}" { host = "${ICINGA_MASTER}" ; port = "5665" }
-object Zone "master" { endpoints = [ "${icinga_master_name}" ] }
+object Endpoint "${ICINGA_MASTER}" { host = "${ICINGA_MASTER}" ; port = "5665" }
+object Zone "master" { endpoints = [ "${ICINGA_MASTER}" ] }
 
 /* endpoint for this satellite */
 object Endpoint NodeName { host = NodeName }
