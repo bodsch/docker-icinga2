@@ -146,12 +146,39 @@ endpoint_configuration() {
   if [[ -f ${backup_zones_file} ]]
   then
     log_info "restore old zones.conf"
+
     cp ${backup_zones_file} ${zones_file}
+
+set -x
+    local icinga_master_name=${ICINGA_MASTER}
+    local icinga_master_ip=${ICINGA_MASTER}
+
+    if [[ ! -z ${ICINGA_MASTER_NAME} ]]
+    then
+      log_info "use remote master name '${ICINGA_MASTER_NAME}'"
+
+      icinga_master_name=${ICINGA_MASTER_NAME}
+
+      # TODO
+      # locate the Endpoint and the Zone for our Master and replace the original
+      # entrys with the new one
+      sed -i \
+        -e 's|object Endpoint "${ICINGA_MASTER}"|object Endpoint "${icinga_master_name}"|' \
+        -e 's|endpoints = [ "${ICINGA_MASTER}" ]|endpoints = [ "${icinga_master_name}" ]|' \
+      ${zones_file}
+    fi
+set +x
   fi
 
   if [[ $(grep -c "initial zones.conf" ${zones_file} ) -eq 1 ]]
   then
     log_info "first run"
+
+    local icinga_master_name=${ICINGA_MASTER}
+    local icinga_master_ip=${ICINGA_MASTER}
+
+    [[ -z ${ICINGA_MASTER_NAME} ]] || icinga_master_name=${ICINGA_MASTER_NAME}
+
     # first run
     #
     # remove default endpoint and zone configuration for 'NodeName' / 'ZoneName'
@@ -166,8 +193,8 @@ endpoint_configuration() {
     cat << EOF >> ${zones_file}
 /** added Endpoint for icinga2-master '${ICINGA_MASTER}' - $(date) */
 /* the following line specifies that the client connects to the master and not vice versa */
-object Endpoint "${ICINGA_MASTER}" { host = "${ICINGA_MASTER}" ; port = "5665" }
-object Zone "master" { endpoints = [ "${ICINGA_MASTER}" ] }
+object Endpoint "${icinga_master_name}" { host = "${ICINGA_MASTER}" ; port = "5665" }
+object Zone "master" { endpoints = [ "${icinga_master_name}" ] }
 
 /* endpoint for this satellite */
 object Endpoint NodeName { host = NodeName }
@@ -258,9 +285,21 @@ request_certificate_from_master() {
 
     if ( [[ $? -eq 0 ]] && [[ ${code} == 200 ]] )
     then
+
+      cat /tmp/sign_${HOSTNAME}.json
+
       message=$(jq --raw-output .message /tmp/sign_${HOSTNAME}.json 2> /dev/null)
+      master_name=$(jq --raw-output .master_name /tmp/sign_${HOSTNAME}.json 2> /dev/null)
+      master_ip=$(jq --raw-output .master_ip /tmp/sign_${HOSTNAME}.json 2> /dev/null)
+
       rm -f /tmp/sign_${HOSTNAME}.json
       log_info "${message}"
+      log_info "  - ${master_name}"
+      log_info "  - ${master_ip}"
+
+      export ICINGA_MASTER_NAME=${master_name}
+      export ICINGA_MASTER_IP=${master_ip}
+
       sleep 5s
 
       RESTART_NEEDED="true"

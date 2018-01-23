@@ -4,8 +4,8 @@ FROM alpine:3.7
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
-  BUILD_DATE="2018-01-23" \
-  BUILD_TYPE="local" \
+  BUILD_DATE="2018-01-18" \
+  BUILD_TYPE="stable" \
   CERT_SERVICE_VERSION="0.16.3" \
   ICINGA_VERSION="2.8.0-r0"
 
@@ -27,17 +27,13 @@ LABEL \
 
 # ---------------------------------------------------------------------------------------
 
-ADD build/ /build/
-
 RUN \
   apk update --quiet --no-cache  && \
   apk upgrade --quiet --no-cache && \
   apk add --quiet --no-cache --virtual .build-deps \
     libffi-dev g++ make git openssl-dev ruby-dev && \
   apk add --quiet --no-cache \
-    bash bind-tools curl expect fping inotify-tools icinga2 jq mailx monitoring-plugins mariadb-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby ssmtp tzdata unzip && \
-  cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
-  echo ${TZ} > /etc/timezone && \
+    bash bind-tools curl expect fping inotify-tools icinga2 jq mailx monitoring-plugins mariadb-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby rsync ssmtp tzdata unzip && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   ln -s /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command checker mainlog notification && \
@@ -47,14 +43,12 @@ RUN \
   chmod u+s /bin/busybox && \
   echo 'gem: --no-document' >> /etc/gemrc && \
   gem install --quiet --no-rdoc --no-ri \
-    io-console bundler
-
-RUN \
+    io-console bundler && \
   cd /tmp && \
   if [ "${BUILD_TYPE}" == "local" ] ; then \
     echo "use local sources" && \
-    ls -1 /build/ && \
-    mv /build/ruby-icinga-cert-service /tmp/ ; \
+    mv /ruby-icinga-cert-service /tmp/ && \
+    cd ruby-icinga-cert-service ; \
   else \
     git clone https://github.com/bodsch/ruby-icinga-cert-service.git && \
     cd ruby-icinga-cert-service && \
@@ -66,14 +60,11 @@ RUN \
       git checkout development 2> /dev/null ; \
     fi \
   fi && \
-  cd /tmp/ruby-icinga-cert-service && \
   bundle install --quiet && \
   gem uninstall --quiet \
     io-console bundler && \
   cp -ar /tmp/ruby-icinga-cert-service/bin /usr/local/ && \
-  cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/
-
-RUN \
+  cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/ && \
   apk del --quiet --purge .build-deps && \
   rm -rf \
     /tmp/* \
