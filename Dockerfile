@@ -4,9 +4,9 @@ FROM alpine:3.7
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
-  BUILD_DATE="2018-01-18" \
+  BUILD_DATE="2018-01-23" \
   BUILD_TYPE="stable" \
-  CERT_SERVICE_VERSION="0.16.3" \
+  CERT_SERVICE_VERSION="0.16.5" \
   ICINGA_VERSION="2.8.0-r0"
 
 EXPOSE 5665 8080
