@@ -146,12 +146,26 @@ endpoint_configuration() {
   if [[ -f ${backup_zones_file} ]]
   then
     log_info "restore old zones.conf"
+
     cp ${backup_zones_file} ${zones_file}
+
+    if [[ ! -z ${ICINGA_MASTER_NAME} ]]
+    then
+      log_info "use remote master name '${ICINGA_MASTER_NAME}'"
+
+      # locate the Endpoint and the Zone for our Master and replace the original
+      # entrys with the new one
+      sed -i \
+        -e 's/^\(object Endpoint\) "[^"]*"/\1 \"'$ICINGA_MASTER_NAME'\"/' \
+        -e 's/\(\[\) "[^"]*" \(\]\)/\1 \"'$ICINGA_MASTER_NAME'\" \2/' \
+      ${zones_file}
+    fi
   fi
 
   if [[ $(grep -c "initial zones.conf" ${zones_file} ) -eq 1 ]]
   then
     log_info "first run"
+
     # first run
     #
     # remove default endpoint and zone configuration for 'NodeName' / 'ZoneName'
@@ -258,9 +272,21 @@ request_certificate_from_master() {
 
     if ( [[ $? -eq 0 ]] && [[ ${code} == 200 ]] )
     then
+
+      cat /tmp/sign_${HOSTNAME}.json
+
       message=$(jq --raw-output .message /tmp/sign_${HOSTNAME}.json 2> /dev/null)
+      master_name=$(jq --raw-output .master_name /tmp/sign_${HOSTNAME}.json 2> /dev/null)
+      master_ip=$(jq --raw-output .master_ip /tmp/sign_${HOSTNAME}.json 2> /dev/null)
+
       rm -f /tmp/sign_${HOSTNAME}.json
       log_info "${message}"
+      log_info "  - ${master_name}"
+      log_info "  - ${master_ip}"
+
+      export ICINGA_MASTER_NAME=${master_name}
+      export ICINGA_MASTER_IP=${master_ip}
+
       sleep 5s
 
       RESTART_NEEDED="true"
