@@ -1,6 +1,14 @@
 ---
 version: '3.3'
 
+networks:
+  frontend:
+  backend:
+  database:
+  satellite:
+
+
+
 services:
 
   database:
@@ -13,6 +21,8 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /tmp/docker-data/database:/srv
+    networks:
+      - database
 
   # icingaweb2
   #
@@ -37,6 +47,12 @@ services:
     links:
       - icinga2-master:icinga2-master.matrix.lan
       - database
+    extra_hosts:
+      - dl-cdn.alpinelinux.org:192.168.0.20
+    networks:
+      - database
+      - frontend
+      - backend
 
   # the Icinga2 Master
   # includes a certificate service to create and provide a icinga certificate
@@ -75,6 +91,12 @@ services:
 #      - /tmp/docker-data/icinga2-master:/var/lib/icinga2
     links:
       - database
+    extra_hosts:
+      - dl-cdn.alpinelinux.org:192.168.0.20
+    networks:
+      - database
+      - backend
+
 
   # the first icinga2 satellite
   # ask the master above for an certificate
@@ -100,7 +122,9 @@ services:
       - /etc/localtime:/etc/localtime:ro
     links:
       - icinga2-master:icinga2-master.matrix.lan
-
+    networks:
+      - backend
+      - satellite
 
   # the second icinga2 satellite
   # ask the master above for an certificate
