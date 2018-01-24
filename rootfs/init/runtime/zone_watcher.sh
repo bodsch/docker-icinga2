@@ -63,6 +63,21 @@ inotifywait \
 
         cp /etc/icinga2/zones.conf ${ICINGA_LIB_DIR}/backup/zones.conf
 
+        log_info "we remove also the static global-templates directory"
+        if [[ -d /etc/icinga2/zones.d/global-templates ]]
+        then
+          for template in $(ls -1 /etc/icinga2/zones.d/global-templates/*)
+          do
+            name=$(basename ${template})
+            [[ -f /var/lib/icinga2/api/zones/global-templates/_etc/${base} ]] || cp -v ${template} /var/lib/icinga2/api/zones/global-templates/_etc/
+          done
+
+          rm -rf /etc/icinga2/zones.d/global-templates
+        fi
+
+        log_info "we remove also the static director-global directory"
+        [[ -d /etc/icinga2/zones.d/director-global ]] && rm -rf /etc/icinga2/zones.d/director-global
+
         # touch file for later add the satellite to the master over API
         #
         touch /tmp/add_host
@@ -70,6 +85,7 @@ inotifywait \
 
         # kill myself to finalize
         #
+        killall icinga2
         exit 1
       fi
     fi

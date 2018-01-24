@@ -39,6 +39,8 @@ RUN \
   /usr/sbin/icinga2 feature enable command checker mainlog notification && \
   mkdir -p /etc/icinga2/objects.d && \
   mkdir -p /run/icinga2/cmd && \
+  mkdir -p /etc/icinga2/zones.d/global-templates && \
+  mkdir -p /etc/icinga2/zones.d/director-global && \
   cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
   chmod u+s /bin/busybox && \
   echo 'gem: --no-document' >> /etc/gemrc && \

@@ -222,12 +222,19 @@ EOF
   then
     log_info "CA from our master replicated"
 
-    # we must also replace the zone configuration
-    # with our icinga-master as parent to report checks
-    log_info "  replace the static zone config"
-    sed -i \
-      -e 's|^object Zone ZoneName.*}$|object Zone ZoneName { endpoints = [ NodeName ]; parent = "master" }|g' \
-      ${zones_file}
+    # TODO
+    # detect the Endpoint for this zone
+    if [[ -f ${api_endpoint} ]]
+    then
+      log_info "  endpoint also replicated"
+
+      # we must also replace the zone configuration
+      # with our icinga-master as parent to report checks
+      log_info "  replace the static zone config"
+      sed -i \
+        -e 's|^object Zone ZoneName.*}$|object Zone ZoneName { endpoints = [ NodeName ]; parent = "master" }|g' \
+        ${zones_file}
+    fi
   fi
 
   # finaly, we create the backup
