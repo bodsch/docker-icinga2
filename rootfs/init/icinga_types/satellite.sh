@@ -149,15 +149,21 @@ endpoint_configuration() {
 
     cp ${backup_zones_file} ${zones_file}
 
-    if [[ ! -z ${ICINGA_MASTER_NAME} ]]
+    master_json="${ICINGA_LIB_DIR}/backup/sign_${HOSTNAME}.json"
+
+    if [[ -f ${master_json} ]]
     then
-      log_info "use remote master name '${ICINGA_MASTER_NAME}'"
+      message=$(jq --raw-output .message ${master_json} 2> /dev/null)
+      master_name=$(jq --raw-output .master_name ${master_json} 2> /dev/null)
+      master_ip=$(jq --raw-output .master_ip ${master_json} 2> /dev/null)
+
+      log_info "use remote master name '${master_name}'"
 
       # locate the Endpoint and the Zone for our Master and replace the original
       # entrys with the new one
       sed -i \
-        -e 's/^\(object Endpoint\) "[^"]*"/\1 \"'$ICINGA_MASTER_NAME'\"/' \
-        -e 's/\(\[\) "[^"]*" \(\]\)/\1 \"'$ICINGA_MASTER_NAME'\" \2/' \
+        -e 's/^\(object Endpoint\) "[^"]*"/\1 \"'$master_name'\"/' \
+        -e 's/\(\[\) "[^"]*" \(\]\)/\1 \"'$master_name'\" \2/' \
       ${zones_file}
     fi
   fi
@@ -222,12 +228,19 @@ EOF
   then
     log_info "CA from our master replicated"
 
-    # we must also replace the zone configuration
-    # with our icinga-master as parent to report checks
-    log_info "  replace the static zone config"
-    sed -i \
-      -e 's|^object Zone ZoneName.*}$|object Zone ZoneName { endpoints = [ NodeName ]; parent = "master" }|g' \
-      ${zones_file}
+    # TODO
+    # detect the Endpoint for this zone
+    if [[ -f ${api_endpoint} ]]
+    then
+      log_info "  endpoint also replicated"
+
+      # we must also replace the zone configuration
+      # with our icinga-master as parent to report checks
+      log_info "  replace the static zone config"
+      sed -i \
+        -e 's|^object Zone ZoneName.*}$|object Zone ZoneName { endpoints = [ NodeName ]; parent = "master" }|g' \
+        ${zones_file}
+    fi
   fi
 
   # finaly, we create the backup
@@ -272,20 +285,15 @@ request_certificate_from_master() {
 
     if ( [[ $? -eq 0 ]] && [[ ${code} == 200 ]] )
     then
-
-      cat /tmp/sign_${HOSTNAME}.json
-
       message=$(jq --raw-output .message /tmp/sign_${HOSTNAME}.json 2> /dev/null)
       master_name=$(jq --raw-output .master_name /tmp/sign_${HOSTNAME}.json 2> /dev/null)
       master_ip=$(jq --raw-output .master_ip /tmp/sign_${HOSTNAME}.json 2> /dev/null)
 
-      rm -f /tmp/sign_${HOSTNAME}.json
+      mv /tmp/sign_${HOSTNAME}.json ${ICINGA_LIB_DIR}/backup/
+
       log_info "${message}"
       log_info "  - ${master_name}"
       log_info "  - ${master_ip}"
-
-      export ICINGA_MASTER_NAME=${master_name}
-      export ICINGA_MASTER_IP=${master_ip}
 
       sleep 5s
 
@@ -360,9 +368,17 @@ configure_icinga2_satellite() {
 
   request_certificate_from_master
 
-  ( [[ -d /etc/icinga2/zones.d/global-templates ]] && [[ -f /etc/icinga2/master.d/templates_services.conf ]] ) && cp /etc/icinga2/master.d/templates_services.conf /etc/icinga2/zones.d/global-templates/
   [[ -f /etc/icinga2/satellite.d/services.conf ]] && cp /etc/icinga2/satellite.d/services.conf /etc/icinga2/conf.d/
   [[ -f /etc/icinga2/satellite.d/commands.conf ]] && cp /etc/icinga2/satellite.d/commands.conf /etc/icinga2/conf.d/satellite_commands.conf
+
+  # REALLY BAD HACK ..
+  # copy the inline templates direct into the API path
+  #
+  if [[ ! -d /var/lib/icinga2/api/zones/global-templates/_etc/ ]]
+  then
+    mkdir -p /var/lib/icinga2/api/zones/global-templates/_etc/
+    cp -a /etc/icinga2/master.d/templates_services.conf /var/lib/icinga2/api/zones/global-templates/_etc/
+  fi
 
   correct_rights
 

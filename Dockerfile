@@ -4,7 +4,7 @@ FROM alpine:3.7
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
-  BUILD_DATE="2018-01-23" \
+  BUILD_DATE="2018-01-24" \
   BUILD_TYPE="stable" \
   CERT_SERVICE_VERSION="0.16.5" \
   ICINGA_VERSION="2.8.0-r0"
@@ -39,6 +39,8 @@ RUN \
   /usr/sbin/icinga2 feature enable command checker mainlog notification && \
   mkdir -p /etc/icinga2/objects.d && \
   mkdir -p /run/icinga2/cmd && \
+  mkdir -p /etc/icinga2/zones.d/global-templates && \
+  mkdir -p /etc/icinga2/zones.d/director-global && \
   cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
   chmod u+s /bin/busybox && \
   echo 'gem: --no-document' >> /etc/gemrc && \
