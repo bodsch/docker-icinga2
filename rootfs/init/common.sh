@@ -64,8 +64,8 @@ prepare() {
 
   # create global zone directories for distributed monitoring
   #
-  [[ -d /etc/icinga2/zones.d/global-templates ]] || mkdir -p /etc/icinga2/zones.d/global-templates
-  [[ -d /etc/icinga2/zones.d/director-global ]] || mkdir -p /etc/icinga2/zones.d/director-global
+  # [[ -d /etc/icinga2/zones.d/global-templates ]] || mkdir -p /etc/icinga2/zones.d/global-templates
+  # [[ -d /etc/icinga2/zones.d/director-global ]] || mkdir -p /etc/icinga2/zones.d/director-global
 
   # create directory for the logfile and change rights
   #
