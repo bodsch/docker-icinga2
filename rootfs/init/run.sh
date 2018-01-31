@@ -2,7 +2,7 @@
 #
 #
 
-set -e
+# set -e
 
 [[ ${DEBUG} ]] && set -x
 
@@ -94,7 +94,6 @@ run() {
 
   if [[ "${ICINGA2_TYPE}" = "Master" ]]
   then
-    export RAILS_ENV="production"
     # backup the generated zones
     #
     nohup /init/runtime/inotify.sh > /dev/stdout 2>&1 &

@@ -126,11 +126,12 @@ inspect() {
   for d in database icingaweb2 icinga2-master icinga2-satellite-1
   do
     # docker inspect --format "{{lower .Name}}" ${d}
-    docker inspect -f '{{with .State}} {{$.Name}} has pid {{.Pid}} {{end}}' ${d}
+    docker inspect --format '{{with .State}} {{$.Name}} has pid {{.Pid}} {{end}}' ${d}
   done
 }
 
 echo "wait 5 seconds for start"
+sleep 5s
 
 inspect
 

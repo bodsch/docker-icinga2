@@ -4,7 +4,7 @@ FROM alpine:3.7
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
-  BUILD_DATE="2018-01-23" \
+  BUILD_DATE="2018-01-31" \
   BUILD_TYPE="development" \
   CERT_SERVICE_VERSION="0.16.5" \
   ICINGA_VERSION="2.8.0-r0"
@@ -27,7 +27,7 @@ LABEL \
 
 # ---------------------------------------------------------------------------------------
 
-# ADD build/ /build/
+ADD build/ /build/
 
 RUN \
   apk update --quiet --no-cache  && \
@@ -35,7 +35,7 @@ RUN \
   apk add --quiet --no-cache --virtual .build-deps \
     libffi-dev g++ make git openssl-dev ruby-dev && \
   apk add --quiet --no-cache \
-    bash bind-tools curl expect fping inotify-tools icinga2 jq mailx monitoring-plugins mariadb-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby ssmtp tzdata unzip && \
+    bash bind-tools curl drill expect fping inotify-tools icinga2 jq mailx monitoring-plugins mariadb-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby ssmtp tzdata unzip && \
   cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
   echo ${TZ} > /etc/timezone && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
@@ -66,11 +66,7 @@ RUN \
     fi \
   fi && \
   cd /tmp/ruby-icinga-cert-service && \
-  bundle install --quiet && \
-  gem uninstall --quiet \
-    io-console bundler && \
-  cp -ar /tmp/ruby-icinga-cert-service/bin /usr/local/ && \
-  cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/
+  bin/install.sh
 
 RUN \
   apk del --quiet --purge .build-deps && \

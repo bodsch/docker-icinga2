@@ -46,8 +46,6 @@ services:
     links:
       - icinga2-master:icinga2-master.matrix.lan
       - database
-    extra_hosts:
-      - dl-cdn.alpinelinux.org:192.168.0.20
     networks:
       - database
       - frontend
@@ -114,7 +112,7 @@ services:
       - CERT_SERVICE_BA_PASSWORD=admin
       - CERT_SERVICE_API_USER=root
       - CERT_SERVICE_API_PASSWORD=icinga
-      - CERT_SERVICE_SERVER=icinga2-master
+      - CERT_SERVICE_SERVER=icinga2-master.matrix.lan
       - CERT_SERVICE_PORT=8080
       - CERT_SERVICE_PATH=/
     volumes:
