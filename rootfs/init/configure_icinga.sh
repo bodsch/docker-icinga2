@@ -1,20 +1,20 @@
 #
 
-ICINGA_CERT_SERVICE=${ICINGA_CERT_SERVICE:-false}
-export ICINGA_CERT_SERVICE_BA_USER=${ICINGA_CERT_SERVICE_BA_USER:-"admin"}
-export ICINGA_CERT_SERVICE_BA_PASSWORD=${ICINGA_CERT_SERVICE_BA_PASSWORD:-"admin"}
-export ICINGA_CERT_SERVICE_API_USER=${ICINGA_CERT_SERVICE_API_USER:-""}
-export ICINGA_CERT_SERVICE_API_PASSWORD=${ICINGA_CERT_SERVICE_API_PASSWORD:-""}
-export ICINGA_CERT_SERVICE_SERVER=${ICINGA_CERT_SERVICE_SERVER:-"localhost"}
-export ICINGA_CERT_SERVICE_PORT=${ICINGA_CERT_SERVICE_PORT:-"80"}
-export ICINGA_CERT_SERVICE_PATH=${ICINGA_CERT_SERVICE_PATH:-"/"}
+USE_CERT_SERVICE=${USE_CERT_SERVICE:-false}
+export CERT_SERVICE_BA_USER=${CERT_SERVICE_BA_USER:-"admin"}
+export CERT_SERVICE_BA_PASSWORD=${CERT_SERVICE_BA_PASSWORD:-"admin"}
+export CERT_SERVICE_API_USER=${CERT_SERVICE_API_USER:-""}
+export CERT_SERVICE_API_PASSWORD=${CERT_SERVICE_API_PASSWORD:-""}
+export CERT_SERVICE_SERVER=${CERT_SERVICE_SERVER:-"localhost"}
+export CERT_SERVICE_PORT=${CERT_SERVICE_PORT:-"80"}
+export CERT_SERVICE_PATH=${CERT_SERVICE_PATH:-"/"}
 
 export PKI_CMD="icinga2 pki"
-export PKI_KEY_FILE="${ICINGA_CERT_DIR}/${HOSTNAME}.key"
-export PKI_CSR_FILE="${ICINGA_CERT_DIR}/${HOSTNAME}.csr"
-export PKI_CRT_FILE="${ICINGA_CERT_DIR}/${HOSTNAME}.crt"
+export PKI_KEY_FILE="${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.key"
+export PKI_CSR_FILE="${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.csr"
+export PKI_CRT_FILE="${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.crt"
 
-# ICINGA_MASTER must be an FQDN or an IP
+# ICINGA2_MASTER must be an FQDN or an IP
 
 # -------------------------------------------------------------------------------------------------
 
@@ -37,7 +37,7 @@ EOF
 
   # version 2.8 has some changes for certifiacte configuration
   #
-  if [[ "${ICINGA_VERSION}" == "2.8" ]]
+  if [[ "${ICINGA2_VERSION}" == "2.8" ]]
   then
     # look at https://www.icinga.com/docs/icinga2/latest/doc/16-upgrading-icinga-2/#upgrading-to-v28
     cat << EOF >> /etc/icinga2/features-available/api.conf
@@ -63,11 +63,11 @@ EOF
 
 create_api_config
 
-if [[ "${ICINGA_TYPE}" = "Master" ]]
+if [[ "${ICINGA2_TYPE}" = "Master" ]]
 then
   # configure_icinga2_master
   . /init/icinga_types/master.sh
-elif [[ "${ICINGA_TYPE}" = "Satellite" ]]
+elif [[ "${ICINGA2_TYPE}" = "Satellite" ]]
 then
   # configure_icinga2_satellite
   . /init/icinga_types/satellite.sh

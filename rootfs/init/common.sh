@@ -3,15 +3,15 @@
 DEMO_DATA=${DEMO_DATA:-'false'}
 USER=
 GROUP=
-ICINGA_MASTER=${ICINGA_MASTER:-''}
-ICINGA_HOST=${ICINGA_HOST:-${ICINGA_MASTER}}
+ICINGA2_MASTER=${ICINGA2_MASTER:-''}
+ICINGA2_HOST=${ICINGA2_HOST:-${ICINGA2_MASTER}}
 
 # prepare the system and icinga to run in the docker environment
 #
 prepare() {
 
-  [[ -d ${ICINGA_LIB_DIR}/backup ]] || mkdir -p ${ICINGA_LIB_DIR}/backup
-  [[ -d ${ICINGA_CERT_DIR} ]] || mkdir -p ${ICINGA_CERT_DIR}
+  [[ -d ${ICINGA2_LIB_DIRECTORY}/backup ]] || mkdir -p ${ICINGA2_LIB_DIRECTORY}/backup
+  [[ -d ${ICINGA2_CERT_DIRECTORY} ]] || mkdir -p ${ICINGA2_CERT_DIRECTORY}
 
   # detect username
   #
@@ -42,11 +42,13 @@ prepare() {
   then
     . /etc/icinga2/icinga2.sysconfig
 
+    ICINGA2_RUN_DIRECTORY=${ICINGA2_RUN_DIR}
+    ICINGA2_LOG_DIRECTORY=${ICINGA2_LOG}
   #  ICINGA2_RUNasUSER=${ICINGA2_USER}
   #  ICINGA2_RUNasGROUP=${ICINGA2_GROUP}
   else
-    ICINGA2_RUN_DIR=$(/usr/sbin/icinga2 variable get RunDir)
-    ICINGA2_LOG="/var/log/icinga2/icinga2.log"
+    ICINGA2_RUN_DIRECTORY=$(/usr/sbin/icinga2 variable get RunDir)
+    ICINGA2_LOG_DIRECTORY="/var/log/icinga2/icinga2.log"
   #  ICINGA2_RUNasUSER=$(/usr/sbin/icinga2 variable get RunAsUser)
   #  ICINGA2_RUNasGROUP=$(/usr/sbin/icinga2 variable get RunAsGroup)
   fi
@@ -69,7 +71,7 @@ prepare() {
 
   # create directory for the logfile and change rights
   #
-  LOGDIR=$(dirname ${ICINGA2_LOG})
+  LOGDIR=$(dirname ${ICINGA2_LOG_DIRECTORY})
 
   [[ -d ${LOGDIR} ]] || mkdir -p ${LOGDIR}
 
@@ -131,8 +133,8 @@ correct_rights() {
 
     chown -R ${USER}:root     /etc/icinga2
     chown -R ${USER}:${GROUP} /var/lib/icinga2
-    chown -R ${USER}:${GROUP} ${ICINGA2_RUN_DIR}/icinga2
-    chown -R ${USER}:${GROUP} ${ICINGA_CERT_DIR}
+    chown -R ${USER}:${GROUP} ${ICINGA2_RUN_DIRECTORY}/icinga2
+    chown -R ${USER}:${GROUP} ${ICINGA2_CERT_DIRECTORY}
   fi
 }
 
@@ -143,15 +145,15 @@ random() {
 curl_opts() {
 
   opts=""
-  opts="${opts} --user ${ICINGA_CERT_SERVICE_API_USER}:${ICINGA_CERT_SERVICE_API_PASSWORD}"
+  opts="${opts} --user ${CERT_SERVICE_API_USER}:${CERT_SERVICE_API_PASSWORD}"
   opts="${opts} --silent"
   opts="${opts} --insecure"
 
-#  if [ -e ${ICINGA_CERT_DIR}/${HOSTNAME}.pem ]
+#  if [ -e ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.pem ]
 #  then
-#    opts="${opts} --capath ${ICINGA_CERT_DIR}"
-#    opts="${opts} --cert ${ICINGA_CERT_DIR}/${HOSTNAME}.pem"
-#    opts="${opts} --cacert ${ICINGA_CERT_DIR}/ca.crt"
+#    opts="${opts} --capath ${ICINGA2_CERT_DIRECTORY}"
+#    opts="${opts} --cert ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.pem"
+#    opts="${opts} --cacert ${ICINGA2_CERT_DIRECTORY}/ca.crt"
 #  fi
 
   echo ${opts}
@@ -160,33 +162,33 @@ curl_opts() {
 
 validate_certservice_environment() {
 
-  ICINGA_CERT_SERVICE_BA_USER=${ICINGA_CERT_SERVICE_BA_USER:-"admin"}
-  ICINGA_CERT_SERVICE_BA_PASSWORD=${ICINGA_CERT_SERVICE_BA_PASSWORD:-"admin"}
-  ICINGA_CERT_SERVICE_API_USER=${ICINGA_CERT_SERVICE_API_USER:-""}
-  ICINGA_CERT_SERVICE_API_PASSWORD=${ICINGA_CERT_SERVICE_API_PASSWORD:-""}
-  ICINGA_CERT_SERVICE_SERVER=${ICINGA_CERT_SERVICE_SERVER:-"localhost"}
-  ICINGA_CERT_SERVICE_PORT=${ICINGA_CERT_SERVICE_PORT:-"80"}
-  ICINGA_CERT_SERVICE_PATH=${ICINGA_CERT_SERVICE_PATH:-"/"}
-  ICINGA_CERT_SERVICE=false
+  CERT_SERVICE_BA_USER=${CERT_SERVICE_BA_USER:-"admin"}
+  CERT_SERVICE_BA_PASSWORD=${CERT_SERVICE_BA_PASSWORD:-"admin"}
+  CERT_SERVICE_API_USER=${CERT_SERVICE_API_USER:-""}
+  CERT_SERVICE_API_PASSWORD=${CERT_SERVICE_API_PASSWORD:-""}
+  CERT_SERVICE_SERVER=${CERT_SERVICE_SERVER:-"localhost"}
+  CERT_SERVICE_PORT=${CERT_SERVICE_PORT:-"80"}
+  CERT_SERVICE_PATH=${CERT_SERVICE_PATH:-"/"}
+  USE_CERT_SERVICE=false
 
   # use the new Cert Service to create and get a valide certificat for distributed icinga services
   #
   if (
-    [[ ! -z ${ICINGA_CERT_SERVICE_BA_USER} ]] &&
-    [[ ! -z ${ICINGA_CERT_SERVICE_BA_PASSWORD} ]] &&
-    [[ ! -z ${ICINGA_CERT_SERVICE_API_USER} ]] &&
-    [[ ! -z ${ICINGA_CERT_SERVICE_API_PASSWORD} ]]
+    [[ ! -z ${CERT_SERVICE_BA_USER} ]] &&
+    [[ ! -z ${CERT_SERVICE_BA_PASSWORD} ]] &&
+    [[ ! -z ${CERT_SERVICE_API_USER} ]] &&
+    [[ ! -z ${CERT_SERVICE_API_PASSWORD} ]]
   )
   then
-    ICINGA_CERT_SERVICE=true
+    USE_CERT_SERVICE=true
 
-    export ICINGA_CERT_SERVICE_BA_USER
-    export ICINGA_CERT_SERVICE_BA_PASSWORD
-    export ICINGA_CERT_SERVICE_API_USER
-    export ICINGA_CERT_SERVICE_API_PASSWORD
-    export ICINGA_CERT_SERVICE_SERVER
-    export ICINGA_CERT_SERVICE_PORT
-    export ICINGA_CERT_SERVICE_PATH
-    export ICINGA_CERT_SERVICE
+    export CERT_SERVICE_BA_USER
+    export CERT_SERVICE_BA_PASSWORD
+    export CERT_SERVICE_API_USER
+    export CERT_SERVICE_API_PASSWORD
+    export CERT_SERVICE_SERVER
+    export CERT_SERVICE_PORT
+    export CERT_SERVICE_PATH
+    export USE_CERT_SERVICE
   fi
 }

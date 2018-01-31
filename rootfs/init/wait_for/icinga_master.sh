@@ -5,13 +5,13 @@ wait_for_icinga_master() {
 
   # I can't wait for myself.
   #
-  [[ "${ICINGA_TYPE}" = "Master" ]] && return
+  [[ "${ICINGA2_TYPE}" = "Master" ]] && return
 
   RETRY=50
 
   until [[ ${RETRY} -le 0 ]]
   do
-    nc -z ${ICINGA_MASTER} 5665 < /dev/null > /dev/null
+    nc -z ${ICINGA2_MASTER} 5665 < /dev/null > /dev/null
 
     [[ $? -eq 0 ]] && break
 
@@ -21,7 +21,7 @@ wait_for_icinga_master() {
 
   if [[ ${RETRY} -le 0 ]]
   then
-    log_error "could not connect to the icinga2 master instance '${ICINGA_MASTER}'"
+    log_error "could not connect to the icinga2 master instance '${ICINGA2_MASTER}'"
     exit 1
   fi
 

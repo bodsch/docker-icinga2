@@ -6,15 +6,17 @@ restore_backup() {
   # backwards compatibility
   # in an older version, we create all zone config files in an seperate directory
   #
-  [[ -d ${ICINGA_LIB_DIR}/backup/automatic-zones.d ]] && mv ${ICINGA_LIB_DIR}/backup/automatic-zones.d ${ICINGA_LIB_DIR}/backup/zones.d
+  [[ -d ${ICINGA2_LIB_DIRECTORY}/backup/automatic-zones.d ]] && mv ${ICINGA2_LIB_DIRECTORY}/backup/automatic-zones.d ${ICINGA2_LIB_DIRECTORY}/backup/zones.d
 
-  if [[ -d ${ICINGA_LIB_DIR}/backup ]]
+  if [[ -d ${ICINGA2_LIB_DIRECTORY}/backup ]]
   then
     log_info "restore backup"
+set +e
+    [[ -f ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf ]] && cp -a ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf /etc/icinga2/zones.conf
+    [[ -d ${ICINGA2_LIB_DIRECTORY}/backup/zones.d ]]    && cp -ar ${ICINGA2_LIB_DIRECTORY}/backup/zones.d/* /etc/icinga2/zones.d/
+    [[ -f ${ICINGA2_LIB_DIRECTORY}/backup/conf.d/api-users.conf ]] && cp -a ${ICINGA2_LIB_DIRECTORY}/backup/conf.d/api-users.conf /etc/icinga2/conf.d/api-users.conf
 
-    [[ -f ${ICINGA_LIB_DIR}/backup/zones.conf ]] && cp -a ${ICINGA_LIB_DIR}/backup/zones.conf /etc/icinga2/zones.conf
-    [[ -d ${ICINGA_LIB_DIR}/backup/zones.d ]]    && cp -ar ${ICINGA_LIB_DIR}/backup/zones.d/* /etc/icinga2/zones.d/
-    [[ -f ${ICINGA_LIB_DIR}/backup/conf.d/api-users.conf ]] && cp -a ${ICINGA_LIB_DIR}/backup/conf.d/api-users.conf /etc/icinga2/conf.d/api-users.conf
+set -e
   fi
 }
 

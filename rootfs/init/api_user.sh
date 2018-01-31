@@ -9,9 +9,9 @@ create_api_user() {
   # the format are following:
   # username:password,username:password, ...
   # for example:
-  # ICINGA_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
+  # ICINGA2_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
   #
-  [[ -n "${ICINGA_API_USERS}" ]] &&  api_users=$(echo ${ICINGA_API_USERS} | sed -e 's/,/ /g' -e 's/\s+/\n/g' | uniq)
+  [[ -n "${ICINGA2_API_USERS}" ]] &&  api_users=$(echo ${ICINGA2_API_USERS} | sed -e 's/,/ /g' -e 's/\s+/\n/g' | uniq)
 
   if [[ ! -z "${api_users}" ]]
   then

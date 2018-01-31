@@ -4,17 +4,17 @@
 
 # a satellite or agent don't need this
 #
-[[ "${ICINGA_TYPE}" != "Master" ]] && return
+[[ "${ICINGA2_TYPE}" != "Master" ]] && return
 
 
-ICINGA_SSMTP_RELAY_SERVER=${ICINGA_SSMTP_RELAY_SERVER:-}
-ICINGA_SSMTP_REWRITE_DOMAIN=${ICINGA_SSMTP_REWRITE_DOMAIN:-}
-ICINGA_SSMTP_RELAY_USE_STARTTLS=${ICINGA_SSMTP_RELAY_USE_STARTTLS:-"false"}
+ICINGA2_SSMTP_RELAY_SERVER=${ICINGA2_SSMTP_RELAY_SERVER:-}
+ICINGA2_SSMTP_REWRITE_DOMAIN=${ICINGA2_SSMTP_REWRITE_DOMAIN:-}
+ICINGA2_SSMTP_RELAY_USE_STARTTLS=${ICINGA2_SSMTP_RELAY_USE_STARTTLS:-"false"}
 
-ICINGA_SSMTP_SENDER_EMAIL=${ICINGA_SSMTP_SENDER_EMAIL:-}
-ICINGA_SSMTP_SMTPAUTH_USER=${ICINGA_SSMTP_SMTPAUTH_USER:-}
-ICINGA_SSMTP_SMTPAUTH_PASS=${ICINGA_SSMTP_SMTPAUTH_PASS:-}
-ICINGA_SSMTP_ALIASES=${ICINGA_SSMTP_ALIASES:-}
+ICINGA2_SSMTP_SENDER_EMAIL=${ICINGA2_SSMTP_SENDER_EMAIL:-}
+ICINGA2_SSMTP_SMTPAUTH_USER=${ICINGA2_SSMTP_SMTPAUTH_USER:-}
+ICINGA2_SSMTP_SMTPAUTH_PASS=${ICINGA2_SSMTP_SMTPAUTH_PASS:-}
+ICINGA2_SSMTP_ALIASES=${ICINGA2_SSMTP_ALIASES:-}
 
 # configure the ssmtp tool to create notification emails
 #
@@ -28,24 +28,24 @@ configure_ssmtp() {
 # Benutzer, der alle Mails bekommt, die an Benutzer mit einer ID < 1000 adressiert sind.
 root=postmaster
 # Überschreiben der Absender-Domain.
-rewriteDomain=${ICINGA_SSMTP_REWRITE_DOMAIN}
+rewriteDomain=${ICINGA2_SSMTP_REWRITE_DOMAIN}
 # the mailrelay
-mailhub=${ICINGA_SSMTP_RELAY_SERVER}
+mailhub=${ICINGA2_SSMTP_RELAY_SERVER}
 FromLineOverride=NO
 EOF
 
-  if ( [[ ! -z "${ICINGA_SSMTP_RELAY_USE_STARTTLS}" ]] && [[ "${ICINGA_SSMTP_RELAY_USE_STARTTLS}" = "true" ]] )
+  if ( [[ ! -z "${ICINGA2_SSMTP_RELAY_USE_STARTTLS}" ]] && [[ "${ICINGA2_SSMTP_RELAY_USE_STARTTLS}" = "true" ]] )
   then
     cat << EOF >> ${file}
 UseSTARTTLS=YES
 EOF
   fi
 
-  if ( [[ ! -z ${ICINGA_SSMTP_SMTPAUTH_USER} ]] && [[ ! -z ${ICINGA_SSMTP_SMTPAUTH_PASS} ]] )
+  if ( [[ ! -z ${ICINGA2_SSMTP_SMTPAUTH_USER} ]] && [[ ! -z ${ICINGA2_SSMTP_SMTPAUTH_PASS} ]] )
   then
     cat << EOF >> ${file}
-AuthUser=${ICINGA_SSMTP_SMTPAUTH_USER}
-AuthPass=${ICINGA_SSMTP_SMTPAUTH_PASS}
+AuthUser=${ICINGA2_SSMTP_SMTPAUTH_USER}
+AuthPass=${ICINGA2_SSMTP_SMTPAUTH_PASS}
 EOF
   fi
 }
@@ -59,11 +59,11 @@ create_smtp_aliases() {
   # our default mail-sender
   #
   cat << EOF > ${file}
-root:${ICINGA_SSMTP_SENDER_EMAIL}@${ICINGA_SSMTP_REWRITE_DOMAIN}:${ICINGA_SSMTP_RELAY_SERVER}
+root:${ICINGA2_SSMTP_SENDER_EMAIL}@${ICINGA2_SSMTP_REWRITE_DOMAIN}:${ICINGA2_SSMTP_RELAY_SERVER}
 EOF
 
 
-  [[ -n "${ICINGA_SSMTP_ALIASES}" ]] && aliases=$(echo ${ICINGA_SSMTP_ALIASES} | sed -e 's/,/ /g' -e 's/\s+/\n/g' | uniq)
+  [[ -n "${ICINGA2_SSMTP_ALIASES}" ]] && aliases=$(echo ${ICINGA2_SSMTP_ALIASES} | sed -e 's/,/ /g' -e 's/\s+/\n/g' | uniq)
 
   if [[ ! -z "${aliases}" ]]
   then
@@ -75,7 +75,7 @@ EOF
       email=$(echo "${u}" | cut -d: -f2)
 
       cat << EOF >> ${file}
-${local}:${email}:${ICINGA_SSMTP_RELAY_SERVER}
+${local}:${email}:${ICINGA2_SSMTP_RELAY_SERVER}
 EOF
     done
   fi

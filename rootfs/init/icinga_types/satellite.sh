@@ -2,7 +2,7 @@
 
 remove_satellite_from_master() {
 
-  log_info "remove myself from my master '${ICINGA_MASTER}'"
+  log_info "remove myself from my master '${ICINGA2_MASTER}'"
 
   curl_opts=$(curl_opts)
 
@@ -11,7 +11,7 @@ remove_satellite_from_master() {
   code=$(curl \
     ${curl_opts} \
     --request DELETE \
-    https://${ICINGA_MASTER}:5665/v1/objects/hosts/$(hostname -f)?cascade=1 )
+    https://${ICINGA2_MASTER}:5665/v1/objects/hosts/$(hostname -f)?cascade=1 )
 }
 
 add_satellite_to_master() {
@@ -50,7 +50,7 @@ EOF
     ${curl_opts} \
     --header "Accept: application/json" \
     --request GET \
-    https://${ICINGA_MASTER}:5665/v1/objects/hosts/$(hostname -f))
+    https://${ICINGA2_MASTER}:5665/v1/objects/hosts/$(hostname -f))
 
   if [[ $? -eq 0 ]]
   then
@@ -66,14 +66,14 @@ EOF
 
       # add myself as host
       #
-      log_info "add myself to my master '${ICINGA_MASTER}'"
+      log_info "add myself to my master '${ICINGA2_MASTER}'"
 
       code=$(curl \
         ${curl_opts} \
         --header "Accept: application/json" \
         --request PUT \
         --data "$(api_satellite_host)" \
-        https://${ICINGA_MASTER}:5665/v1/objects/hosts/$(hostname -f))
+        https://${ICINGA2_MASTER}:5665/v1/objects/hosts/$(hostname -f))
 
 #       log_info "${code}"
 
@@ -110,14 +110,14 @@ restart_master() {
 
   # restart the master to activate the zone
   #
-  log_info "restart the master '${ICINGA_MASTER}' to activate the zone"
+  log_info "restart the master '${ICINGA2_MASTER}' to activate the zone"
   code=$(curl \
-    --user ${ICINGA_CERT_SERVICE_API_USER}:${ICINGA_CERT_SERVICE_API_PASSWORD} \
+    --user ${CERT_SERVICE_API_USER}:${CERT_SERVICE_API_PASSWORD} \
     --silent \
     --header 'Accept: application/json' \
     --request POST \
     --insecure \
-    https://${ICINGA_MASTER}:5665/v1/actions/restart-process )
+    https://${ICINGA2_MASTER}:5665/v1/actions/restart-process )
 
   if [[ $? -gt 0 ]]
   then
@@ -135,11 +135,11 @@ endpoint_configuration() {
   log_info "configure our endpoint"
 
   zones_file="/etc/icinga2/zones.conf"
-  backup_zones_file="${ICINGA_LIB_DIR}/backup/zones.conf"
+  backup_zones_file="${ICINGA2_LIB_DIRECTORY}/backup/zones.conf"
 
   hostname_f=$(hostname -f)
-  api_endpoint="${ICINGA_LIB_DIR}/api/zones/${hostname_f}/_etc/${hostname_f}.conf"
-  ca_file="${ICINGA_LIB_DIR}/certs/ca.crt"
+  api_endpoint="${ICINGA2_LIB_DIRECTORY}/api/zones/${hostname_f}/_etc/${hostname_f}.conf"
+  ca_file="${ICINGA2_LIB_DIRECTORY}/certs/ca.crt"
 
   # restore zone backup
   #
@@ -149,7 +149,7 @@ endpoint_configuration() {
 
     cp ${backup_zones_file} ${zones_file}
 
-    master_json="${ICINGA_LIB_DIR}/backup/sign_${HOSTNAME}.json"
+    master_json="${ICINGA2_LIB_DIRECTORY}/backup/sign_${HOSTNAME}.json"
 
     if [[ -f ${master_json} ]]
     then
@@ -184,10 +184,10 @@ endpoint_configuration() {
     # add our real icinga master
     #
     cat << EOF >> ${zones_file}
-/** added Endpoint for icinga2-master '${ICINGA_MASTER}' - $(date) */
+/** added Endpoint for icinga2-master '${ICINGA2_MASTER}' - $(date) */
 /* the following line specifies that the client connects to the master and not vice versa */
-object Endpoint "${ICINGA_MASTER}" { host = "${ICINGA_MASTER}" ; port = "5665" }
-object Zone "master" { endpoints = [ "${ICINGA_MASTER}" ] }
+object Endpoint "${ICINGA2_MASTER}" { host = "${ICINGA2_MASTER}" ; port = "5665" }
+object Zone "master" { endpoints = [ "${ICINGA2_MASTER}" ] }
 
 /* endpoint for this satellite */
 object Endpoint NodeName { host = NodeName }
@@ -256,7 +256,7 @@ request_certificate_from_master() {
   # restore our own zone configuration
   # otherwise, we can't communication with the master
   #
-  if ( [[ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ]] && [[ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.crt ]] )
+  if ( [[ -f ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.key ]] && [[ -f ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.crt ]] )
   then
     :
   else
@@ -274,14 +274,14 @@ request_certificate_from_master() {
     . /init/wait_for/cert_service.sh
 
     code=$(curl \
-      --user ${ICINGA_CERT_SERVICE_BA_USER}:${ICINGA_CERT_SERVICE_BA_PASSWORD} \
+      --user ${CERT_SERVICE_BA_USER}:${CERT_SERVICE_BA_PASSWORD} \
       --silent \
       --request GET \
-      --header "X-API-USER: ${ICINGA_CERT_SERVICE_API_USER}" \
-      --header "X-API-PASSWORD: ${ICINGA_CERT_SERVICE_API_PASSWORD}" \
+      --header "X-API-USER: ${CERT_SERVICE_API_USER}" \
+      --header "X-API-PASSWORD: ${CERT_SERVICE_API_PASSWORD}" \
       --write-out "%{http_code}\n" \
       --output /tmp/sign_${HOSTNAME}.json \
-      http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}${ICINGA_CERT_SERVICE_PATH}v2/sign/${HOSTNAME})
+      http://${CERT_SERVICE_SERVER}:${CERT_SERVICE_PORT}${CERT_SERVICE_PATH}v2/sign/${HOSTNAME})
 
     if ( [[ $? -eq 0 ]] && [[ ${code} == 200 ]] )
     then
@@ -289,7 +289,7 @@ request_certificate_from_master() {
       master_name=$(jq --raw-output .master_name /tmp/sign_${HOSTNAME}.json 2> /dev/null)
       master_ip=$(jq --raw-output .master_ip /tmp/sign_${HOSTNAME}.json 2> /dev/null)
 
-      mv /tmp/sign_${HOSTNAME}.json ${ICINGA_LIB_DIR}/backup/
+      mv /tmp/sign_${HOSTNAME}.json ${ICINGA2_LIB_DIRECTORY}/backup/
 
       log_info "${message}"
       log_info "  - ${master_name}"
@@ -319,7 +319,7 @@ configure_icinga2_satellite() {
 
   # TODO check this!
   #
-  export ICINGA_SATELLITE=true
+  export ICINGA2_SATELLITE=true
 
   # ONLY THE MASTER CREATES NOTIFICATIONS!
   #
@@ -341,7 +341,7 @@ configure_icinga2_satellite() {
   # we have a certificate
   # validate this against our icinga-master
   #
-  if ( [[ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ]] && [[ -f ${ICINGA_CERT_DIR}/${HOSTNAME}.crt ]] )
+  if ( [[ -f ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.key ]] && [[ -f ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.crt ]] )
   then
     validate_local_ca
     # create the certificate pem for later use
@@ -360,10 +360,10 @@ configure_icinga2_satellite() {
   endpoint_configuration
 
 
-  log_info "waiting for our cert-service on '${ICINGA_CERT_SERVICE_SERVER}' to come up"
+  log_info "waiting for our cert-service on '${CERT_SERVICE_SERVER}' to come up"
   . /init/wait_for/cert_service.sh
 
-  log_info "waiting for our icinga master '${ICINGA_MASTER}' to come up"
+  log_info "waiting for our icinga master '${ICINGA2_MASTER}' to come up"
   . /init/wait_for/icinga_master.sh
 
   request_certificate_from_master

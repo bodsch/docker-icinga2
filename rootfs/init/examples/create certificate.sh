@@ -5,9 +5,9 @@ DIR="/tmp/icinga-pki/xxxxxx"
 SATELLITE="icinga2-satellite-2.matrix.lan"
 SALT=$(echo ${s} | sha256sum | cut -f 1 -d ' ')
 
-ICINGA_CERT_DIR="/etc/icinga2/pki"
-ICINGA_VERSION=$(icinga2 --version | head -n1 | awk -F 'version: ' '{printf $2}' | awk -F \. {'print $1 "." $2'} | sed 's|r||')
-[ "${ICINGA_VERSION}" = "2.8" ] && ICINGA_CERT_DIR="/var/lib/icinga2/certs"
+ICINGA2_CERT_DIRECTORY="/etc/icinga2/pki"
+ICINGA2_VERSION=$(icinga2 --version | head -n1 | awk -F 'version: ' '{printf $2}' | awk -F \. {'print $1 "." $2'} | sed 's|r||')
+[ "${ICINGA2_VERSION}" = "2.8" ] && ICINGA2_CERT_DIRECTORY="/var/lib/icinga2/certs"
 
 [ -d ${DIR} ] && rm -rf ${DIR}
 [ -d ${DIR} ] || mkdir -vp ${DIR}
@@ -40,5 +40,5 @@ icinga2 pki request \
   --key ${DIR}/${SATELLITE}.key \
   --cert ${DIR}/${SATELLITE}.crt \
   --trustedcert ${DIR}/trusted-master.crt \
-  --ca ${ICINGA_CERT_DIR}/ca.crt
+  --ca ${ICINGA2_CERT_DIRECTORY}/ca.crt
 

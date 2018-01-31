@@ -2,19 +2,21 @@
 #
 #
 
+set -e
+
 [[ ${DEBUG} ]] && set -x
 
 HOSTNAME=$(hostname -f)
 
-export ICINGA_CERT_DIR="/etc/icinga2/certs"
-ICINGA_LIB_DIR="/var/lib/icinga2"
+export ICINGA2_CERT_DIRECTORY="/etc/icinga2/certs"
+ICINGA2_LIB_DIRECTORY="/var/lib/icinga2"
 
-ICINGA_VERSION=$(icinga2 --version | head -n1 | awk -F 'version: ' '{printf $2}' | awk -F \. {'print $1 "." $2'} | sed 's|r||')
-[[ "${ICINGA_VERSION}" = "2.8" ]] && export ICINGA_CERT_DIR="/var/lib/icinga2/certs"
+ICINGA2_VERSION=$(icinga2 --version | head -n1 | awk -F 'version: ' '{printf $2}' | awk -F \. {'print $1 "." $2'} | sed 's|r||')
+[[ "${ICINGA2_VERSION}" = "2.8" ]] && export ICINGA2_CERT_DIRECTORY="/var/lib/icinga2/certs"
 
-export ICINGA_VERSION
-export ICINGA_CERT_DIR
-export ICINGA_LIB_DIR
+export ICINGA2_VERSION
+export ICINGA2_CERT_DIRECTORY
+export ICINGA2_LIB_DIRECTORY
 export HOSTNAME
 
 . /init/output.sh
@@ -52,16 +54,16 @@ custom_scripts() {
 
 detect_type() {
 
-  if ( [[ -z ${ICINGA_PARENT} ]] && [[ ! -z ${ICINGA_MASTER} ]] && [[ "${ICINGA_MASTER}" == "${HOSTNAME}" ]] )
+  if ( [[ -z ${ICINGA2_PARENT} ]] && [[ ! -z ${ICINGA2_MASTER} ]] && [[ "${ICINGA2_MASTER}" == "${HOSTNAME}" ]] )
   then
-    ICINGA_TYPE="Master"
-  elif ( [[ ! -z ${ICINGA_PARENT} ]] && [[ ! -z ${ICINGA_MASTER} ]] && [[ "${ICINGA_MASTER}" == "${ICINGA_PARENT}" ]] )
+    ICINGA2_TYPE="Master"
+  elif ( [[ ! -z ${ICINGA2_PARENT} ]] && [[ ! -z ${ICINGA2_MASTER} ]] && [[ "${ICINGA2_MASTER}" == "${ICINGA2_PARENT}" ]] )
   then
-    ICINGA_TYPE="Satellite"
+    ICINGA2_TYPE="Satellite"
   else
-    ICINGA_TYPE="Agent"
+    ICINGA2_TYPE="Agent"
   fi
-  export ICINGA_TYPE
+  export ICINGA2_TYPE
 }
 
 
@@ -70,7 +72,7 @@ run() {
   detect_type
 
   log_info "---------------------------------------------------"
-  log_info "   Icinga ${ICINGA_TYPE} Version ${ICINGA_VERSION} - build: ${BUILD_DATE}"
+  log_info "   Icinga ${ICINGA2_TYPE} Version ${ICINGA2_VERSION} - build: ${BUILD_DATE}"
   log_info "---------------------------------------------------"
 
   . /init/common.sh
@@ -90,7 +92,7 @@ run() {
 
   log_info "start init process ..."
 
-  if [[ "${ICINGA_TYPE}" = "Master" ]]
+  if [[ "${ICINGA2_TYPE}" = "Master" ]]
   then
     export RAILS_ENV="production"
     # backup the generated zones
@@ -98,7 +100,7 @@ run() {
     nohup /init/runtime/inotify.sh > /dev/stdout 2>&1 &
 
     # env | grep ICINGA | sort
-    nohup /usr/local/bin/rest-service.rb > /dev/stdout 2>&1 &
+    nohup /usr/local/icinga2-cert-service/bin/icinga2-cert-service.rb > /dev/stdout 2>&1 &
   else
     :
     nohup /init/runtime/ca_validator.sh > /dev/stdout 2>&1 &

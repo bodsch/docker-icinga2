@@ -45,19 +45,19 @@
 HOSTNAME="$(hostname -f)"
 DOMAINNAME="$(hostname -d)"
 
-ICINGA_CERT_DIR="/etc/icinga2/pki"
-ICINGA_VERSION=$(icinga2 --version | head -n1 | awk -F 'version: ' '{printf $2}' | awk -F \. {'print $1 "." $2'} | sed 's|r||')
-[ "${ICINGA_VERSION}" = "2.8" ] && ICINGA_CERT_DIR="/var/lib/icinga2/certs"
+ICINGA2_CERT_DIRECTORY="/etc/icinga2/pki"
+ICINGA2_VERSION=$(icinga2 --version | head -n1 | awk -F 'version: ' '{printf $2}' | awk -F \. {'print $1 "." $2'} | sed 's|r||')
+[ "${ICINGA2_VERSION}" = "2.8" ] && ICINGA2_CERT_DIRECTORY="/var/lib/icinga2/certs"
 
-export ICINGA_VERSION
-export ICINGA_CERT_DIR
+export ICINGA2_VERSION
+export ICINGA2_CERT_DIRECTORY
 
 
-PKI_KEY="${ICINGA_CERT_DIR}/${HOSTNAME}.key"
-PKI_CSR="${ICINGA_CERT_DIR}/${HOSTNAME}.csr"
-PKI_CRT="${ICINGA_CERT_DIR}/${HOSTNAME}.crt"
+PKI_KEY="${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.key"
+PKI_CSR="${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.csr"
+PKI_CRT="${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.crt"
 
-ICINGA_MASTER="icinga2-master"
+ICINGA2_MASTER="icinga2-master"
 
 PKI_CMD="icinga2 pki"
 
@@ -120,7 +120,7 @@ do
     --key ${dir}/${s}.key \
     --cert ${dir}/${s}.crt \
     --trustedcert ${dir}/trusted-master.crt \
-    --host ${ICINGA_MASTER}
+    --host ${ICINGA2_MASTER}
 
   # Receive Ticket from master...
   pki_ticket=$(${PKI_CMD} ticket \
@@ -128,13 +128,13 @@ do
     --salt ${salt})
 
   ${PKI_CMD} request \
-    --host ${ICINGA_MASTER} \
+    --host ${ICINGA2_MASTER} \
     --port 5665 \
     --ticket ${pki_ticket} \
     --key ${dir}/${s}.key \
     --cert ${dir}/${s}.crt \
     --trustedcert ${dir}/trusted-master.crt \
-    --ca ${ICINGA_CERT_DIR}/ca.crt
+    --ca ${ICINGA2_CERT_DIRECTORY}/ca.crt
 
   # openssl x509 -in ${dir}/${s}.crt -text -noout
   # openssl req -in  ${dir}/${s}.csr -noout -text

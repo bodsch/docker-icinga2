@@ -20,7 +20,7 @@ do
   . /init/wait_for/cert_service.sh
   validate_local_ca
 
-  if [[ ! -f ${ICINGA_CERT_DIR}/${HOSTNAME}.key ]]
+  if [[ ! -f ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.key ]]
   then
     log_error "the validation of our CA was not successful."
     log_error "clean up and restart."

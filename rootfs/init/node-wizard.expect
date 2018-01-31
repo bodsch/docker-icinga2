@@ -16,7 +16,7 @@ expect -re "Please specify the common name " {
 }
 
 expect -re "Master/Satellite Common Name" {
- send -- "$env(ICINGA_MASTER)\r"
+ send -- "$env(ICINGA2_MASTER)\r"
 }
 
 expect -re "Do you want to establish a connection to the parent node" {
@@ -24,7 +24,7 @@ expect -re "Do you want to establish a connection to the parent node" {
 }
 
 expect -re "endpoint host" {
-  send -- "$env(ICINGA_MASTER)\r"
+  send -- "$env(ICINGA2_MASTER)\r"
 }
 
 expect -re "endpoint port" {

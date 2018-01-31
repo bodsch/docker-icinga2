@@ -44,7 +44,7 @@ inotifywait \
           -e 's|^object Zone ZoneName.*}$|object Zone ZoneName { endpoints = [ NodeName ]; parent = "master" }|g' \
           /etc/icinga2/zones.conf
 
-        cp /etc/icinga2/zones.conf ${ICINGA_LIB_DIR}/backup/zones.conf
+        cp /etc/icinga2/zones.conf ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf
       fi
     # monitor CREATE,ISDIR
     #
@@ -61,7 +61,7 @@ inotifywait \
           -e '/^object Endpoint NodeName.*/d' \
           /etc/icinga2/zones.conf
 
-        cp /etc/icinga2/zones.conf ${ICINGA_LIB_DIR}/backup/zones.conf
+        cp /etc/icinga2/zones.conf ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf
 
         log_info "we remove also the static global-templates directory"
         [[ -d /etc/icinga2/zones.d/global-templates ]] && rm -rf /etc/icinga2/zones.d/global-templates

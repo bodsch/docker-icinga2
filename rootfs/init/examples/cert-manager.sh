@@ -49,7 +49,7 @@ PKI_KEY="/etc/icinga2/pki/${HOSTNAME}.key"
 PKI_CSR="/etc/icinga2/pki/${HOSTNAME}.csr"
 PKI_CRT="/etc/icinga2/pki/${HOSTNAME}.crt"
 
-ICINGA_MASTER="icinga2-master"
+ICINGA2_MASTER="icinga2-master"
 
 PKI_CMD="icinga2 pki"
 
@@ -99,7 +99,7 @@ do
     --key ${dir}/${s}.key \
     --cert ${dir}/${s}.crt \
     --trustedcert ${dir}/trusted-master.crt \
-    --host ${ICINGA_MASTER}
+    --host ${ICINGA2_MASTER}
 
   # Receive Ticket from master...
   pki_ticket=$(${PKI_CMD} ticket \
@@ -107,7 +107,7 @@ do
     --salt ${salt})
 
   ${PKI_CMD} request \
-    --host ${ICINGA_MASTER} \
+    --host ${ICINGA2_MASTER} \
     --port 5665 \
     --ticket ${pki_ticket} \
     --key ${dir}/${s}.key \
