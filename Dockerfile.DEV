@@ -41,7 +41,6 @@ RUN \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   ln -s /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command checker mainlog notification && \
-  mkdir -p /etc/icinga2/objects.d && \
   mkdir -p /run/icinga2/cmd && \
   cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
   chmod u+s /bin/busybox && \
