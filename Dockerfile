@@ -5,9 +5,9 @@ ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
   BUILD_DATE="2018-01-23" \
-  BUILD_TYPE="local" \
+  BUILD_TYPE="development" \
   CERT_SERVICE_VERSION="0.16.5" \
-  ICINGA2_VERSION="2.8.0-r0"
+  ICINGA_VERSION="2.8.0-r0"
 
 EXPOSE 5665 8080
 
@@ -20,14 +20,14 @@ LABEL \
   org.label-schema.url="https://www.icinga.org/" \
   org.label-schema.vcs-url="https://github.com/bodsch/docker-icinga2" \
   org.label-schema.vendor="Bodo Schulz" \
-  org.label-schema.version=${ICINGA2_VERSION} \
+  org.label-schema.version=${ICINGA_VERSION} \
   org.label-schema.schema-version="1.0" \
   com.microscaling.docker.dockerfile="/Dockerfile" \
   com.microscaling.license="GNU General Public License v3.0"
 
 # ---------------------------------------------------------------------------------------
 
-ADD build/ /build/
+# ADD build/ /build/
 
 RUN \
   apk update --quiet --no-cache  && \
@@ -41,7 +41,6 @@ RUN \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   ln -s /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command checker mainlog notification && \
-  mkdir -p /etc/icinga2/objects.d && \
   mkdir -p /run/icinga2/cmd && \
   cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
   chmod u+s /bin/busybox && \
@@ -66,14 +65,12 @@ RUN \
       git checkout development 2> /dev/null ; \
     fi \
   fi && \
-  /tmp/ruby-icinga-cert-service/bin/install.sh
-
-#  cd /tmp/ruby-icinga-cert-service && \
-#  bundle install --quiet && \
-#  gem uninstall --quiet \
-#    io-console bundler && \
-#  cp -ar /tmp/ruby-icinga-cert-service/bin /usr/local/ && \
-#  cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/
+  cd /tmp/ruby-icinga-cert-service && \
+  bundle install --quiet && \
+  gem uninstall --quiet \
+    io-console bundler && \
+  cp -ar /tmp/ruby-icinga-cert-service/bin /usr/local/ && \
+  cp -ar /tmp/ruby-icinga-cert-service/lib /usr/local/
 
 RUN \
   apk del --quiet --purge .build-deps && \
