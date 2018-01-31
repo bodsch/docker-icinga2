@@ -10,7 +10,7 @@ install:
   - docker run --detach --name icinga2 bodsch/docker-icinga2
 
 script:
-  - docker ps | grep -q icinga2
+  - docker-compose up --build
   - tests/test.sh
 
 after_success:
