@@ -73,8 +73,8 @@ services:
       - IDO_PASSWORD=qUVuLTk9oEDUV0A
       # environment variables for the certificates service
       - ICINGA2_MASTER=icinga2-master.matrix.lan
-      - BASIC_AUTH_USER=foofoo
-      - BASIC_AUTH_PASS=barbar
+      - BASIC_AUTH_USER=admin
+      - BASIC_AUTH_PASS=admin
       - CERT_SERVICE_BA_USER=admin
       - CERT_SERVICE_BA_PASSWORD=admin
       - CERT_SERVICE_API_USER=root
@@ -110,8 +110,8 @@ services:
     environment:
       - ICINGA2_MASTER=icinga2-master.matrix.lan
       - ICINGA2_PARENT=icinga2-master.matrix.lan
-      - CERT_SERVICE_BA_USER=foofoo
-      - CERT_SERVICE_BA_PASSWORD=barbar
+      - CERT_SERVICE_BA_USER=admin
+      - CERT_SERVICE_BA_PASSWORD=admin
       - CERT_SERVICE_API_USER=root
       - CERT_SERVICE_API_PASSWORD=icinga
       - CERT_SERVICE_SERVER=icinga2-master

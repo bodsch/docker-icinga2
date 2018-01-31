@@ -11,6 +11,7 @@ install:
 
 script:
   - docker ps | grep -q icinga2
+  - tests/test.sh
 
 after_success:
   - |
