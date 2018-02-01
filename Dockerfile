@@ -4,7 +4,7 @@ FROM alpine:3.7
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
-  BUILD_DATE="2018-01-31" \
+  BUILD_DATE="2018-02-01" \
   BUILD_TYPE="development" \
   CERT_SERVICE_VERSION="0.16.5" \
   ICINGA_VERSION="2.8.0-r0"
@@ -12,7 +12,7 @@ ENV \
 EXPOSE 5665 8080
 
 LABEL \
-  version="1801" \
+  version="1802" \
   maintainer="Bodo Schulz <bodo@boone-schulz.de>" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Icinga2 Docker Image" \
@@ -65,8 +65,7 @@ RUN \
       git checkout development 2> /dev/null ; \
     fi \
   fi && \
-  cd /tmp/ruby-icinga-cert-service && \
-  bin/install.sh
+  /tmp/ruby-icinga-cert-service/bin/installer.sh
 
 RUN \
   apk del --quiet --purge .build-deps && \

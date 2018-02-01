@@ -123,6 +123,7 @@ api_request() {
 
 inspect() {
 
+  echo "inspect needed containers"
   for d in database icingaweb2 icinga2-master icinga2-satellite-1
   do
     # docker inspect --format "{{lower .Name}}" ${d}

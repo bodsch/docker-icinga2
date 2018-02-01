@@ -12,6 +12,8 @@ install:
 script:
   - docker-compose --file docker-compose_example.yml up --build -d
   - tests/test.sh
+  - docker-compose --file docker-compose_example.yml kill
+  - docker-compose --file docker-compose_example.yml down
 
 after_success:
   - |
