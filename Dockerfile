@@ -1,93 +1,99 @@
 
-FROM alpine:3.7
+FROM alpine:3.7 as builder
 
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
   BUILD_DATE="2018-02-01" \
-  BUILD_TYPE="development" \
-  CERT_SERVICE_VERSION="0.16.5" \
-  ICINGA_VERSION="2.8.0-r0"
+  ICINGA_VERSION="2.8.1"
 
-EXPOSE 5665 8080
-
-LABEL \
-  version="1802" \
-  maintainer="Bodo Schulz <bodo@boone-schulz.de>" \
-  org.label-schema.build-date=${BUILD_DATE} \
-  org.label-schema.name="Icinga2 Docker Image" \
-  org.label-schema.description="Inofficial Icinga2 Docker Image" \
-  org.label-schema.url="https://www.icinga.org/" \
-  org.label-schema.vcs-url="https://github.com/bodsch/docker-icinga2" \
-  org.label-schema.vendor="Bodo Schulz" \
-  org.label-schema.version=${ICINGA_VERSION} \
-  org.label-schema.schema-version="1.0" \
-  com.microscaling.docker.dockerfile="/Dockerfile" \
-  com.microscaling.license="GNU General Public License v3.0"
-
-# ---------------------------------------------------------------------------------------
-
-#ADD build/ /build/
+WORKDIR /build
 
 RUN \
   apk update --quiet --no-cache  && \
   apk upgrade --quiet --no-cache && \
   apk add --quiet --no-cache --virtual .build-deps \
-    libffi-dev g++ make git openssl-dev ruby-dev && \
+    build-base \
+    boost \
+    boost-dev \
+    bison \
+    cmake \
+    flex && \
+    libressl-dev \
+    libffi-dev \
+    mariadb-dev \
+    postgresql-dev \
+    shadow && \
   apk add --quiet --no-cache \
-    bash bind-tools curl drill expect fping inotify-tools icinga2 jq mailx monitoring-plugins mariadb-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby ssmtp tzdata unzip && \
-  cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
-  echo ${TZ} > /etc/timezone && \
-  cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
-  ln -s /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
-  /usr/sbin/icinga2 feature enable command checker mainlog notification && \
-  mkdir -p /run/icinga2/cmd && \
-  cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
-  chmod u+s /bin/busybox && \
-  echo 'gem: --no-document' >> /etc/gemrc && \
-  gem install --quiet --no-rdoc --no-ri \
-    io-console bundler
+    curl git
+
 
 RUN \
-  cd /tmp && \
-  if [ "${BUILD_TYPE}" == "local" ] ; then \
-    echo "use local sources" && \
-    ls -1 /build/ && \
-    mv /build/ruby-icinga-cert-service /tmp/ ; \
-  else \
-    git clone https://github.com/bodsch/ruby-icinga-cert-service.git && \
-    cd ruby-icinga-cert-service && \
-    if [ "${BUILD_TYPE}" == "stable" ] ; then \
-      echo "switch to stable Tag v${CERT_SERVICE_VERSION}" && \
-      git checkout tags/${CERT_SERVICE_VERSION} 2> /dev/null ; \
-    elif [ "${BUILD_TYPE}" == "development" ] ; then \
-      echo "switch to development Branch" && \
-      git checkout development 2> /dev/null ; \
-    fi \
-  fi && \
-  /tmp/ruby-icinga-cert-service/bin/installer.sh
+  curl \
+    --silent \
+    --location \
+    --retry 3 \
+    --cacert /etc/ssl/certs/ca-certificates.crt \
+    "https://github.com/Icinga/icinga2/archive/v${ICINGA_VERSION}.tar.gz" \
+    | gunzip \
+    | tar x -C /build
 
 RUN \
-  apk del --quiet --purge .build-deps && \
-  rm -rf \
-    /tmp/* \
-    /var/cache/apk/* \
-    /root/.gem \
-    /root/.bundle
+  addgroup -g 1000 icinga && \
+  addgroup -g 1001 icingacmd && \
+  adduser -D -H -G icinga -g '' -u 1000 -h /var/lib/icinga2 -s /sbin/nologin icinga && \
+  usermod -a -G icingacmd icinga
 
-COPY rootfs/ /
+RUN \
+  mkdir -p /etc/icinga2 && \
+  mkdir -p /var/log/icinga2 && \
+  mkdir -p /var/lib/icinga2/api/zones && \
+  mkdir -p /var/lib/icinga2/api/repository && \
+  mkdir -p /var/lib/icinga2/api/log && \
+  mkdir -p /var/spool/icinga2/perfdata && \
+  mkdir -p /usr/share/icinga2/include/plugins
 
-WORKDIR "/etc/icinga2"
+RUN \
+  chown root:icinga /etc/icinga2 && \
+  chmod 0750 /etc/icinga2 && \
+  chown icinga:icinga /var/lib/icinga2 && \
+  chown icinga:icinga /var/spool/icinga2 && \
+  chown -R icinga:icingacmd /var/lib/icinga2/api && \
+  chown icinga:icinga /var/spool/icinga2/perfdata && \
+  chown icinga:icingacmd /var/log/icinga2 && \
+  chmod ug+rwX,o-rwx /etc/icinga2 && \
+  chmod ug+rwX,o-rwx /var/lib/icinga2 && \
+  chmod ug+rwX,o-rwx /var/spool/icinga2 && \
+  chmod ug+rwX,o-rwx /var/log/icinga2
 
-VOLUME [ "/etc/icinga2", "/var/lib/icinga2" ]
+RUN \
+  cd /build/icinga2-${ICINGA_VERSION} && \
+  mkdir build && \
+  cd build && \
+  cmake .. \
+    -DICINGA2_UNITY_BUILD=FALSE \
+    -DCMAKE_VERBOSE_MAKEFILE=ON \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_SYSCONFDIR=/etc \
+    -DCMAKE_INSTALL_LOCALSTATEDIR=/var \
+    -DICINGA2_SYSCONFIGFILE=/etc/conf.d/icinga2 \
+    -DICINGA2_PLUGINDIR="/usr/share/icinga2/include/plugins" \
+    -DICINGA2_USER=icinga \
+    -DICINGA2_GROUP=icingacmd \
+    -DICINGA2_COMMAND_GROUP=icingacmd \
+    -DINSTALL_SYSTEMD_SERVICE_AND_INITSCRIPT=no \
+    -DLOGROTATE_HAS_SU=OFF \
+    -DICINGA2_WITH_MYSQL=ON \
+    -DICINGA2_WITH_PGSQL=ON \
+    -DICINGA2_LTO_BUILD=ON \
+    -DICINGA2_WITH_STUDIO=OFF && \
+  make
 
-HEALTHCHECK \
-  --interval=5s \
-  --timeout=2s \
-  --retries=12 \
-  --start-period=10s \
-  CMD ps ax | grep -v grep | grep -c "/usr/lib/icinga2/sbin/icinga2" || exit 1
+RUN \
+  cd /build/icinga2-${ICINGA_VERSION}/build && \
+  make install
 
-CMD [ "/init/run.sh" ]
 
-# ---------------------------------------------------------------------------------------
+CMD [ "/bin/sh" ]
+
