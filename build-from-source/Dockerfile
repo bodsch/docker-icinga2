@@ -14,17 +14,18 @@ RUN \
   apk upgrade --quiet --no-cache && \
   apk add --quiet --no-cache --virtual .build-deps \
     build-base \
-    boost \
     boost-dev \
     bison \
     cmake \
     curl \
     flex \
-    git \
     libressl-dev \
     mariadb-dev \
     postgresql-dev \
-    shadow
+    shadow && \
+  apk add --quiet --no-cache \
+    boost \
+    boost-program_options
 
 RUN \
   curl \
@@ -48,6 +49,7 @@ RUN \
   mkdir -p /var/lib/icinga2/api/zones && \
   mkdir -p /var/lib/icinga2/api/repository && \
   mkdir -p /var/lib/icinga2/api/log && \
+  mkdir -p /var/cache/icinga2 && \
   mkdir -p /var/spool/icinga2/perfdata && \
   mkdir -p /usr/share/icinga2/include/plugins
 
@@ -58,6 +60,7 @@ RUN \
   chown icinga:icinga /var/spool/icinga2 && \
   chown -R icinga:icingacmd /var/lib/icinga2/api && \
   chown icinga:icinga /var/spool/icinga2/perfdata && \
+  chown icinga:icinga /var/cache/icinga2 && \
   chown icinga:icingacmd /var/log/icinga2 && \
   chmod ug+rwX,o-rwx /etc/icinga2 && \
   chmod ug+rwX,o-rwx /var/lib/icinga2 && \
@@ -90,18 +93,21 @@ RUN \
 
 RUN \
   cd /build/icinga2-${ICINGA_VERSION}/build && \
-  make install
-
+  make config && \
+  make install && \
+  cp -ar /usr/etc/icinga2/* /etc/icinga2/
 
 RUN \
   which icinga2 && \
   icinga2 --version
 
-RUN \
-  apk del --quiet .build-deps && \
-  rm -rf \
-    /tmp/* \
-    /var/cache/apk/*
+#RUN \
+#  apk del --quiet .build-deps && \
+#  rm -rf \
+#    /tmp/* \
+#    /var/cache/apk/*
+
+WORKDIR /etc/icinga2
 
 CMD [ "/bin/sh" ]
 
