@@ -7,7 +7,6 @@ networks:
   database:
   satellite:
 
-
 services:
 
   database:
@@ -26,21 +25,21 @@ services:
   # icingaweb2
   #
   icingaweb2:
-    image: bodsch/docker-icingaweb2:2.5.1-r1
+    image: bodsch/docker-icingaweb2:latest
     container_name: icingaweb2
     hostname: icingaweb2.matrix.lan
     ports:
       - 80:80
     environment:
-      ICINGA2_HOST: icinga2-master.matrix.lan
-      MYSQL_HOST: database
-      MYSQL_ROOT_USER: root
-      MYSQL_ROOT_PASS: vYUQ14SGVrJRi69PsujC
-      ICINGA2_CMD_API_USER: root
-      ICINGA2_CMD_API_PASS: icinga
-      ICINGAWEB2_USERS: 'icinga:icinga,foo:bar'
-      IDO_DATABASE_NAME: icinga2core
-      IDO_PASSWORD: qUVuLTk9oEDUV0A
+      - ICINGA2_HOST=icinga2-master.matrix.lan
+      - MYSQL_HOST=database
+      - MYSQL_ROOT_USER=root
+      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
+      - ICINGA2_CMD_API_USER=root
+      - ICINGA2_CMD_API_PASS=icinga
+      - ICINGAWEB2_USERS='icinga:icinga,foo:bar'
+      - IDO_DATABASE_NAME=icinga2core
+      - IDO_PASSWORD=qUVuLTk9oEDUV0A
     volumes:
       - /tmp/docker-data/icingaweb2:/srv
     links:

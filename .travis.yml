@@ -10,7 +10,7 @@ install:
   - docker run --detach --name icinga2 bodsch/docker-icinga2
 
 script:
-  - docker-compose --file docker-compose_example.yml up --build
+  - docker-compose --file docker-compose_example.yml up --build -d
   - tests/test.sh
 
 after_success:

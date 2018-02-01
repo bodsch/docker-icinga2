@@ -130,8 +130,8 @@ inspect() {
   done
 }
 
-echo "wait 5 seconds for start"
-sleep 5s
+echo "wait 5 minutes for start"
+sleep 5m
 
 inspect
 
