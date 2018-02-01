@@ -27,7 +27,7 @@ LABEL \
 
 # ---------------------------------------------------------------------------------------
 
-ADD build/ /build/
+#ADD build/ /build/
 
 RUN \
   apk update --quiet --no-cache  && \
