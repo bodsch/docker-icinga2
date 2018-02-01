@@ -18,7 +18,7 @@ RUN \
     boost-dev \
     bison \
     cmake \
-    flex && \
+    flex \
     libressl-dev \
     libffi-dev \
     mariadb-dev \
@@ -26,7 +26,6 @@ RUN \
     shadow && \
   apk add --quiet --no-cache \
     curl git
-
 
 RUN \
   curl \
