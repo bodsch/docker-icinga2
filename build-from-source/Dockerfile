@@ -61,6 +61,11 @@ RUN \
 
 RUN \
   cd /build/monitoring-plugins/ && \
+  # fix this:
+  # ar: `u' modifier ignored since `D' is the default (see `U')
+  # see: https://bugzilla.redhat.com/show_bug.cgi?id=1155273#c13
+  export ARFLAGS='cr' && \
+  export AR_FLAGS='cr' && \
   find . -name "*apt*" | xargs -r rm -rf && \
   make && \
   make install
