@@ -4,8 +4,8 @@ include env_make
 NS       = bodsch
 VERSION ?= latest
 
-REPO     = icinga2-master
-NAME     = icinga2-master
+REPO     = icinga2-satellite
+NAME     = icinga2-satellite
 INSTANCE = default
 
 .PHONY: build push shell run start stop rm release

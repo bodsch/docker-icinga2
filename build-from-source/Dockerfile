@@ -41,6 +41,10 @@ RUN \
     iputils \
     libedit \
     yajl \
+    gettext \
+    mariadb-client \
+    mariadb-client-libs \
+    postgresql-client \
     boost \
     boost-program_options && \
   git clone https://github.com/monitoring-plugins/monitoring-plugins.git && \
@@ -86,8 +90,8 @@ RUN \
     -DCMAKE_INSTALL_SBINDIR=/usr/sbin \
     -DCMAKE_INSTALL_LIBDIR=/usr/lib \
     -DCMAKE_INSTALL_LOCALSTATEDIR=/var \
-    -DICINGA2_WITH_COMPAT=OFF \
-    -DICINGA2_WITH_LIVESTATUS=OFF \
+    -DICINGA2_WITH_COMPAT=ON \
+    -DICINGA2_WITH_LIVESTATUS=ON \
     -DICINGA2_GIT_VERSION_INFO=OFF \
     -DICINGA2_RUNDIR=/run \
     -DICINGA2_SYSCONFIGFILE=/etc/icinga2 \
@@ -118,7 +122,8 @@ RUN \
     /var/cache/apk/* && \
   which icinga2 && \
   icinga2 --version && \
-  icinga2 daemon --validate
+  icinga2 daemon --validate && \
+  icinga2 feature list
 
 WORKDIR /etc/icinga2
 

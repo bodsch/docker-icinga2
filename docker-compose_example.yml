@@ -37,7 +37,7 @@ services:
       - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
       - ICINGA2_CMD_API_USER=root
       - ICINGA2_CMD_API_PASS=icinga
-      - ICINGAWEB2_USERS='icinga:icinga,foo:bar'
+      - ICINGAWEB2_USERS=icinga:icinga,foo:bar
       - IDO_DATABASE_NAME=icinga2core
       - IDO_PASSWORD=qUVuLTk9oEDUV0A
     volumes:
@@ -53,7 +53,7 @@ services:
   # the Icinga2 Master
   # includes a certificate service to create and provide a icinga certificate
   icinga2-master:
-    build: .
+    build: icinga2-master
     container_name: icinga2-master
     hostname: icinga2-master.matrix.lan
     restart: always
@@ -99,7 +99,7 @@ services:
   #
   # this satellite should work, the BA is correct
   icinga2-satellite-1:
-    build: .
+    build: icinga2-satellite
     container_name: icinga2-satellite-1
     hostname: icinga2-satellite-1.matrix.lan
     restart: always

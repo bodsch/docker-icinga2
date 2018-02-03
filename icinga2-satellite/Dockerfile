@@ -5,11 +5,10 @@ ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
   BUILD_DATE="2018-02-03" \
-  BUILD_TYPE="development" \
   CERT_SERVICE_VERSION="0.16.5" \
-  ICINGA2_TYPE="Master"
+  ICINGA2_TYPE="Satellite"
 
-EXPOSE 5665 8080
+EXPOSE 5665
 
 LABEL \
   version="1802" \
@@ -32,42 +31,17 @@ LABEL \
 RUN \
   apk update --quiet --no-cache  && \
   apk upgrade --quiet --no-cache && \
-  apk add --quiet --no-cache --virtual .build-deps \
-    libffi-dev g++ make git openssl-dev ruby-dev && \
   apk add --quiet --no-cache \
-    bash bind-tools curl drill expect fping inotify-tools jq mailx mariadb-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby ssmtp tzdata unzip && \
+    bash bind-tools curl drill expect fping inotify-tools jq mariadb-client netcat-openbsd nrpe-plugin openssl pwgen tzdata unzip && \
   cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
   echo ${TZ} > /etc/timezone && \
   ln -s /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
-  /usr/sbin/icinga2 feature enable command checker mainlog notification && \
+  /usr/sbin/icinga2 feature enable command checker mainlog && \
   mkdir -p /run/icinga2/cmd && \
   cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
-  chmod u+s /bin/busybox && \
-  echo 'gem: --no-document' >> /etc/gemrc && \
-  gem install --quiet --no-rdoc --no-ri \
-    io-console bundler
+  chmod u+s /bin/busybox
 
 RUN \
-  cd /tmp && \
-  if [ "${BUILD_TYPE}" == "local" ] ; then \
-    echo "use local sources" && \
-    ls -1 /build/ && \
-    mv /build/ruby-icinga-cert-service /tmp/ ; \
-  else \
-    git clone https://github.com/bodsch/ruby-icinga-cert-service.git && \
-    cd ruby-icinga-cert-service && \
-    if [ "${BUILD_TYPE}" == "stable" ] ; then \
-      echo "switch to stable Tag v${CERT_SERVICE_VERSION}" && \
-      git checkout tags/${CERT_SERVICE_VERSION} 2> /dev/null ; \
-    elif [ "${BUILD_TYPE}" == "development" ] ; then \
-      echo "switch to development Branch" && \
-      git checkout development 2> /dev/null ; \
-    fi \
-  fi && \
-  /tmp/ruby-icinga-cert-service/bin/installer.sh
-
-RUN \
-  apk del --quiet --purge .build-deps && \
   rm -rf \
     /tmp/* \
     /var/cache/apk/* \
