@@ -25,8 +25,6 @@ LABEL \
 
 # ---------------------------------------------------------------------------------------
 
-#ADD build/ /build/
-
 RUN \
   apk update --quiet --no-cache  && \
   apk upgrade --quiet --no-cache && \
@@ -41,9 +39,7 @@ RUN \
   chmod u+s /bin/busybox && \
   rm -rf \
     /tmp/* \
-    /var/cache/apk/* \
-    /root/.gem \
-    /root/.bundle
+    /var/cache/apk/*
 
 COPY rootfs/ /
 
