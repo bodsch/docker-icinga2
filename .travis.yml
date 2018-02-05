@@ -6,8 +6,12 @@ services:
   - docker
 
 install:
-  - travis_retry docker build --tag bodsch/docker-icinga2 .
-#  - docker run --detach --name icinga2 bodsch/docker-icinga2
+  - cd build-from-source
+  - docker build --tag bodsch/docker-icinga2 .
+  - cd ../icinga2-master
+  - docker build --tag bodsch/docker-icinga2-master .
+  - cd ../icinga2-satellite
+  - docker build --tag bodsch/docker-icinga2-satellite .
 
 script:
   - docker-compose --file docker-compose_example.yml up --build -d
