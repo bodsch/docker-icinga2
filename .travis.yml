@@ -12,6 +12,7 @@ install:
   - docker build --tag bodsch/docker-icinga2-master .
   - cd ../icinga2-satellite
   - docker build --tag bodsch/docker-icinga2-satellite .
+  - cd ..
 
 script:
   - docker-compose --file docker-compose_example.yml up --build -d
