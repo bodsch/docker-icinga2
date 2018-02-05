@@ -1,5 +1,5 @@
 
-FROM bodsch/docker-icinga2:2.8.1-source-r1
+FROM bodsch/docker-icinga2:2.8.1-source-r2
 
 ENV \
   TERM=xterm \

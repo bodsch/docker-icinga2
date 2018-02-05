@@ -1,11 +1,10 @@
 
-FROM bodsch/docker-icinga2:2.8.1-source-r1
+FROM bodsch/docker-icinga2:2.8.1-source-r2
 
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
   BUILD_DATE="2018-02-05" \
-  CERT_SERVICE_VERSION="0.17.5" \
   ICINGA2_TYPE="Satellite"
 
 EXPOSE 5665
