@@ -4,9 +4,9 @@ FROM bodsch/docker-icinga2:2.8.1-source-r1
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
-  BUILD_DATE="2018-02-03" \
-  BUILD_TYPE="development" \
-  CERT_SERVICE_VERSION="0.16.5" \
+  BUILD_DATE="2018-02-05" \
+  BUILD_TYPE="stable" \
+  CERT_SERVICE_VERSION="0.17.5" \
   ICINGA2_TYPE="Master"
 
 EXPOSE 5665 8080
@@ -45,9 +45,7 @@ RUN \
   chmod u+s /bin/busybox && \
   echo 'gem: --no-document' >> /etc/gemrc && \
   gem install --quiet --no-rdoc --no-ri \
-    io-console bundler
-
-RUN \
+    io-console bundler && \
   cd /tmp && \
   if [ "${BUILD_TYPE}" == "local" ] ; then \
     echo "use local sources" && \
@@ -64,9 +62,7 @@ RUN \
       git checkout development 2> /dev/null ; \
     fi \
   fi && \
-  /tmp/ruby-icinga-cert-service/bin/installer.sh
-
-RUN \
+  /tmp/ruby-icinga-cert-service/bin/installer.sh && \
   apk del --quiet --purge .build-deps && \
   rm -rf \
     /tmp/* \

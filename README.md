@@ -1,14 +1,13 @@
-docker-icinga2
-==============
 
-Installs an working icinga2 Master or Satellite based on [alpine-linux](https://www.alpinelinux.org/about/).
+# docker-icinga2
 
-This Version includes also an small REST-Service to generate the Certificates for a Satellite via REST Service.
+creates several containers with different icinga2 characteristics:
 
-It also include an docker-compose **example** to create a set of one Master and 2 Satellites with automatich Certificate Exchange.
+- [icinga2](./build-from-source) created from the sourcecode
+- icinga2 as [master](icinga2-master) with a certificats service
+- icinga2 [satellite](icinga2-satellite)
 
-More then one API User can also be created over one Environment Variables.
-
+---
 
 # Status
 
@@ -246,6 +245,12 @@ A docker-compose **example** could look like this:
 ---
 version: '3.3'
 
+networks:
+  frontend:
+  backend:
+  database:
+  satellite:
+
 services:
 
   database:
@@ -254,13 +259,17 @@ services:
     hostname: database
     environment:
       - MYSQL_SYSTEM_USER=root
-      - MYSQL_ROOT_PASS=v3rysycr3t
+      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /tmp/docker-data/database:/srv
+    networks:
+      - database
 
+  # icingaweb2
+  #
   icingaweb2:
-    image: bodsch/docker-icingaweb2:2.5.0-r4
+    image: bodsch/docker-icingaweb2:latest
     container_name: icingaweb2
     hostname: icingaweb2.matrix.lan
     ports:
@@ -269,71 +278,93 @@ services:
       - ICINGA2_HOST=icinga2-master.matrix.lan
       - MYSQL_HOST=database
       - MYSQL_ROOT_USER=root
-      - MYSQL_ROOT_PASS=v3rysycr3t
+      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
       - ICINGA2_CMD_API_USER=root
       - ICINGA2_CMD_API_PASS=icinga
-      - ICINGAWEB2_USERS='icinga:icinga'
+      - ICINGAWEB2_USERS=icinga:icinga,foo:bar
       - IDO_DATABASE_NAME=icinga2core
-      - IDO_PASSWORD=id0pass
+      - IDO_PASSWORD=qUVuLTk9oEDUV0A
     volumes:
       - /tmp/docker-data/icingaweb2:/srv
     links:
       - icinga2-master:icinga2-master.matrix.lan
-      - database:database
+      - database
+    networks:
+      - database
+      - frontend
+      - backend
 
   # the Icinga2 Master
   # includes a certificate service to create and provide a icinga certificate
   icinga2-master:
-    image: bodsch/docker-icinga2:1801.1-r1
+    build: icinga2-master
     container_name: icinga2-master
     hostname: icinga2-master.matrix.lan
     restart: always
     privileged: true
     ports:
       - 5665:5665
-      - 8080
+      - 8080:8080
     environment:
-      # database settings
+      - ICINGA2_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
+      - LOG_LEVEL=debug
       - MYSQL_HOST=database
       - MYSQL_ROOT_USER=root
-      - MYSQL_ROOT_PASS=v3rysycr3t
-      - IDO_PASSWORD=id0pass
-      # add api user
-      - ICINGA2_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
+      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
+      - IDO_PASSWORD=qUVuLTk9oEDUV0A
       # environment variables for the certificates service
       - ICINGA2_MASTER=icinga2-master.matrix.lan
-      - BASIC_AUTH_USER=foofoo
-      - BASIC_AUTH_PASS=barbar
-      - CERT_SERVICE_API_USER=cert
-      - CERT_SERVICE_API_PASSWORD=foo-bar
+      - BASIC_AUTH_USER=admin
+      - BASIC_AUTH_PASS=admin
+      - CERT_SERVICE_BA_USER=admin
+      - CERT_SERVICE_BA_PASSWORD=admin
+      - CERT_SERVICE_API_USER=root
+      - CERT_SERVICE_API_PASSWORD=icinga
+      - CERT_SERVICE_SERVER=icinga2-master
+      - CERT_SERVICE_PORT=8080
+      - CERT_SERVICE_PATH=/
+      - CARBON_HOST=
+      - CARBON_PORT=2003
+      - DEMO_DATA=false
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /tmp/docker-data/icinga2-master:/var/lib/icinga2
+#      - /tmp/docker-data/icinga2-master:/var/lib/icinga2
     links:
-      - database:database
+      - database
+    extra_hosts:
+      - dl-cdn.alpinelinux.org:192.168.0.20
+    networks:
+      - database
+      - backend
+
 
   # the first icinga2 satellite
   # ask the master above for an certificate
   #
   # this satellite should work, the BA is correct
   icinga2-satellite-1:
-    image: bodsch/docker-icinga2:1801.1-r1
+    build: icinga2-satellite
     container_name: icinga2-satellite-1
     hostname: icinga2-satellite-1.matrix.lan
     restart: always
     privileged: true
     environment:
       - ICINGA2_MASTER=icinga2-master.matrix.lan
-      - CERT_SERVICE_BA_USER=foofoo
-      - CERT_SERVICE_BA_PASSWORD=barbar
-      - CERT_SERVICE_API_USER=cert
-      - CERT_SERVICE_API_PASSWORD=foo-bar
-      - CERT_SERVICE_SERVER=icinga2-master
+      - ICINGA2_PARENT=icinga2-master.matrix.lan
+      - CERT_SERVICE_BA_USER=admin
+      - CERT_SERVICE_BA_PASSWORD=admin
+      - CERT_SERVICE_API_USER=root
+      - CERT_SERVICE_API_PASSWORD=icinga
+      - CERT_SERVICE_SERVER=icinga2-master.matrix.lan
       - CERT_SERVICE_PORT=8080
+      - CERT_SERVICE_PATH=/
     volumes:
       - /etc/localtime:/etc/localtime:ro
     links:
       - icinga2-master:icinga2-master.matrix.lan
+    networks:
+      - backend
+      - satellite
 ```
 
 In this example I use my own docker containers:

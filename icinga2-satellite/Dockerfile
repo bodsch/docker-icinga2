@@ -4,8 +4,8 @@ FROM bodsch/docker-icinga2:2.8.1-source-r1
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
-  BUILD_DATE="2018-02-03" \
-  CERT_SERVICE_VERSION="0.16.5" \
+  BUILD_DATE="2018-02-05" \
+  CERT_SERVICE_VERSION="0.17.5" \
   ICINGA2_TYPE="Satellite"
 
 EXPOSE 5665
@@ -39,9 +39,7 @@ RUN \
   /usr/sbin/icinga2 feature enable command checker mainlog && \
   mkdir -p /run/icinga2/cmd && \
   cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
-  chmod u+s /bin/busybox
-
-RUN \
+  chmod u+s /bin/busybox && \
   rm -rf \
     /tmp/* \
     /var/cache/apk/* \
