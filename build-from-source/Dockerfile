@@ -4,7 +4,7 @@ FROM alpine:3.7 as builder
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
-  BUILD_DATE="2018-02-02" \
+  BUILD_DATE="2018-03-15" \
   ICINGA_VERSION="2.8.1"
 
 WORKDIR /build
@@ -46,7 +46,9 @@ RUN \
     mariadb-client-libs \
     postgresql-client \
     boost \
-    boost-program_options && \
+    boost-program_options
+
+RUN \
   git clone https://github.com/monitoring-plugins/monitoring-plugins.git && \
   cd /build/monitoring-plugins/ && \
   # should fix this:
@@ -66,7 +68,10 @@ RUN \
     --with-fping-command=$(which fping) \
     --with-nslookup-command=$(which nslookup) && \
   make --silent --jobs=2 && \
-  make install --silent && \
+  make install --silent
+
+RUN \
+  cd /build && \
   curl \
     --silent \
     --location \
@@ -75,10 +80,6 @@ RUN \
     "https://github.com/Icinga/icinga2/archive/v${ICINGA_VERSION}.tar.gz" \
     | gunzip \
     | tar x -C /build && \
-  addgroup -g 1000 icinga && \
-  addgroup -g 1001 icingacmd && \
-  adduser -D -H -G icinga -g '' -u 1000 -h /var/lib/icinga2 -s /sbin/nologin icinga && \
-  usermod -a -G icingacmd icinga && \
   cd /build/icinga2-${ICINGA_VERSION} && \
   mkdir build && \
   cd build && \
@@ -100,9 +101,93 @@ RUN \
   make --silent --jobs=2 && \
   cd /build/icinga2-${ICINGA_VERSION}/build && \
   make config && \
-  make install && \
+  make install
+
+RUN \
   cp -ar /usr/etc/icinga2/* /etc/icinga2/ && \
-  rm -f /etc/icinga2/features-enabled/* && \
+  rm -f /etc/icinga2/features-enabled/*
+
+
+#RUN \
+#  chown root:icinga /etc/icinga2 && \
+#  chmod 0750 /etc/icinga2 && \
+#  chown icinga:icinga /var/lib/icinga2 && \
+#  chown icinga:icinga /var/spool/icinga2 && \
+#  chown -R icinga:icingacmd /var/lib/icinga2/api && \
+#  chown icinga:icinga /var/spool/icinga2/perfdata && \
+#  chown icinga:icinga /var/cache/icinga2 && \
+#  chown icinga:icingacmd /var/log/icinga2 && \
+#  chmod ug+rwX,o-rwx /etc/icinga2 && \
+#  chmod ug+rwX,o-rwx /var/lib/icinga2 && \
+#  chmod ug+rwX,o-rwx /var/spool/icinga2 && \
+#  chmod ug+rwX,o-rwx /var/log/icinga2
+
+#RUN \
+#  apk del .build-deps
+#
+#RUN \
+#  rm -rf \
+#    /tmp/* \
+#    /build \
+#    /var/cache/apk/*
+
+#RUN \
+#  which icinga2 && \
+#  icinga2 --version && \
+#  icinga2 daemon --validate && \
+#  icinga2 feature list
+
+CMD [ "/bin/sh" ]
+
+# ---------------------------------------------------------------------------------------
+
+FROM alpine:3.7
+
+RUN \
+  apk update --quiet --no-cache  && \
+  apk upgrade --quiet --no-cache && \
+  apk add --quiet --no-cache --virtual .build-deps \
+    shadow && \
+  apk add --quiet --no-cache \
+    file \
+    fping \
+    samba-client \
+    net-snmp-tools \
+    iputils \
+    libedit \
+    yajl \
+    gettext \
+    mariadb-client \
+    mariadb-client-libs \
+    postgresql-client \
+    boost \
+    boost-program_options
+
+RUN \
+  addgroup -g 1000 icinga && \
+  addgroup -g 1001 icingacmd && \
+  adduser -D -H -G icinga -g '' -u 1000 -h /var/lib/icinga2 -s /sbin/nologin icinga && \
+  usermod -a -G icingacmd icinga
+
+#RUN \
+#  mkdir \
+#    /var/log/icinga2
+
+COPY --from=builder /usr/lib/monitoring-plugins /usr/lib/monitoring-plugins
+COPY --from=builder /etc/icinga2 /etc/icinga2
+COPY --from=builder /usr/lib/icinga2 /usr/lib/icinga2
+COPY --from=builder /usr/share/icinga2 /usr/share/icinga2
+COPY --from=builder /usr/sbin/icinga2 /usr/sbin/icinga2
+COPY --from=builder /usr/share/icinga2-ido-mysql /usr/share/icinga2-ido-mysql
+COPY --from=builder /usr/share/icinga2-ido-pgsql /usr/share/icinga2-ido-pgsql
+COPY --from=builder /usr/lib/monitoring-plugins/check_nscp_api /usr/lib/monitoring-plugins/check_nscp_api
+COPY --from=builder /var/lib/icinga2 /var/lib/icinga2
+COPY --from=builder /var/spool/icinga2 /var/spool/icinga2
+COPY --from=builder /var/cache/icinga2 /var/cache/icinga2
+COPY --from=builder /var/log/icinga2 /var/log/icinga2
+
+
+RUN \
   chown root:icinga /etc/icinga2 && \
   chmod 0750 /etc/icinga2 && \
   chown icinga:icinga /var/lib/icinga2 && \
@@ -114,18 +199,23 @@ RUN \
   chmod ug+rwX,o-rwx /etc/icinga2 && \
   chmod ug+rwX,o-rwx /var/lib/icinga2 && \
   chmod ug+rwX,o-rwx /var/spool/icinga2 && \
-  chmod ug+rwX,o-rwx /var/log/icinga2 && \
+  chmod ug+rwX,o-rwx /var/log/icinga2
+
+RUN \
   apk del --quiet .build-deps && \
   rm -rf \
     /tmp/* \
     /build \
-    /var/cache/apk/* && \
+    /var/cache/apk/*
+
+RUN \
   which icinga2 && \
   icinga2 --version && \
   icinga2 daemon --validate && \
   icinga2 feature list
 
+
 WORKDIR /etc/icinga2
 
-CMD [ "/bin/sh" ]
+CMD [ "/init/run.sh" ]
 
