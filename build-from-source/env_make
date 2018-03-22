@@ -1,6 +1,3 @@
-PORTS = \
-  --publish=5665:5665
-
+PORTS =
 VOLUMES =
-
 ENV =

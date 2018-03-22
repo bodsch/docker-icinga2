@@ -1,16 +1,16 @@
 
-FROM bodsch/docker-icinga2:2.8.1-source-r2
+FROM bodsch/docker-icinga2:source-latest
 
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
-  BUILD_DATE="2018-02-05" \
+  BUILD_DATE="2018-03-22" \
   ICINGA2_TYPE="Satellite"
 
 EXPOSE 5665
 
 LABEL \
-  version="1802" \
+  version="1803" \
   maintainer="Bodo Schulz <bodo@boone-schulz.de>" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Icinga2 Docker Image" \

@@ -2,9 +2,9 @@
 include env_make
 
 NS       = bodsch
-VERSION ?= latest
+VERSION ?= satellite-latest
 
-REPO     = icinga2-satellite
+REPO     = docker-icinga2
 NAME     = icinga2-satellite
 INSTANCE = default
 

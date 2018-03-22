@@ -2,10 +2,10 @@
 include env_make
 
 NS       = bodsch
-VERSION ?= latest
+VERSION ?= source-latest
 
 REPO     = docker-icinga2
-NAME     = icinga2
+NAME     = icinga2-source
 INSTANCE = default
 
 .PHONY: build push shell run start stop rm release

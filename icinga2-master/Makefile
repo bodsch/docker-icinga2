@@ -2,9 +2,9 @@
 include env_make
 
 NS       = bodsch
-VERSION ?= latest
+VERSION ?= master-latest
 
-REPO     = icinga2-master
+REPO     = docker-icinga2
 NAME     = icinga2-master
 INSTANCE = default
 
