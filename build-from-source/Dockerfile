@@ -70,16 +70,25 @@ RUN \
   make --silent --jobs=2 && \
   make install --silent
 
+#RUN \
+#  cd /build && \
+#  curl \
+#    --silent \
+#    --location \
+#    --retry 3 \
+#    --cacert /etc/ssl/certs/ca-certificates.crt \
+#    "https://github.com/Icinga/icinga2/archive/v${ICINGA_VERSION}.tar.gz" \
+#    | gunzip \
+#    | tar x -C /build
+
 RUN \
   cd /build && \
-  curl \
-    --silent \
-    --location \
-    --retry 3 \
-    --cacert /etc/ssl/certs/ca-certificates.crt \
-    "https://github.com/Icinga/icinga2/archive/v${ICINGA_VERSION}.tar.gz" \
-    | gunzip \
-    | tar x -C /build && \
+  git clone https://github.com/Icinga/icinga2.git && \
+  mv icinga2 icinga2-${ICINGA_VERSION} && \
+  cd icinga2-${ICINGA_VERSION} && \
+  git checkout support/2.8
+
+RUN \
   cd /build/icinga2-${ICINGA_VERSION} && \
   mkdir build && \
   cd build && \
@@ -102,6 +111,7 @@ RUN \
   cd /build/icinga2-${ICINGA_VERSION}/build && \
   make config && \
   make install
+
 
 RUN \
   cp -ar /usr/etc/icinga2/* /etc/icinga2/ && \
