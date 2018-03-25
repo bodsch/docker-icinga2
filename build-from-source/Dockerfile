@@ -1,11 +1,12 @@
 
 FROM alpine:3.7 as builder
 
+ARG ICINGA2_VERSION
+ARG BUILD_DATE
+ARG ICINGA2_VCS_REF
+
 ENV \
-  TERM=xterm \
-  TZ='Europe/Berlin' \
-  BUILD_DATE="2018-03-22" \
-  ICINGA_VERSION="2.8.2"
+  TZ='Europe/Berlin'
 
 WORKDIR /build
 
@@ -77,19 +78,19 @@ RUN \
 #    --location \
 #    --retry 3 \
 #    --cacert /etc/ssl/certs/ca-certificates.crt \
-#    "https://github.com/Icinga/icinga2/archive/v${ICINGA_VERSION}.tar.gz" \
+#    "https://github.com/Icinga/icinga2/archive/v${ICINGA2_VERSION}.tar.gz" \
 #    | gunzip \
 #    | tar x -C /build
 
 RUN \
   cd /build && \
   git clone https://github.com/Icinga/icinga2.git && \
-  mv icinga2 icinga2-${ICINGA_VERSION} && \
-  cd icinga2-${ICINGA_VERSION} && \
+  mv icinga2 icinga2-${ICINGA2_VERSION} && \
+  cd icinga2-${ICINGA2_VERSION} && \
   git checkout support/2.8
 
 RUN \
-  cd /build/icinga2-${ICINGA_VERSION} && \
+  cd /build/icinga2-${ICINGA2_VERSION} && \
   mkdir build && \
   cd build && \
   cmake .. \
@@ -108,7 +109,7 @@ RUN \
     -DICINGA2_PLUGINDIR=/usr/lib/monitoring-plugins \
     -DICINGA2_LTO_BUILD=ON && \
   make --silent --jobs=2 && \
-  cd /build/icinga2-${ICINGA_VERSION}/build && \
+  cd /build/icinga2-${ICINGA2_VERSION}/build && \
   make config && \
   make install
 
@@ -130,7 +131,7 @@ COPY --from=builder /usr/share/icinga2 /usr/share/icinga2
 COPY --from=builder /usr/sbin/icinga2 /usr/sbin/icinga2
 COPY --from=builder /usr/share/icinga2-ido-mysql /usr/share/icinga2-ido-mysql
 COPY --from=builder /usr/share/icinga2-ido-pgsql /usr/share/icinga2-ido-pgsql
-COPY --from=builder /usr/lib/monitoring-plugins/check_nscp_api /usr/lib/monitoring-plugins/check_nscp_api
+# COPY --from=builder /usr/lib/monitoring-plugins/check_nscp_api /usr/lib/monitoring-plugins/check_nscp_api
 COPY --from=builder /var/lib/icinga2 /var/lib/icinga2
 COPY --from=builder /var/spool/icinga2 /var/spool/icinga2
 COPY --from=builder /var/cache/icinga2 /var/cache/icinga2

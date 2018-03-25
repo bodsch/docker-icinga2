@@ -1,13 +1,18 @@
 
-FROM bodsch/docker-icinga2:source-latest
+ARG ICINGA2_VERSION
+ARG BUILD_DATE
+ARG ICINGA2_VCS_REF
+ARG CERT_SERVICE_VERSION
+
+FROM bodsch/docker-icinga2:${ICINGA2_VERSION}-source-${ICINGA2_VCS_REF}
 
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
-  BUILD_DATE="2018-03-22" \
   BUILD_TYPE="stable" \
-  CERT_SERVICE_VERSION="0.17.6" \
-  ICINGA2_TYPE="Master"
+  CERT_SERVICE_VERSION="${CERT_SERVICE_VERSION:-0.17.6}" \
+  ICINGA2_TYPE="Master" \
+  BUILD_DATE=${BUILD_DATE}
 
 EXPOSE 5665 8080
 
@@ -20,7 +25,7 @@ LABEL \
   org.label-schema.url="https://www.icinga.org/" \
   org.label-schema.vcs-url="https://github.com/bodsch/docker-icinga2" \
   org.label-schema.vendor="Bodo Schulz" \
-  org.label-schema.version=${ICINGA_VERSION} \
+  org.label-schema.version=${ICINGA2_VERSION} \
   org.label-schema.schema-version="1.0" \
   com.microscaling.docker.dockerfile="/Dockerfile" \
   com.microscaling.license="GNU General Public License v3.0"

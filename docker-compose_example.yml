@@ -31,15 +31,15 @@ services:
     ports:
       - 80:80
     environment:
-      - ICINGA2_HOST=icinga2-master.matrix.lan
       - MYSQL_HOST=database
       - MYSQL_ROOT_USER=root
       - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
+      - IDO_DATABASE_NAME=icinga2core
+      - IDO_PASSWORD=qUVuLTk9oEDUV0A
+      - ICINGA2_MASTER=icinga2-master.matrix.lan
       - ICINGA2_CMD_API_USER=root
       - ICINGA2_CMD_API_PASS=icinga
       - ICINGAWEB2_USERS=icinga:icinga,foo:bar
-      - IDO_DATABASE_NAME=icinga2core
-      - IDO_PASSWORD=qUVuLTk9oEDUV0A
     volumes:
       - /tmp/docker-data/icingaweb2:/srv
     links:
@@ -53,7 +53,14 @@ services:
   # the Icinga2 Master
   # includes a certificate service to create and provide a icinga certificate
   icinga2-master:
-    build: icinga2-master
+    build:
+      context: icinga2-master
+      dockerfile: Dockerfile
+      args:
+        - BUILD_DATE=${BUILD_DATE}
+        - ICINGA2_VCS_REF=${ICINGA2_VCS_REF}
+        - ICINGA2_VERSION=${ICINGA2_VERSION}
+        - CERT_SERVICE_VERSION=0.17.6
     container_name: icinga2-master
     hostname: icinga2-master.matrix.lan
     restart: always
@@ -99,7 +106,13 @@ services:
   #
   # this satellite should work, the BA is correct
   icinga2-satellite-1:
-    build: icinga2-satellite
+    build:
+      context: icinga2-satellite
+      dockerfile: Dockerfile
+      args:
+        - BUILD_DATE=${BUILD_DATE}
+        - ICINGA2_VCS_REF=${ICINGA2_VCS_REF}
+        - ICINGA2_VERSION=${ICINGA2_VERSION}
     container_name: icinga2-satellite-1
     hostname: icinga2-satellite-1.matrix.lan
     restart: always
