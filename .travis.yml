@@ -6,13 +6,10 @@ services:
   - docker
 
 install:
-  - cd build-from-source
-  - docker build --tag bodsch/docker-icinga2 .
-  - cd ../icinga2-master
-  - docker build --tag bodsch/docker-icinga2-master .
-  - cd ../icinga2-satellite
-  - docker build --tag bodsch/docker-icinga2-satellite .
-  - cd ..
+  - export ICINGA2_VERSION=2.8.2
+  - export ICINGA2_VCS_REF=dev
+  - export BUILD_DATE=2018-03-26
+  - make build
 
 script:
   - docker-compose --file docker-compose_example.yml up --build -d
