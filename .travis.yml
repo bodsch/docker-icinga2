@@ -5,22 +5,42 @@ group: edge
 services:
   - docker
 
-install:
-  - export ICINGA2_VERSION=2.8.2
-  - export ICINGA2_VCS_REF=dev
-  - export BUILD_DATE=2018-03-26
-  - make build
+jobs:
+  include:
+    - stage: build docker image
+      script:
+        - export ICINGA2_VERSION=${ICINGA2_VERSION:-2.8.2}
+        - export ICINGA2_VCS_REF=dev
+        - export BUILD_DATE=$(date +"%Y-%m-%d")
+        - make build
+    - stage: test images
+      script:
+        - docker-compose --file docker-compose_example.yml up --build -d
+        - tests/test.sh
+        - docker-compose --file docker-compose_example.yml kill
+        - docker-compose --file docker-compose_example.yml down
+    - stage: push to docker hub
+      script:
+        - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+        - make publish
 
-script:
-  - docker-compose --file docker-compose_example.yml up --build -d
-  - tests/test.sh
-  - docker-compose --file docker-compose_example.yml kill
-  - docker-compose --file docker-compose_example.yml down
 
-after_success:
-  - |
-    [ "${TRAVIS_BRANCH}" == "master" ] && curl \
-      --request POST \
-      --header "Content-Type: application/json"  \
-      --data '{"source_type":"Branch","source_name":"master"}' \
-      https://registry.hub.docker.com/u/bodsch/docker-icinga2/trigger/${DOCKER_HUB_TOKEN}/
+#install:
+#  - export ICINGA2_VERSION=2.8.2
+#  - export ICINGA2_VCS_REF=dev
+#  - export BUILD_DATE=2018-03-26
+#  - make build
+
+#script:
+#  - docker-compose --file docker-compose_example.yml up --build -d
+#  - tests/test.sh
+#  - docker-compose --file docker-compose_example.yml kill
+#  - docker-compose --file docker-compose_example.yml down
+
+#after_success:
+#  - |
+#    [ "${TRAVIS_BRANCH}" == "master" ] && curl \
+#      --request POST \
+#      --header "Content-Type: application/json"  \
+#      --data '{"source_type":"Branch","source_name":"master"}' \
+#      https://registry.hub.docker.com/u/bodsch/docker-icinga2/trigger/${DOCKER_HUB_TOKEN}/
