@@ -1,4 +1,4 @@
-sudo: required
+# sudo: required
 
 group: edge
 
@@ -6,9 +6,10 @@ services:
   - docker
 
 env:
- - ICINGA2_VERSION=${ICINGA2_VERSION:-2.8.2}
- - ICINGA2_VCS_REF=dev
- - BUILD_DATE=$(date +"%Y-%m-%d")
+  global:
+    - ICINGA2_VERSION=${ICINGA2_VERSION:-2.8.2}
+    - ICINGA2_VCS_REF=dev
+    - BUILD_DATE=$(date +"%Y-%m-%d")
 
 jobs:
   include:
