@@ -16,6 +16,8 @@ jobs:
     - stage: build docker image
       script:
         - make build
+        - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-source-${ICINGA2_VCS_REF}
     - stage: test images
       script:
         - docker-compose --file docker-compose_example.yml up --build -d
@@ -24,9 +26,9 @@ jobs:
         - docker-compose --file docker-compose_example.yml down
     - stage: push to docker hub
       script:
+        - make build
         - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
         - make publish
-
 
 #install:
 #  - export ICINGA2_VERSION=2.8.2
