@@ -1,8 +1,8 @@
 
 FROM alpine:3.7 as builder
 
-ARG ICINGA2_VERSION
 ARG BUILD_DATE
+ARG ICINGA2_VERSION
 ARG ICINGA2_VCS_REF
 
 ENV \
@@ -173,16 +173,17 @@ RUN \
   chmod ug+rwX,o-rwx /var/spool/icinga2 && \
   chmod ug+rwX,o-rwx /var/log/icinga2 && \
   apk del --quiet .build-deps && \
-  rm -rf \
-    /tmp/* \
-    /build \
-    /var/cache/apk/* && \
   echo "" && \
   which icinga2 && \
   icinga2 --version && \
   icinga2 daemon --validate && \
   icinga2 feature list && \
-  echo ""
+  echo "" && \
+  rm -rf \
+    /tmp/* \
+    /build \
+    /var/cache/apk/* \
+    /var/cache/icinga2/*
 
 WORKDIR /etc/icinga2
 

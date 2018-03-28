@@ -1,18 +1,18 @@
 
 ARG ICINGA2_VERSION
-ARG BUILD_DATE
 ARG ICINGA2_VCS_REF
-ARG CERT_SERVICE_VERSION
 
 FROM bodsch/docker-icinga2:${ICINGA2_VERSION}-source-${ICINGA2_VCS_REF}
+
+ARG BUILD_DATE
+ARG CERT_SERVICE_VERSION
 
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
   BUILD_TYPE="stable" \
   CERT_SERVICE_VERSION="${CERT_SERVICE_VERSION:-0.17.6}" \
-  ICINGA2_TYPE="Master" \
-  BUILD_DATE=${BUILD_DATE}
+  ICINGA2_TYPE="Master"
 
 EXPOSE 5665 8080
 
@@ -35,6 +35,8 @@ LABEL \
 #ADD build/ /build/
 
 RUN \
+  env && \
+  echo "" && \
   apk update --quiet --no-cache  && \
   apk upgrade --quiet --no-cache && \
   apk add --quiet --no-cache --virtual .build-deps \
