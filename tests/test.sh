@@ -114,7 +114,9 @@ api_request() {
   if [[ $? -eq 0 ]]
   then
     echo "api request are successfull"
+    echo "${code}" | jq --raw-output ".results[].status"
     echo "${code}" | jq --raw-output ".results[].status.api.zones"
+
   else
     echo ${code}
     echo "api request failed"

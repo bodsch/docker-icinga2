@@ -35,8 +35,6 @@ LABEL \
 #ADD build/ /build/
 
 RUN \
-  env && \
-  echo "" && \
   apk update --quiet --no-cache  && \
   apk upgrade --quiet --no-cache && \
   apk add --quiet --no-cache --virtual .build-deps \

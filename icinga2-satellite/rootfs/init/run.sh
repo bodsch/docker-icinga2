@@ -5,6 +5,7 @@
 # set -e
 
 [[ ${DEBUG} ]] && set -x
+[[ -f /etc/enviroment ]] && . /etc/enviroment
 
 HOSTNAME=$(hostname -f)
 

@@ -5,6 +5,7 @@
 # set -e
 
 [[ ${DEBUG} ]] && set -x
+[[ -f /etc/enviroment ]] && . /etc/enviroment
 
 HOSTNAME=$(hostname -f)
 
@@ -110,10 +111,11 @@ run() {
     fi
   fi
 
+  # gdb -ex=run  --args /usr/lib/icinga2/sbin/icinga2 daemon -x debug --no-stack-rlimit
   /usr/sbin/icinga2 \
-    daemon \
-      --config /etc/icinga2/icinga2.conf \
-      --errorlog /dev/stdout
+    daemon
+  #    --config /etc/icinga2/icinga2.conf \
+  #    --errorlog /dev/stdout
 }
 
 
