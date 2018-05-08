@@ -17,7 +17,7 @@ jobs:
       script:
         - make build
         - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-source-${ICINGA2_VCS_REF}
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-${ICINGA2_VCS_REF}
     - stage: test images
       script:
         - docker-compose --file docker-compose_example.yml up --build -d
