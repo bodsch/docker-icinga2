@@ -18,7 +18,6 @@ services:
       - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /tmp/docker-data/database:/srv
     networks:
       - database
 
@@ -40,8 +39,6 @@ services:
       - ICINGA2_CMD_API_USER=root
       - ICINGA2_CMD_API_PASS=icinga
       - ICINGAWEB2_USERS=icinga:icinga,foo:bar
-    volumes:
-      - /tmp/docker-data/icingaweb2:/srv
     links:
       - icinga2-master:icinga2-master.matrix.lan
       - database
@@ -53,6 +50,7 @@ services:
   # the Icinga2 Master
   # includes a certificate service to create and provide a icinga certificate
   icinga2-master:
+#    image: bodsch/docker-icinga2:2.8.4-master-dev
     build:
       context: icinga2-master
       dockerfile: Dockerfile
@@ -88,14 +86,11 @@ services:
       - CERT_SERVICE_PATH=/
       - CARBON_HOST=
       - CARBON_PORT=2003
-      - DEMO_DATA=false
+      - DEMO_DATA=true
     volumes:
       - /etc/localtime:/etc/localtime:ro
-#      - /tmp/docker-data/icinga2-master:/var/lib/icinga2
     links:
       - database
-    extra_hosts:
-      - dl-cdn.alpinelinux.org:192.168.0.20
     networks:
       - database
       - backend

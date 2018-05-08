@@ -73,7 +73,7 @@ run() {
 #   detect_type
 
   log_info "---------------------------------------------------"
-  log_info "   Icinga ${ICINGA2_TYPE} Version ${ICINGA2_VERSION} - build: ${BUILD_DATE}"
+  log_info "   Icinga ${ICINGA2_TYPE} Version ${BUILD_VERSION} - build: ${BUILD_DATE}"
   log_info "---------------------------------------------------"
 
   . /init/common.sh
@@ -111,13 +111,11 @@ run() {
     fi
   fi
 
-  # gdb -ex=run  --args /usr/lib/icinga2/sbin/icinga2 daemon -x debug --no-stack-rlimit
   /usr/sbin/icinga2 \
-    daemon
-  #    --config /etc/icinga2/icinga2.conf \
-  #    --errorlog /dev/stdout
+    daemon \
+    --config /etc/icinga2/icinga2.conf \
+    --errorlog /dev/stdout
 }
-
 
 run
 

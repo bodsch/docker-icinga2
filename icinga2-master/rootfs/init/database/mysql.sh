@@ -49,7 +49,6 @@ version_compare () {
     echo "="
     return 0
   fi
-
 }
 
 # create IDO database schema
@@ -134,7 +133,7 @@ update_schema() {
 
     for DB_UPDATE_FILE in $(ls -1 ${upgrape_directory}/*.sql)
     do
-      FILE_VER=$(grep icinga_dbversion ${DB_UPDATE_FILE} | grep idoutils | cut -d ',' -f 5 | sed -e "s| ||g" -e "s|\\'||g")
+      FILE_VER=$(grep icinga_dbversion ${DB_UPDATE_FILE} | grep idoutils | cut -d ',' -f 5 | sed -e "s| ||g" -e "s|'||g")
 
       if [[ "$(version_compare ${db_version} ${FILE_VER})" = "<" ]]
       then

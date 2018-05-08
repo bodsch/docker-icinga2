@@ -338,6 +338,11 @@ configure_icinga2_satellite() {
     [[ -f /etc/icinga2/conf.d/${file} ]] && mv /etc/icinga2/conf.d/${file} /etc/icinga2/conf.d/${file}-SAVE
   done
 
+  if [[ ! -f ${ICINGA2_CERT_DIRECTORY}/ca.crt ]]
+  then
+    rm -rfv ${ICINGA2_CERT_DIRECTORY}/*
+  fi
+
   # we have a certificate
   # validate this against our icinga-master
   #
