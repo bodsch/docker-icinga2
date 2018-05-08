@@ -40,8 +40,6 @@ RUN \
     bash bind9utils curl dnsutils expect fping inotify-tools jq bsd-mailx mariadb-client \
     netcat-openbsd nagios-nrpe-server openssl pwgen ruby ssmtp tzdata unzip > /dev/null && \
   /usr/sbin/icinga2 feature enable command checker mainlog notification && \
-  mkdir -p /run/icinga2/cmd && \
-  cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
   echo 'gem: --no-document' >> /etc/gemrc && \
   gem install --quiet --no-rdoc --no-ri \
     io-console bundler && \

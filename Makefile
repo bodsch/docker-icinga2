@@ -49,7 +49,6 @@ icinga2-master: params
 	docker build \
 		--force-rm \
 		--compress \
-		--no-cache \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg ICINGA2_VCS_REF=${ICINGA2_VCS_REF} \
 		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
@@ -64,7 +63,6 @@ icinga2-satellite: params
 	docker build \
 		--force-rm \
 		--compress \
-		--no-cache \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg ICINGA2_VCS_REF=${ICINGA2_VCS_REF} \
 		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \

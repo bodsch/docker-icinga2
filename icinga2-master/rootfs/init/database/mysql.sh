@@ -160,11 +160,11 @@ create_config() {
   # create the IDO configuration
   #
   sed -i \
-    -e 's|//host \= \".*\"|host \=\ \"'${MYSQL_HOST}'\"|g' \
-    -e 's|//port \= \".*\"|port \=\ \"'${MYSQL_PORT}'\"|g' \
-    -e 's|//password \= \".*\"|password \= \"'${IDO_PASSWORD}'\"|g' \
-    -e 's|//user =\ \".*\"|user =\ \"icinga2\"|g' \
-    -e 's|//database =\ \".*\"|database =\ \"'${IDO_DATABASE_NAME}'\"|g' \
+    -e 's|host \= \".*\"|host \=\ \"'${MYSQL_HOST}'\"|g' \
+    -e 's|port \= \".*\"|port \=\ \"'${MYSQL_PORT}'\"|g' \
+    -e 's|password \= \".*\"|password \= \"'${IDO_PASSWORD}'\"|g' \
+    -e 's|user =\ \".*\"|user =\ \"icinga2\"|g' \
+    -e 's|database =\ \".*\"|database =\ \"'${IDO_DATABASE_NAME}'\"|g' \
     /etc/icinga2/features-available/ido-mysql.conf
 }
 

@@ -53,19 +53,19 @@ custom_scripts() {
 }
 
 
-detect_type() {
-
-  if ( [[ -z ${ICINGA2_PARENT} ]] && [[ ! -z ${ICINGA2_MASTER} ]] && [[ "${ICINGA2_MASTER}" == "${HOSTNAME}" ]] )
-  then
-    ICINGA2_TYPE="Master"
-  elif ( [[ ! -z ${ICINGA2_PARENT} ]] && [[ ! -z ${ICINGA2_MASTER} ]] && [[ "${ICINGA2_MASTER}" == "${ICINGA2_PARENT}" ]] )
-  then
-    ICINGA2_TYPE="Satellite"
-  else
-    ICINGA2_TYPE="Agent"
-  fi
-  export ICINGA2_TYPE
-}
+# detect_type() {
+#
+#   if ( [[ -z ${ICINGA2_PARENT} ]] && [[ ! -z ${ICINGA2_MASTER} ]] && [[ "${ICINGA2_MASTER}" == "${HOSTNAME}" ]] )
+#   then
+#     ICINGA2_TYPE="Master"
+#   elif ( [[ ! -z ${ICINGA2_PARENT} ]] && [[ ! -z ${ICINGA2_MASTER} ]] && [[ "${ICINGA2_MASTER}" == "${ICINGA2_PARENT}" ]] )
+#   then
+#     ICINGA2_TYPE="Satellite"
+#   else
+#     ICINGA2_TYPE="Agent"
+#   fi
+#   export ICINGA2_TYPE
+# }
 
 
 run() {
