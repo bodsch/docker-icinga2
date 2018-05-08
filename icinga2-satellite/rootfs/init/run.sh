@@ -73,7 +73,7 @@ run() {
   detect_type
 
   log_info "---------------------------------------------------"
-  log_info "   Icinga ${ICINGA2_TYPE} Version ${ICINGA2_VERSION} - build: ${BUILD_DATE}"
+  log_info "   Icinga ${ICINGA2_TYPE} Version ${BUILD_VERSION} - build: ${BUILD_DATE}"
   log_info "---------------------------------------------------"
 
   . /init/common.sh
@@ -84,8 +84,8 @@ run() {
   . /init/database/mysql.sh
   . /init/configure_icinga.sh
   . /init/api_user.sh
-  . /init/graphite_setup.sh
-  . /init/configure_ssmtp.sh
+#  . /init/graphite_setup.sh
+#  . /init/configure_ssmtp.sh
 
   correct_rights
 

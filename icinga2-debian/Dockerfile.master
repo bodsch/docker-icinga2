@@ -2,7 +2,7 @@
 ARG ICINGA2_VERSION
 ARG ICINGA2_VCS_REF
 
-FROM bodsch/docker-icinga2:${ICINGA2_VERSION}-${ICINGA2_VCS_REF}
+FROM bodsch/docker-icinga2:${ICINGA2_VERSION}-source-${ICINGA2_VCS_REF}
 
 ARG BUILD_DATE
 ARG CERT_SERVICE_VERSION
@@ -74,7 +74,7 @@ RUN \
     /root/.gem \
     /root/.bundle
 
-COPY rootfs/ /
+COPY rootfs-master/ /
 
 WORKDIR "/etc/icinga2"
 

@@ -49,7 +49,6 @@ version_compare () {
     echo "="
     return 0
   fi
-
 }
 
 # create IDO database schema
@@ -134,7 +133,7 @@ update_schema() {
 
     for DB_UPDATE_FILE in $(ls -1 ${upgrape_directory}/*.sql)
     do
-      FILE_VER=$(grep icinga_dbversion ${DB_UPDATE_FILE} | grep idoutils | cut -d ',' -f 5 | sed -e "s| ||g" -e "s|\\'||g")
+      FILE_VER=$(grep icinga_dbversion ${DB_UPDATE_FILE} | grep idoutils | cut -d ',' -f 5 | sed -e "s| ||g" -e "s|'||g")
 
       if [[ "$(version_compare ${db_version} ${FILE_VER})" = "<" ]]
       then
@@ -161,11 +160,11 @@ create_config() {
   # create the IDO configuration
   #
   sed -i \
-    -e 's|//host \= \".*\"|host \=\ \"'${MYSQL_HOST}'\"|g' \
-    -e 's|//port \= \".*\"|port \=\ \"'${MYSQL_PORT}'\"|g' \
-    -e 's|//password \= \".*\"|password \= \"'${IDO_PASSWORD}'\"|g' \
-    -e 's|//user =\ \".*\"|user =\ \"icinga2\"|g' \
-    -e 's|//database =\ \".*\"|database =\ \"'${IDO_DATABASE_NAME}'\"|g' \
+    -e 's|host \= \".*\"|host \=\ \"'${MYSQL_HOST}'\"|g' \
+    -e 's|port \= \".*\"|port \=\ \"'${MYSQL_PORT}'\"|g' \
+    -e 's|password \= \".*\"|password \= \"'${IDO_PASSWORD}'\"|g' \
+    -e 's|user =\ \".*\"|user =\ \"icinga2\"|g' \
+    -e 's|database =\ \".*\"|database =\ \"'${IDO_DATABASE_NAME}'\"|g' \
     /etc/icinga2/features-available/ido-mysql.conf
 }
 

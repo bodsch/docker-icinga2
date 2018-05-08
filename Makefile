@@ -12,7 +12,7 @@ default:
 	@echo ""
 	@echo "  params                 Print build parameter"
 	@echo "  build                  Build images"
-	@echo "  version                Print version of images"
+#	@echo "  version                Print version of images"
 	@echo "  test                   Test images"
 	@echo "  publish                Publish images"
 	@echo ""
@@ -25,18 +25,20 @@ params:
 	@echo " BUILD_DATE     : $(BUILD_DATE)"
 	@echo ""
 
-build:	base-container 	icinga2-master	icinga2-satellite
+build: base-debian	icinga2-master	icinga2-satellite
 
-
-base-container: params
-	cd build-from-source ; \
+base-debian: params
+	@echo ""
+	@echo " build icinga2 base"
+	@echo ""
+	cd icinga2-debian ; \
 	docker build \
-		--rm \
+		--force-rm \
 		--compress \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg ICINGA2_VCS_REF=${ICINGA2_VCS_REF} \
 		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-source-$(ICINGA2_VCS_REF) . ; \
+		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-$(ICINGA2_VCS_REF) . ; \
 	cd ..
 
 icinga2-master: params
@@ -45,9 +47,8 @@ icinga2-master: params
 	@echo ""
 	cd icinga2-master ; \
 	docker build \
-		--rm \
+		--force-rm \
 		--compress \
-		--no-cache \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg ICINGA2_VCS_REF=${ICINGA2_VCS_REF} \
 		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
@@ -60,9 +61,8 @@ icinga2-satellite: params
 	@echo ""
 	cd icinga2-satellite ; \
 	docker build \
-		--rm \
+		--force-rm \
 		--compress \
-		--no-cache \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg ICINGA2_VCS_REF=${ICINGA2_VCS_REF} \
 		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
@@ -79,8 +79,7 @@ list:
 	-docker images $(NS)/$(REPO)*
 
 publish:
-	# amd64 / community / cpy3
-	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)-source-$(ICINGA2_VCS_REF)
+	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)-$(ICINGA2_VCS_REF)
 	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)-master-$(ICINGA2_VCS_REF)
 	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)-satellite-$(ICINGA2_VCS_REF)
 

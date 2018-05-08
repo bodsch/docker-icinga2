@@ -53,19 +53,19 @@ custom_scripts() {
 }
 
 
-detect_type() {
-
-  if ( [[ -z ${ICINGA2_PARENT} ]] && [[ ! -z ${ICINGA2_MASTER} ]] && [[ "${ICINGA2_MASTER}" == "${HOSTNAME}" ]] )
-  then
-    ICINGA2_TYPE="Master"
-  elif ( [[ ! -z ${ICINGA2_PARENT} ]] && [[ ! -z ${ICINGA2_MASTER} ]] && [[ "${ICINGA2_MASTER}" == "${ICINGA2_PARENT}" ]] )
-  then
-    ICINGA2_TYPE="Satellite"
-  else
-    ICINGA2_TYPE="Agent"
-  fi
-  export ICINGA2_TYPE
-}
+# detect_type() {
+#
+#   if ( [[ -z ${ICINGA2_PARENT} ]] && [[ ! -z ${ICINGA2_MASTER} ]] && [[ "${ICINGA2_MASTER}" == "${HOSTNAME}" ]] )
+#   then
+#     ICINGA2_TYPE="Master"
+#   elif ( [[ ! -z ${ICINGA2_PARENT} ]] && [[ ! -z ${ICINGA2_MASTER} ]] && [[ "${ICINGA2_MASTER}" == "${ICINGA2_PARENT}" ]] )
+#   then
+#     ICINGA2_TYPE="Satellite"
+#   else
+#     ICINGA2_TYPE="Agent"
+#   fi
+#   export ICINGA2_TYPE
+# }
 
 
 run() {
@@ -73,7 +73,7 @@ run() {
 #   detect_type
 
   log_info "---------------------------------------------------"
-  log_info "   Icinga ${ICINGA2_TYPE} Version ${ICINGA2_VERSION} - build: ${BUILD_DATE}"
+  log_info "   Icinga ${ICINGA2_TYPE} Version ${BUILD_VERSION} - build: ${BUILD_DATE}"
   log_info "---------------------------------------------------"
 
   . /init/common.sh
@@ -111,13 +111,11 @@ run() {
     fi
   fi
 
-  # gdb -ex=run  --args /usr/lib/icinga2/sbin/icinga2 daemon -x debug --no-stack-rlimit
   /usr/sbin/icinga2 \
-    daemon
-  #    --config /etc/icinga2/icinga2.conf \
-  #    --errorlog /dev/stdout
+    daemon \
+    --config /etc/icinga2/icinga2.conf \
+    --errorlog /dev/stdout
 }
-
 
 run
 
