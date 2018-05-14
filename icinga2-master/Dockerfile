@@ -85,6 +85,6 @@ HEALTHCHECK \
   --timeout=2s \
   --retries=12 \
   --start-period=10s \
-  CMD ps ax | grep -v grep | grep -c "/usr/lib/icinga2/sbin/icinga2" || exit 1
+  CMD ps ax | grep -v grep | grep -c $(cat /run/icinga2/icinga2.pid) || exit 1
 
 CMD [ "/init/run.sh" ]
