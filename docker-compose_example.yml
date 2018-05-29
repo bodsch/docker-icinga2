@@ -56,7 +56,6 @@ services:
       dockerfile: Dockerfile
       args:
         - BUILD_DATE=${BUILD_DATE}
-        - ICINGA2_VCS_REF=${ICINGA2_VCS_REF}
         - ICINGA2_VERSION=${ICINGA2_VERSION}
         - CERT_SERVICE_VERSION=0.17.6
     container_name: icinga2-master
@@ -106,7 +105,6 @@ services:
       dockerfile: Dockerfile
       args:
         - BUILD_DATE=${BUILD_DATE}
-        - ICINGA2_VCS_REF=${ICINGA2_VCS_REF}
         - ICINGA2_VERSION=${ICINGA2_VERSION}
     container_name: icinga2-satellite-1
     hostname: icinga2-satellite-1.matrix.lan

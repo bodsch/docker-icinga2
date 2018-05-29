@@ -10,8 +10,14 @@ CERTIFICATE_PORT=${CERTIFICATE_PORT:-8080}
 CERTIFICATE_PATH=${CERTIFICATE_PATH:-/}
 
 CURL=$(which curl 2> /dev/null)
-NC=$(which nc 2> /dev/null)
+NC=$(which ncat 2> /dev/null)
 NC_OPTS="-z"
+
+if [[ -z "${NC}" ]]
+then
+  NC=$(which nc 2> /dev/null)
+  NC_OPTS=
+fi
 
 
 # wait for the Icinga2 Master
@@ -123,6 +129,31 @@ api_request() {
   fi
 }
 
+
+get_versions() {
+
+  for s in icinga2-master icinga2-satellite-1
+  do
+    ip=$(docker network inspect dockericinga2_backend | jq -r ".[].Containers | to_entries[] | select(.value.Name==\"${s}\").value.IPv4Address" | awk -F "/" '{print $1}')
+
+    code=$(curl \
+      --user ${ICINGA2_API_USER}:${ICINGA2_API_PASSWORD} \
+      --silent \
+      --location \
+      --header 'Accept: application/json' \
+      --request GET \
+      --insecure \
+      https://${ip}:5665/v1/status/IcingaApplication)
+
+    version=$(echo "${code}" | jq --raw-output '.results[].status.icingaapplication.app.version' 2> /dev/null)
+    node_name=$(echo "${code}" | jq --raw-output '.results[].status.icingaapplication.app.node_name' 2> /dev/null)
+
+    echo "service ${s} (${node_name} ${ip}) has version: ${version}"
+  done
+}
+
+
+
 inspect() {
 
   echo "inspect needed containers"
@@ -133,6 +164,10 @@ inspect() {
   done
 }
 
+
+
+
+
 echo "wait 5 minutes for start"
 sleep 5m
 
@@ -140,6 +175,7 @@ inspect
 
 wait_for_icinga_master
 wait_for_icinga_cert_service
+get_versions
 api_request
 
 exit 0

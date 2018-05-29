@@ -21,7 +21,6 @@ default:
 params:
 	@echo ""
 	@echo " ICINGA2_VERSION: ${ICINGA2_VERSION}"
-	@echo " ICINGA2_VCS_REF: ${ICINGA2_VCS_REF}"
 	@echo " BUILD_DATE     : $(BUILD_DATE)"
 	@echo ""
 
@@ -36,9 +35,8 @@ base-debian: params
 		--force-rm \
 		--compress \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
-		--build-arg ICINGA2_VCS_REF=${ICINGA2_VCS_REF} \
 		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-$(ICINGA2_VCS_REF) . ; \
+		--tag $(NS)/$(REPO):$(ICINGA2_VERSION) . ; \
 	cd ..
 
 icinga2-master: params
@@ -50,9 +48,8 @@ icinga2-master: params
 		--force-rm \
 		--compress \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
-		--build-arg ICINGA2_VCS_REF=${ICINGA2_VCS_REF} \
 		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-master-$(ICINGA2_VCS_REF) . ; \
+		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-master . ; \
 	cd ..
 
 icinga2-satellite: params
@@ -64,9 +61,8 @@ icinga2-satellite: params
 		--force-rm \
 		--compress \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
-		--build-arg ICINGA2_VCS_REF=${ICINGA2_VCS_REF} \
 		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-satellite-$(ICINGA2_VCS_REF) . ; \
+		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-satellite . ; \
 	cd ..
 
 clean:
@@ -79,9 +75,9 @@ list:
 	-docker images $(NS)/$(REPO)*
 
 publish:
-	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)-$(ICINGA2_VCS_REF)
-	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)-master-$(ICINGA2_VCS_REF)
-	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)-satellite-$(ICINGA2_VCS_REF)
+	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)
+	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)-master
+	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)-satellite
 
 compose: params
 	docker-compose --file docker-compose_example.yml up --build

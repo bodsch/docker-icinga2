@@ -22,6 +22,7 @@ export HOSTNAME
 
 . /init/output.sh
 . /init/runtime/service_handler.sh
+[[ -f /usr/bin/vercomp ]] && . /usr/bin/vercomp
 
 # -------------------------------------------------------------------------------------------------
 

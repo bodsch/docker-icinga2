@@ -7,25 +7,19 @@ services:
 
 env:
   global:
-    - ICINGA2_VERSION=${ICINGA2_VERSION:-2.8.2}
-    - ICINGA2_VCS_REF=dev
+    - ICINGA2_VERSION=${ICINGA2_VERSION:-2.8.4}
     - BUILD_DATE=$(date +"%Y-%m-%d")
 
 jobs:
   include:
-    - stage: build docker image
+    - stage: build, test and push docker image
       script:
         - make build
-        - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-${ICINGA2_VCS_REF}
-    - stage: test images
-      script:
         - docker-compose --file docker-compose_example.yml up --build -d
         - tests/test.sh
         - docker-compose --file docker-compose_example.yml kill
         - docker-compose --file docker-compose_example.yml down
-    - stage: push to docker hub
-      script:
-        - make build
         - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-        - make publish
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}
+        - docker tag ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION} ${DOCKER_USERNAME}/docker-icinga2:latest
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:latest

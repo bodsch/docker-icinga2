@@ -80,6 +80,8 @@ validate_local_ca() {
     code=$(curl \
       --user ${CERT_SERVICE_BA_USER}:${CERT_SERVICE_BA_PASSWORD} \
       --silent \
+      --location \
+      --insecure \
       --request GET \
       --header "X-API-USER: ${CERT_SERVICE_API_USER}" \
       --header "X-API-KEY: ${CERT_SERVICE_API_PASSWORD}" \

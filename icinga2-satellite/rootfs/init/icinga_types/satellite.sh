@@ -114,6 +114,7 @@ restart_master() {
   code=$(curl \
     --user ${CERT_SERVICE_API_USER}:${CERT_SERVICE_API_PASSWORD} \
     --silent \
+    --location \
     --header 'Accept: application/json' \
     --request POST \
     --insecure \
@@ -276,6 +277,8 @@ request_certificate_from_master() {
     code=$(curl \
       --user ${CERT_SERVICE_BA_USER}:${CERT_SERVICE_BA_PASSWORD} \
       --silent \
+      --insecure \
+      --location \
       --request GET \
       --header "X-API-USER: ${CERT_SERVICE_API_USER}" \
       --header "X-API-PASSWORD: ${CERT_SERVICE_API_PASSWORD}" \

@@ -7,7 +7,6 @@ ENV \
 
 ARG BUILD_DATE
 ARG ICINGA2_VERSION
-ARG ICINGA2_VCS_REF
 
 RUN \
   echo "export BUILD_DATE=${BUILD_DATE}" > /etc/enviroment && \
@@ -53,6 +52,8 @@ RUN \
   icinga2 daemon --validate && \
   icinga2 feature list && \
   echo ""
+
+COPY vercomp /usr/bin/vercomp
 
 WORKDIR /etc/icinga2
 

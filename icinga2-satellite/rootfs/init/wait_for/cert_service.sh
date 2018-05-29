@@ -50,6 +50,8 @@ wait_for_icinga_cert_service() {
 
         health=$(curl \
           --silent \
+          --location \
+          --insecure \
           --request GET \
           --write-out "%{http_code}\n" \
           --request GET \

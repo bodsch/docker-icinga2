@@ -22,6 +22,7 @@ export HOSTNAME
 
 . /init/output.sh
 . /init/runtime/service_handler.sh
+[[ -f /usr/bin/vercomp ]] && . /usr/bin/vercomp
 
 # -------------------------------------------------------------------------------------------------
 
@@ -81,7 +82,9 @@ run() {
   prepare
   validate_certservice_environment
 
-  . /init/database/mysql.sh
+  version_of_icinga_master
+
+#  . /init/database/mysql.sh
   . /init/configure_icinga.sh
   . /init/api_user.sh
 #  . /init/graphite_setup.sh

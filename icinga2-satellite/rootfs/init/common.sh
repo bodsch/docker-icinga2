@@ -6,6 +6,62 @@ GROUP=
 ICINGA2_MASTER=${ICINGA2_MASTER:-''}
 ICINGA2_HOST=${ICINGA2_HOST:-${ICINGA2_MASTER}}
 
+version_string() {
+  echo "${1}" | sed 's|r||' | awk -F '-' {'print $1'}
+}
+
+# compare the version of the Icinga2 Master with the Satellite
+#
+version_of_icinga_master() {
+
+  . /init/wait_for/icinga_master.sh
+
+  # get the icinga2 version of our master
+  #
+  log_info "compare our version with the master '${ICINGA2_MASTER}'"
+  code=$(curl \
+    --user ${CERT_SERVICE_API_USER}:${CERT_SERVICE_API_PASSWORD} \
+    --silent \
+    --location \
+    --header 'Accept: application/json' \
+    --request GET \
+    --insecure \
+    https://${ICINGA2_MASTER}:5665/v1/status/IcingaApplication )
+
+  if [[ $? -eq 0 ]]
+  then
+    version=$(echo "${code}" | jq --raw-output '.results[].status.icingaapplication.app.version' 2> /dev/null)
+
+    version=$(version_string ${version})
+
+    vercomp ${BUILD_VERSION} ${version}
+    case $? in
+        0) op='=';;
+        1) op='>';;
+        2) op='<';;
+    esac
+
+    if [[ "${op}" != "=" ]]
+    then
+      if [[ "${op}" = "<" ]]
+      then
+        log_warn "The version of the master is smaller than that of the satellite!"
+      elif [[ "${op}" = ">" ]]
+      then
+        log_warn "The version of the master is higher than that of the satellite!"
+      fi
+
+      log_warn "The version of the master differs from that of the satellite!"
+      log_warn "Which can lead to problems!"
+    else
+      log_info "The versions between Master and Satellite are identical"
+    fi
+  fi
+}
+
+
+
+
 # prepare the system and icinga to run in the docker environment
 #
 prepare() {
@@ -147,7 +203,9 @@ curl_opts() {
   opts=""
   opts="${opts} --user ${CERT_SERVICE_API_USER}:${CERT_SERVICE_API_PASSWORD}"
   opts="${opts} --silent"
+  opts="${opts} --location"
   opts="${opts} --insecure"
+
 
 #  if [ -e ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.pem ]
 #  then
