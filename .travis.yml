@@ -1,21 +1,31 @@
-sudo: required
+# sudo: required
 
 group: edge
 
 services:
   - docker
 
-install:
-  - travis_retry docker build --tag bodsch/docker-icinga2 .
-  - docker run --detach --name icinga2 bodsch/docker-icinga2
+env:
+  global:
+    - ICINGA2_VERSION=${ICINGA2_VERSION:-2.8.4}
+    - BUILD_DATE=$(date +"%Y-%m-%d")
 
-script:
-  - docker ps | grep -q icinga2
-
-after_success:
-  - |
-    [ "${TRAVIS_BRANCH}" == "master" ] && curl \
-      --request POST \
-      --header "Content-Type: application/json"  \
-      --data '{"source_type":"Branch","source_name":"master"}' \
-      https://registry.hub.docker.com/u/bodsch/docker-icinga2/trigger/${DOCKER_HUB_TOKEN}/
+jobs:
+  include:
+    - stage: build, test and push docker image
+      script:
+        - make build
+        - docker-compose --file docker-compose_example.yml up --build -d
+        - tests/test.sh
+        - docker-compose --file docker-compose_example.yml kill
+        - docker-compose --file docker-compose_example.yml down
+        - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-master
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-satellite
+        - docker tag  ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}           ${DOCKER_USERNAME}/docker-icinga2:latest
+        - docker tag  ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-master    ${DOCKER_USERNAME}/docker-icinga2:latest-master
+        - docker tag  ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-satellite ${DOCKER_USERNAME}/docker-icinga2:latest-satellite
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:latest
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-master
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-satellite

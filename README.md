@@ -1,14 +1,13 @@
-docker-icinga2
-==============
 
-Installs an working icinga2 Master or Satellite based on [alpine-linux](https://www.alpinelinux.org/about/).
+# docker-icinga2
 
-This Version includes also an small REST-Service to generate the Certificates for a Satellite via REST Service.
+creates several containers with different icinga2 characteristics:
 
-It also include an docker-compose **example** to create a set of one Master and 2 Satellites with automatich Certificate Exchange.
+- [icinga2](./build-from-source) created from the sourcecode
+- icinga2 as [master](icinga2-master) with a certificats service
+- icinga2 [satellite](icinga2-satellite)
 
-More then one API User can also be created over one Environment Variables.
-
+---
 
 # Status
 
@@ -103,12 +102,12 @@ If you want to issue your own certificate, you can use the following API calls.
 
 The certificate service requires the following environment variables:
 
-- `ICINGA_MASTER` (default: ``)
+- `ICINGA2_MASTER` (default: ``)
 - `BASIC_AUTH_USER` (default: `admin`)
 - `BASIC_AUTH_PASS` (default: `admin`)
-- `ICINGA_API_PORT` (default: `5665`)
-- `ICINGA_API_USER` (default: `root`)
-- `ICINGA_API_PASSWORD` (default: `icinga`)
+- `ICINGA2_API_PORT` (default: `5665`)
+- `ICINGA2_API_USER` (default: `root`)
+- `ICINGA2_API_PASSWORD` (default: `icinga`)
 
 
 ### new way (since Icinga2 2.8)
@@ -120,14 +119,14 @@ You can use `expect` on a *satellite* or *agent* to create an certificate reques
 After this, you can use the *cert-service* to sign this request:
 
     curl \
-      --user ${ICINGA_CERT_SERVICE_BA_USER}:${ICINGA_CERT_SERVICE_BA_PASSWORD} \
+      --user ${ICINGA2_CERT_SERVICE_BA_USER}:${ICINGA2_CERT_SERVICE_BA_PASSWORD} \
       --silent \
       --request GET \
-      --header "X-API-USER: ${ICINGA_CERT_SERVICE_API_USER}" \
-      --header "X-API-PASSWORD: ${ICINGA_CERT_SERVICE_API_PASSWORD}" \
+      --header "X-API-USER: ${ICINGA2_CERT_SERVICE_API_USER}" \
+      --header "X-API-PASSWORD: ${ICINGA2_CERT_SERVICE_API_PASSWORD}" \
       --write-out "%{http_code}\n" \
       --output /tmp/sign_${HOSTNAME}.json \
-      http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}/v2/sign/${HOSTNAME}
+      http://${ICINGA2_CERT_SERVICE_SERVER}:${ICINGA2_CERT_SERVICE_PORT}/v2/sign/${HOSTNAME}
 
 After a restart of the Icinga2 Master the certificate is active and a secure connection can be established.
 
@@ -138,12 +137,12 @@ To create a certificate:
 
     curl \
       --request GET \
-      --user ${ICINGA_CERT_SERVICE_BA_USER}:${ICINGA_CERT_SERVICE_BA_PASSWORD} \
+      --user ${ICINGA2_CERT_SERVICE_BA_USER}:${ICINGA2_CERT_SERVICE_BA_PASSWORD} \
       --silent \
-      --header "X-API-USER: ${ICINGA_CERT_SERVICE_API_USER}" \
-      --header "X-API-PASSWORD: ${ICINGA_CERT_SERVICE_API_PASSWORD}" \
+      --header "X-API-USER: ${ICINGA2_CERT_SERVICE_API_USER}" \
+      --header "X-API-PASSWORD: ${ICINGA2_CERT_SERVICE_API_PASSWORD}" \
       --output /tmp/request_${HOSTNAME}.json \
-      http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}/v2/request/${HOSTNAME}
+      http://${ICINGA2_CERT_SERVICE_SERVER}:${ICINGA2_CERT_SERVICE_PORT}/v2/request/${HOSTNAME}
 
 Extract the session checksum from the request above.
 
@@ -153,13 +152,13 @@ Download the created certificate:
 
     curl \
       --request GET \
-      --user ${ICINGA_CERT_SERVICE_BA_USER}:${ICINGA_CERT_SERVICE_BA_PASSWORD} \
+      --user ${ICINGA2_CERT_SERVICE_BA_USER}:${ICINGA2_CERT_SERVICE_BA_PASSWORD} \
       --silent \
-      --header "X-API-USER: ${ICINGA_CERT_SERVICE_API_USER}" \
-      --header "X-API-PASSWORD: ${ICINGA_CERT_SERVICE_API_PASSWORD}" \
+      --header "X-API-USER: ${ICINGA2_CERT_SERVICE_API_USER}" \
+      --header "X-API-PASSWORD: ${ICINGA2_CERT_SERVICE_API_PASSWORD}" \
       --header "X-CHECKSUM: ${checksum}" \
       --output /tmp/${HOSTNAME}/${HOSTNAME}.tgz \
-       http://${ICINGA_CERT_SERVICE_SERVER}:${ICINGA_CERT_SERVICE_PORT}/v2/cert/${HOSTNAME}
+       http://${ICINGA2_CERT_SERVICE_SERVER}:${ICINGA2_CERT_SERVICE_PORT}/v2/cert/${HOSTNAME}
 
 
 **The generated certificate has an timeout from 10 minutes between beginning of creation and download.**
@@ -188,7 +187,7 @@ For Examples to create a certificate with commandline tools look into `rootfs/in
 
 | Environmental Variable             | Default Value        | Description                                                     |
 | :--------------------------------- | :-------------       | :-----------                                                    |
-| `ICINGA_API_USERS`                 | -                    | comma separated List to create API Users.<br>The Format are `username:password`<br>(e.g. `admin:admin,dashing:dashing` and so on)                  |
+| `ICINGA2_API_USERS`                | -                    | comma separated List to create API Users.<br>The Format are `username:password`<br>(e.g. `admin:admin,dashing:dashing` and so on)                  |
 
 ## support Carbon/Graphite
 
@@ -202,31 +201,31 @@ For Examples to create a certificate with commandline tools look into `rootfs/in
 
 | Environmental Variable             | Default Value        | Description                                                     |
 | :--------------------------------- | :-------------       | :-----------                                                    |
-| `ICINGA_MASTER`                    | -                    | The Icinga2-Master FQDN for a Satellite Node                    |
-| `ICINGA_PARENT`                    | -                    | The Parent Node for an Cluster Setup                            |
+| `ICINGA2_MASTER`                   | -                    | The Icinga2-Master FQDN for a Satellite Node                    |
+| `ICINGA2_PARENT`                   | -                    | The Parent Node for an Cluster Setup                            |
 |                                    |                      |                                                                 |
-| `BASIC_AUTH_USER`                  | `admin`              | both `BASIC_AUTH_*` and the `ICINGA_MASTER` are importand, if you |
+| `BASIC_AUTH_USER`                  | `admin`              | both `BASIC_AUTH_*` and the `ICINGA2_MASTER` are importand, if you |
 | `BASIC_AUTH_PASS`                  | `admin`              | use and modify the authentication of the *icinga-cert-service*  |
 |                                    |                      |                                                                 |
-| `ICINGA_CERT_SERVICE_BA_USER`      | `admin`              | The Basic Auth User for the certicate Service                   |
-| `ICINGA_CERT_SERVICE_BA_PASSWORD`  | `admin`              | The Basic Auth Password for the certicate Service               |
-| `ICINGA_CERT_SERVICE_API_USER`     | -                    | The Certificate Service needs also an API Users                 |
-| `ICINGA_CERT_SERVICE_API_PASSWORD` | -                    |                                                                 |
-| `ICINGA_CERT_SERVICE_SERVER`       | `localhost`          | Certificate Service Host                                        |
-| `ICINGA_CERT_SERVICE_PORT`         | `80`                 | Certificate Service Port                                        |
-| `ICINGA_CERT_SERVICE_PATH`         | `/`                  | Certificate Service Path (needful, when they run behind a Proxy |
+| `CERT_SERVICE_BA_USER`             | `admin`              | The Basic Auth User for the certicate Service                   |
+| `CERT_SERVICE_BA_PASSWORD`         | `admin`              | The Basic Auth Password for the certicate Service               |
+| `CERT_SERVICE_API_USER`            | -                    | The Certificate Service needs also an API Users                 |
+| `CERT_SERVICE_API_PASSWORD`        | -                    |                                                                 |
+| `CERT_SERVICE_SERVER`              | `localhost`          | Certificate Service Host                                        |
+| `CERT_SERVICE_PORT`                | `80`                 | Certificate Service Port                                        |
+| `CERT_SERVICE_PATH`                | `/`                  | Certificate Service Path (needful, when they run behind a Proxy |
 
 ## notifications over SMTP
 
 | Environmental Variable             | Default Value        | Description                                                     |
 | :--------------------------------- | :-------------       | :-----------                                                    |
-| `ICINGA_SSMTP_RELAY_SERVER`        | -                    | SMTP Service to send Notifications                              |
-| `ICINGA_SSMTP_REWRITE_DOMAIN`      | -                    |                                                                 |
-| `ICINGA_SSMTP_RELAY_USE_STARTTLS`  | -                    |                                                                 |
-| `ICINGA_SSMTP_SENDER_EMAIL`        | -                    |                                                                 |
-| `ICINGA_SSMTP_SMTPAUTH_USER`       | -                    |                                                                 |
-| `ICINGA_SSMTP_SMTPAUTH_PASS`       | -                    |                                                                 |
-| `ICINGA_SSMTP_ALIASES`             | -                    |                                                                 |
+| `ICINGA2_SSMTP_RELAY_SERVER`       | -                    | SMTP Service to send Notifications                              |
+| `ICINGA2_SSMTP_REWRITE_DOMAIN`     | -                    |                                                                 |
+| `ICINGA2_SSMTP_RELAY_USE_STARTTLS` | -                    |                                                                 |
+| `ICINGA2_SSMTP_SENDER_EMAIL`       | -                    |                                                                 |
+| `ICINGA2_SSMTP_SMTPAUTH_USER`      | -                    |                                                                 |
+| `ICINGA2_SSMTP_SMTPAUTH_PASS`      | -                    |                                                                 |
+| `ICINGA2_SSMTP_ALIASES`            | -                    |                                                                 |
 
 ## activate some Demodata (taken from the official Icinga-Vagrant repository)
 
@@ -246,6 +245,12 @@ A docker-compose **example** could look like this:
 ---
 version: '3.3'
 
+networks:
+  frontend:
+  backend:
+  database:
+  satellite:
+
 services:
 
   database:
@@ -254,86 +259,112 @@ services:
     hostname: database
     environment:
       - MYSQL_SYSTEM_USER=root
-      - MYSQL_ROOT_PASS=v3rysycr3t
+      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /tmp/docker-data/database:/srv
+    networks:
+      - database
 
+  # icingaweb2
+  #
   icingaweb2:
-    image: bodsch/docker-icingaweb2:2.5.0-r4
+    image: bodsch/docker-icingaweb2:latest
     container_name: icingaweb2
     hostname: icingaweb2.matrix.lan
     ports:
       - 80:80
     environment:
-      - ICINGA_HOST=icinga2-master.matrix.lan
+      - ICINGA2_HOST=icinga2-master.matrix.lan
       - MYSQL_HOST=database
       - MYSQL_ROOT_USER=root
-      - MYSQL_ROOT_PASS=v3rysycr3t
+      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
       - ICINGA2_CMD_API_USER=root
       - ICINGA2_CMD_API_PASS=icinga
-      - ICINGAWEB2_USERS='icinga:icinga'
+      - ICINGAWEB2_USERS=icinga:icinga,foo:bar
       - IDO_DATABASE_NAME=icinga2core
-      - IDO_PASSWORD=id0pass
+      - IDO_PASSWORD=qUVuLTk9oEDUV0A
     volumes:
       - /tmp/docker-data/icingaweb2:/srv
     links:
       - icinga2-master:icinga2-master.matrix.lan
-      - database:database
+      - database
+    networks:
+      - database
+      - frontend
+      - backend
 
   # the Icinga2 Master
   # includes a certificate service to create and provide a icinga certificate
   icinga2-master:
-    image: bodsch/docker-icinga2:1801.1-r1
+    build: icinga2-master
     container_name: icinga2-master
     hostname: icinga2-master.matrix.lan
     restart: always
     privileged: true
     ports:
       - 5665:5665
-      - 8080
+      - 8080:8080
     environment:
-      # database settings
+      - ICINGA2_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
+      - LOG_LEVEL=debug
       - MYSQL_HOST=database
       - MYSQL_ROOT_USER=root
-      - MYSQL_ROOT_PASS=v3rysycr3t
-      - IDO_PASSWORD=id0pass
-      # add api user
-      - ICINGA_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
+      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
+      - IDO_PASSWORD=qUVuLTk9oEDUV0A
       # environment variables for the certificates service
-      - ICINGA_MASTER=icinga2-master.matrix.lan
-      - BASIC_AUTH_USER=foofoo
-      - BASIC_AUTH_PASS=barbar
-      - ICINGA_CERT_SERVICE_API_USER=cert
-      - ICINGA_CERT_SERVICE_API_PASSWORD=foo-bar
+      - ICINGA2_MASTER=icinga2-master.matrix.lan
+      - BASIC_AUTH_USER=admin
+      - BASIC_AUTH_PASS=admin
+      - CERT_SERVICE_BA_USER=admin
+      - CERT_SERVICE_BA_PASSWORD=admin
+      - CERT_SERVICE_API_USER=root
+      - CERT_SERVICE_API_PASSWORD=icinga
+      - CERT_SERVICE_SERVER=icinga2-master
+      - CERT_SERVICE_PORT=8080
+      - CERT_SERVICE_PATH=/
+      - CARBON_HOST=
+      - CARBON_PORT=2003
+      - DEMO_DATA=false
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /tmp/docker-data/icinga2-master:/var/lib/icinga2
+#      - /tmp/docker-data/icinga2-master:/var/lib/icinga2
     links:
-      - database:database
+      - database
+    extra_hosts:
+      - dl-cdn.alpinelinux.org:192.168.0.20
+    networks:
+      - database
+      - backend
+
 
   # the first icinga2 satellite
   # ask the master above for an certificate
   #
   # this satellite should work, the BA is correct
   icinga2-satellite-1:
-    image: bodsch/docker-icinga2:1801.1-r1
+    build: icinga2-satellite
     container_name: icinga2-satellite-1
     hostname: icinga2-satellite-1.matrix.lan
     restart: always
     privileged: true
     environment:
-      - ICINGA_MASTER=icinga2-master.matrix.lan
-      - ICINGA_CERT_SERVICE_BA_USER=foofoo
-      - ICINGA_CERT_SERVICE_BA_PASSWORD=barbar
-      - ICINGA_CERT_SERVICE_API_USER=cert
-      - ICINGA_CERT_SERVICE_API_PASSWORD=foo-bar
-      - ICINGA_CERT_SERVICE_SERVER=icinga2-master
-      - ICINGA_CERT_SERVICE_PORT=8080
+      - ICINGA2_MASTER=icinga2-master.matrix.lan
+      - ICINGA2_PARENT=icinga2-master.matrix.lan
+      - CERT_SERVICE_BA_USER=admin
+      - CERT_SERVICE_BA_PASSWORD=admin
+      - CERT_SERVICE_API_USER=root
+      - CERT_SERVICE_API_PASSWORD=icinga
+      - CERT_SERVICE_SERVER=icinga2-master.matrix.lan
+      - CERT_SERVICE_PORT=8080
+      - CERT_SERVICE_PATH=/
     volumes:
       - /etc/localtime:/etc/localtime:ro
     links:
       - icinga2-master:icinga2-master.matrix.lan
+    networks:
+      - backend
+      - satellite
 ```
 
 In this example I use my own docker containers:

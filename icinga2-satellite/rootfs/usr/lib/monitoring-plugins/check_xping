@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------------------------
+
+STATE_OK=0
+STATE_WARNING=1
+STATE_CRITICAL=2
+STATE_UNKNOWN=3
+STATE_DEPENDENT=4
+
+# ----------------------------------------------------------------------------------------
+
+# Parse parameters
+while [ $# -gt 0 ]
+do
+  case "${1}" in
+    -H|--host) shift
+      HOST="${1}"       ;;
+  esac
+shift
+done
+
+[ -z $WRTA ] && WRTA=100
+[ -z $CRTA ] && CRTA=200
+[ -z $WPL ] && WPL=5
+[ -z $CPL ] && CPL=2
+
+PING_RESPONSE=$( (/usr/sbin/fping --ipv4 --count=2 --elapsed --unreach --name --stats "$HOST") 2>&1)
+
+ALIVE=$(echo -e "${PING_RESPONSE}" | grep "alive" | awk '{print $1}')
+UNREACHABLE=$(echo -e "${PING_RESPONSE}" | grep "unreachable" | awk '{print $1}')
+RTA_MIN=$(echo -e "${PING_RESPONSE}" | grep "min round trip time" | awk '{print $1}')
+RTA_AVG=$(echo -e "${PING_RESPONSE}" | grep "avg round trip time" | awk '{print $1}')
+RTA_MAX=$(echo -e "${PING_RESPONSE}" | grep "max round trip time" | awk '{print $1}')
+
+if [ ${ALIVE} -eq 1 ]
+then
+  echo "PING OK - Packet loss = 0%, RTA = ${RTA_AVG} ms | rta_min=${RTA_MIN} rta_avg=${RTA_AVG} rta_max=${RTA_MAX}"
+  exit ${STATE_OK}
+fi
+
+if [ ${UNREACHABLE} -eq 1 ]
+then
+  echo "PING CRITICAL - Host unreachable"
+  exit ${STATE_CRITICAL}
+fi
+
+exit $?

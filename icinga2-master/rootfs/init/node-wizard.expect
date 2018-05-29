@@ -1,0 +1,62 @@
+#!/usr/bin/expect
+
+# exp_internal 1
+
+log_user 1
+set timeout 3
+
+spawn icinga2 node wizard
+
+expect -re "Please specify if this is a satellite/client setup" {
+  send -- "y\r"
+}
+
+expect -re "Please specify the common name " {
+  send -- "[exec hostname -f]\r"
+}
+
+expect -re "Master/Satellite Common Name" {
+ send -- "$env(ICINGA2_MASTER)\r"
+}
+
+expect -re "Do you want to establish a connection to the parent node" {
+  send -- "y\r"
+}
+
+expect -re "endpoint host" {
+  send -- "$env(ICINGA2_MASTER)\r"
+}
+
+expect -re "endpoint port" {
+  send -- "5665\r"
+}
+
+expect -re "Add more master/satellite endpoints" {
+  send -- "n\r"
+}
+
+expect -re "Is this information correct" {
+  send -- "y\r"
+}
+
+expect -re "Please specify the request ticket generated on your Icinga 2 master" {
+  send -- "\r"
+}
+
+expect -re "Bind Host" {
+  send -- "\r"
+}
+
+expect -re "Bind Port" {
+  send -- "\r"
+}
+
+expect -re "config from parent node" {
+  send -- "y\r"
+}
+
+expect -re "commands from parent node" {
+  send -- "y\r"
+}
+
+interact

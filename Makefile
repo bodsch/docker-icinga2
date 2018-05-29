@@ -1,85 +1,83 @@
 
-include env_make
+.PHONY: ALL base-container icinga2-master icinga2-satellite clean
 
-NS       = bodsch
-VERSION ?= latest
+NS       := bodsch
+REPO     := docker-icinga2
 
-REPO     = docker-icinga2
-NAME     = icinga2
-INSTANCE = default
+BUILD_DATE := $(shell date +%Y-%m-%d)
 
-.PHONY: build push shell run start stop rm release
+default:
+	@echo ""
+	@echo "Targets:"
+	@echo ""
+	@echo "  params                 Print build parameter"
+	@echo "  build                  Build images"
+#	@echo "  version                Print version of images"
+	@echo "  test                   Test images"
+	@echo "  publish                Publish images"
+	@echo ""
 
 
-build:
+params:
+	@echo ""
+	@echo " ICINGA2_VERSION: ${ICINGA2_VERSION}"
+	@echo " BUILD_DATE     : $(BUILD_DATE)"
+	@echo ""
+
+build: base-debian	icinga2-master	icinga2-satellite
+
+base-debian: params
+	@echo ""
+	@echo " build icinga2 base"
+	@echo ""
+	cd icinga2-debian ; \
 	docker build \
-		--rm \
+		--force-rm \
 		--compress \
-		--tag $(NS)/$(REPO):$(VERSION) .
+		--build-arg BUILD_DATE=$(BUILD_DATE) \
+		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
+		--tag $(NS)/$(REPO):$(ICINGA2_VERSION) . ; \
+	cd ..
+
+icinga2-master: params
+	@echo ""
+	@echo " build icinga2-master"
+	@echo ""
+	cd icinga2-master ; \
+	docker build \
+		--force-rm \
+		--compress \
+		--build-arg BUILD_DATE=$(BUILD_DATE) \
+		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
+		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-master . ; \
+	cd ..
+
+icinga2-satellite: params
+	@echo ""
+	@echo " build icinga2-satellite"
+	@echo ""
+	cd icinga2-satellite ; \
+	docker build \
+		--force-rm \
+		--compress \
+		--build-arg BUILD_DATE=$(BUILD_DATE) \
+		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
+		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-satellite . ; \
+	cd ..
 
 clean:
-	docker rmi \
-		--force \
-		$(NS)/$(REPO):$(VERSION)
+	docker rmi -f `docker images -q ${NS}/${REPO} | uniq`
 
-history:
-	docker history \
-		$(NS)/$(REPO):$(VERSION)
+#
+# List all images
+#
+list:
+	-docker images $(NS)/$(REPO)*
 
-push:
-	docker push \
-		$(NS)/$(REPO):$(VERSION)
+publish:
+	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)
+	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)-master
+	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)-satellite
 
-shell:
-	docker run \
-		--rm \
-		--name $(NAME)-$(INSTANCE) \
-		--hostname $(NAME)-$(INSTANCE) \
-		--interactive \
-		--tty \
-		$(PORTS) \
-		$(VOLUMES) \
-		$(ENV) \
-		$(NS)/$(REPO):$(VERSION) \
-		/bin/sh
-
-run:
-	docker run \
-		--rm \
-		--name $(NAME)-$(INSTANCE) \
-		--hostname $(NAME)-$(INSTANCE) \
-		$(PORTS) \
-		$(VOLUMES) \
-		$(ENV) \
-		$(NS)/$(REPO):$(VERSION)
-
-exec:
-	docker exec \
-		--interactive \
-		--tty \
-		$(NAME)-$(INSTANCE) \
-		/bin/sh
-
-start:
-	docker run \
-		--detach \
-		--name $(NAME)-$(INSTANCE) \
-		$(PORTS) \
-		$(VOLUMES) \
-		$(ENV) \
-		$(NS)/$(REPO):$(VERSION)
-
-stop:
-	docker stop \
-		$(NAME)-$(INSTANCE)
-
-rm:
-	docker rm \
-		$(NAME)-$(INSTANCE)
-
-release: build
-	make push -e VERSION=$(VERSION)
-
-default: build
-
-
+compose: params
+	docker-compose --file docker-compose_example.yml up --build
