@@ -33,6 +33,7 @@ LABEL \
 # ---------------------------------------------------------------------------------------
 
 RUN \
+  echo "export ICINGA2_TYPE=Master" >> /etc/profile.d/icinga2.sh && \
   apt-get update --quiet --quiet > /dev/null && \
   apt-get install --quiet --quiet --assume-yes --no-install-recommends \
     libffi-dev g++ make git libssl-dev ruby-dev \

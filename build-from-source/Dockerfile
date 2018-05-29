@@ -51,7 +51,7 @@ RUN \
     boost-program_options
 
 RUN \
-  echo "export BUILD_DATE=${BUILD_DATE}" > /etc/enviroment
+  echo "export BUILD_DATE=${BUILD_DATE}" > /etc/environment
 
 RUN \
   git clone https://github.com/monitoring-plugins/monitoring-plugins.git && \
@@ -140,10 +140,10 @@ COPY --from=builder /var/lib/icinga2 /var/lib/icinga2
 COPY --from=builder /var/spool/icinga2 /var/spool/icinga2
 COPY --from=builder /var/cache/icinga2 /var/cache/icinga2
 COPY --from=builder /var/log/icinga2 /var/log/icinga2
-COPY --from=builder /etc/enviroment /etc/enviroment
+COPY --from=builder /etc/environment /etc/environment
 
 RUN \
-  if [ -f /etc/enviroment ] ; then . /etc/enviroment; fi && \
+  if [ -f /etc/environment ] ; then . /etc/environment; fi && \
   apk update --quiet --no-cache  && \
   apk upgrade --quiet --no-cache && \
   apk add --quiet --no-cache --virtual .build-deps \

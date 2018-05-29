@@ -34,7 +34,7 @@ version_of_icinga_master() {
 
     version=$(version_string ${version})
 
-    vercomp ${BUILD_VERSION} ${version}
+    vercomp ${version} ${BUILD_VERSION}
     case $? in
         0) op='=';;
         1) op='>';;

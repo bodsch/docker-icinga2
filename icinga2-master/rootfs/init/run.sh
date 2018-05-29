@@ -2,10 +2,12 @@
 #
 #
 
+. /etc/profile
+
 # set -e
 
 [[ ${DEBUG} ]] && set -x
-[[ -f /etc/enviroment ]] && . /etc/enviroment
+[[ -f /etc/environment ]] && . /etc/environment
 
 HOSTNAME=$(hostname -f)
 

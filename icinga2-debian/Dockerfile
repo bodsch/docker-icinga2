@@ -9,8 +9,8 @@ ARG BUILD_DATE
 ARG ICINGA2_VERSION
 
 RUN \
-  echo "export BUILD_DATE=${BUILD_DATE}" > /etc/enviroment && \
-  echo "export BUILD_VERSION=${ICINGA2_VERSION}" >> /etc/enviroment && \
+  echo "export BUILD_DATE=${BUILD_DATE}" > /etc/profile.d/icinga2.sh && \
+  echo "export BUILD_VERSION=${ICINGA2_VERSION}" >> /etc/profile.d/icinga2.sh && \
   DIST=$(awk -F"[)(]+" '/VERSION=/ {print $2}' /etc/os-release) && \
   chsh -s /bin/bash && \
   ln -sf /bin/bash /bin/sh && \
@@ -27,6 +27,13 @@ RUN \
     python3.5-minimal \
     xz-utils \
     > /dev/null && \
+  curl \
+    --silent \
+    --location \
+    --retry 3 \
+    --output /usr/bin/vercomp \
+  https://gist.githubusercontent.com/bodsch/065b16ea3c3deb83af7f41990d2d273c/raw/6ba6d7b43de7cff78b7eaf3959f4546642b76750/vercomp && \
+  chmod +x /usr/bin/vercomp && \
   curl \
     --silent \
     https://packages.icinga.com/icinga.key | apt-key add - && \
@@ -52,8 +59,6 @@ RUN \
   icinga2 daemon --validate && \
   icinga2 feature list && \
   echo ""
-
-COPY vercomp /usr/bin/vercomp
 
 WORKDIR /etc/icinga2
 

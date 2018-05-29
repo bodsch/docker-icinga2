@@ -4,6 +4,7 @@ ARG ICINGA2_VERSION
 FROM bodsch/docker-icinga2:${ICINGA2_VERSION}
 
 ARG BUILD_DATE
+ARG BUILD_VERSION
 ARG CERT_SERVICE_VERSION
 
 ENV \
@@ -17,7 +18,7 @@ ENV \
 EXPOSE 5665 8080
 
 LABEL \
-  version="1805" \
+  version="${BUILD_VERSION}" \
   maintainer="Bodo Schulz <bodo@boone-schulz.de>" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Icinga2 Docker Image" \
@@ -33,6 +34,7 @@ LABEL \
 # ---------------------------------------------------------------------------------------
 
 RUN \
+  echo "export ICINGA2_TYPE=Satellite" >> /etc/profile.d/icinga2.sh && \
   apt-get update && \
   apt-get install --quiet --quiet --assume-yes --no-install-recommends \
     bash bind9utils curl dnsutils expect fping inotify-tools jq bsd-mailx mariadb-client \
