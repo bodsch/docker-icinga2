@@ -51,7 +51,7 @@ version_of_icinga_master() {
         log_warn "The version of the master is higher than that of the satellite!"
       fi
 
-      log_warn "The version of the master differs from that of the satellite!"
+      log_warn "The version of the master differs from that of the satellite! (master: ${version} / satellite: ${BUILD_VERSION})"
       log_warn "Which can lead to problems!"
     else
       log_info "The versions between Master and Satellite are identical"
