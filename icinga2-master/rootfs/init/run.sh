@@ -82,6 +82,9 @@ run() {
   . /init/common.sh
 
   prepare
+
+  . /init/consul.sh
+
   validate_certservice_environment
 
   . /init/database/mysql.sh

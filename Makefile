@@ -5,6 +5,7 @@ NS       := bodsch
 REPO     := docker-icinga2
 
 BUILD_DATE := $(shell date +%Y-%m-%d)
+ICINGA2_VERSION ?= 2.8.4
 
 default:
 	@echo ""
