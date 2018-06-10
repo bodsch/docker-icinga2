@@ -7,6 +7,7 @@ REPO     := docker-icinga2
 BUILD_DATE := $(shell date +%Y-%m-%d)
 
 ICINGA2_VERSION ?= latest
+export
 
 default:
 	@echo ""
