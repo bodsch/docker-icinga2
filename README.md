@@ -21,7 +21,7 @@ creates several containers with different icinga2 characteristics:
 
 
 # Build
-Your can use the included Makefile.
+You can use the included Makefile.
 - To build the Container: `make`
 - To remove the builded Docker Image: `make clean`
 - Starts the Container: `make run`
@@ -29,6 +29,8 @@ Your can use the included Makefile.
 - Entering the Container: `make exec`
 - Stop (but **not kill**): `make stop`
 - History `make history`
+
+_You can specify an image version by using the `ICINGA2_VERSION` environment variable (This defaults to the "latest" tag)._
 
 # Contribution
 Please read [Contribution](CONTRIBUTIONG.md)
