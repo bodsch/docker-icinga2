@@ -49,16 +49,16 @@ RUN \
 
 COPY rootfs/ /
 
-WORKDIR "/etc/icinga2"
-
-VOLUME [ "/etc/icinga2", "/var/lib/icinga2" ]
-
-HEALTHCHECK \
-  --interval=5s \
-  --timeout=2s \
-  --retries=12 \
-  --start-period=10s \
-  CMD ps ax | grep -v grep | grep -c $(cat /run/icinga2/icinga2.pid) || exit 1
+#WORKDIR "/etc/icinga2"
+#
+#VOLUME [ "/etc/icinga2", "/var/lib/icinga2" ]
+#
+#HEALTHCHECK \
+#  --interval=5s \
+#  --timeout=2s \
+#  --retries=12 \
+#  --start-period=10s \
+#  CMD ps ax | grep -v grep | grep -c $(cat /run/icinga2/icinga2.pid) || exit 1
 
 CMD [ "/init/run.sh" ]
 

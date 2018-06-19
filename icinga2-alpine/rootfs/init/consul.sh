@@ -1,15 +1,10 @@
 #!/bin/sh
 
-if [[ -z "${CONSUL}" ]] || [[ -z "${CONFIG_BACKEND}"  ]]
-then
-  return
-fi
-
 log_info "use '${CONFIG_BACKEND}' as configuration backend"
 
-set -x
-
 wait_for_consul() {
+
+  [[ -z "${CONSUL}" ]] || [[ -z "${CONFIG_BACKEND}"  ]] && return
 
   RETRY=50
   local http_response_code=0
@@ -32,11 +27,14 @@ wait_for_consul() {
   if [[ ${RETRY} -le 0 ]]
   then
     log_error "could not connect to the consul master instance '${CONSUL}'"
-    exit 1
+    CONSUL=
+    CONFIG_BACKEND=
   fi
 }
 
 register_node()  {
+
+  [[ -z "${CONSUL}" ]] || [[ -z "${CONFIG_BACKEND}"  ]] && return
 
   local address=$(hostname -i)
 
@@ -47,15 +45,17 @@ register_node()  {
     --data '{
       "ID": "'${HOSTNAME}'",
       "Name": "'${HOSTNAME}'",
-      "Port": 3306,
+      "Port": 5665,
       "Address": "'${address}'",
-      "tags": ["database"]
+      "tags": ["icinga"]
     }')
 
   echo "${data}"
 }
 
 set_consul_var() {
+
+  [[ -z "${CONSUL}" ]] || [[ -z "${CONFIG_BACKEND}"  ]] && return
 
   local consul_key=${1}
   local consul_var=${2}
@@ -65,12 +65,11 @@ set_consul_var() {
     --silent \
     ${CONSUL}:8500/v1/kv/${consul_key} \
     --data ${consul_var})
-#  curl \
-#    --silent \
-#    ${CONSUL}:8500/v1/kv/${consul_key}
 }
 
 get_consult_var() {
+
+  [[ -z "${CONSUL}" ]] || [[ -z "${CONFIG_BACKEND}"  ]] && return
 
   local consul_key=${1}
 
@@ -91,22 +90,3 @@ get_consult_var() {
     fi
   fi
 }
-
-if [[ "${CONFIG_BACKEND}" = "consul" ]]
-then
-  wait_for_consul
-  register_node
-  set_consul_var  'icinga/version' ${ICINGA2_VERSION}
-  set_consul_var  'icinga/cert-service/ba/user'      ${CERT_SERVICE_BA_USER}
-  set_consul_var  'icinga/cert-service/ba/password'  ${CERT_SERVICE_BA_PASSWORD}
-  set_consul_var  'icinga/cert-service/api/user'     ${CERT_SERVICE_API_USER}
-  set_consul_var  'icinga/cert-service/api/password' ${CERT_SERVICE_API_PASSWORD}
-  set_consul_var  'icinga/database/ido/user'         'icinga2'
-  set_consul_var  'icinga/database/ido/password'     ${IDO_PASSWORD}
-  set_consul_var  'icinga/database/ido/schema'       ${IDO_DATABASE_NAME}
-  set_consul_var  'icinga/api/users/'                ''
-
-
-fi
-
-set +x

@@ -2,28 +2,43 @@
 #
 #
 
+set -e
+set -u
+
 . /etc/profile
 
-# set -e
+# if [[ -z ${var+x} ]]; then echo "var is unset"; else echo "var is set to '$var'"; fi
+if [[ -z ${DEBUG+x} ]]
+then
+  if [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]]
+  then
+    set -x
+  fi
+fi
+
+
 
 [[ ${DEBUG} ]] && set -x
 [[ -f /etc/environment ]] && . /etc/environment
 
-HOSTNAME=$(hostname -f)
-
-export ICINGA2_CERT_DIRECTORY="/etc/icinga2/certs"
-ICINGA2_LIB_DIRECTORY="/var/lib/icinga2"
-
-ICINGA2_VERSION=$(icinga2 --version | head -n1 | awk -F 'version: ' '{printf $2}' | awk -F \. {'print $1 "." $2'} | sed 's|r||')
-[[ "${ICINGA2_VERSION}" = "2.8" ]] && export ICINGA2_CERT_DIRECTORY="/var/lib/icinga2/certs"
-
-export ICINGA2_VERSION
-export ICINGA2_CERT_DIRECTORY
-export ICINGA2_LIB_DIRECTORY
-export HOSTNAME
+# HOSTNAME=$(hostname -f)
+#
+# export ICINGA2_CERT_DIRECTORY="/etc/icinga2/certs"
+# ICINGA2_LIB_DIRECTORY="/var/lib/icinga2"
+#
+# ICINGA2_VERSION=$(icinga2 --version | head -n1 | awk -F 'version: ' '{printf $2}' | awk -F \. {'print $1 "." $2'} | sed 's|r||')
+# [[ "${ICINGA2_VERSION}" = "2.8" ]] && export ICINGA2_CERT_DIRECTORY="/var/lib/icinga2/certs"
+#
+# export ICINGA2_VERSION
+# export ICINGA2_CERT_DIRECTORY
+# export ICINGA2_LIB_DIRECTORY
+# export HOSTNAME
 
 . /init/output.sh
+. /init/consul.sh
+. /init/environments.sh
 . /init/runtime/service_handler.sh
+
 [[ -f /usr/bin/vercomp ]] && . /usr/bin/vercomp
 
 # -------------------------------------------------------------------------------------------------
@@ -76,22 +91,24 @@ run() {
 #   detect_type
 
   log_info "---------------------------------------------------"
-  log_info "   Icinga ${ICINGA2_TYPE} Version ${BUILD_VERSION} - build: ${BUILD_DATE}"
+  log_info " Icinga ${ICINGA2_TYPE} Version ${BUILD_VERSION} - build: ${BUILD_DATE}"
   log_info "---------------------------------------------------"
 
   . /init/common.sh
 
   prepare
 
-  . /init/consul.sh
+#  . /init/consul.sh
 
   validate_certservice_environment
 
-  . /init/database/mysql.sh
+  version_of_icinga_master
+
+  if [[ "${ICINGA2_TYPE}" = "Master" ]] && . /init/database/mysql.sh
   . /init/configure_icinga.sh
   . /init/api_user.sh
-  . /init/graphite_setup.sh
-  . /init/configure_ssmtp.sh
+  if [[ "${ICINGA2_TYPE}" = "Master" ]] && . /init/graphite_setup.sh
+  if [[ "${ICINGA2_TYPE}" = "Master" ]] && . /init/configure_ssmtp.sh
 
   correct_rights
 
@@ -116,6 +133,23 @@ run() {
       nohup /init/runtime/zone_watcher.sh > /dev/stdout 2>&1 &
     fi
   fi
+
+  if [[ "${CONFIG_BACKEND}" = "consul" ]]
+  then
+    wait_for_consul
+    register_node
+    set_consul_var  "${HOSTNAME}/version" ${ICINGA2_VERSION}
+    set_consul_var  "${HOSTNAME}/cert-service/ba/user"      ${CERT_SERVICE_BA_USER}
+    set_consul_var  "${HOSTNAME}/cert-service/ba/password"  ${CERT_SERVICE_BA_PASSWORD}
+    set_consul_var  "${HOSTNAME}/cert-service/api/user"     ${CERT_SERVICE_API_USER}
+    set_consul_var  "${HOSTNAME}/cert-service/api/password" ${CERT_SERVICE_API_PASSWORD}
+    set_consul_var  "${HOSTNAME}/database/ido/user"         'icinga2'
+    set_consul_var  "${HOSTNAME}/database/ido/password"     ${IDO_PASSWORD}
+    set_consul_var  "${HOSTNAME}/database/ido/schema"       ${IDO_DATABASE_NAME}
+#    set_consul_var  "${HOSTNAME}/api/users/"                ""
+  fi
+
+
 
   /usr/sbin/icinga2 \
     daemon \
