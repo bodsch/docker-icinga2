@@ -1,11 +1,14 @@
-#!/bin/bash
+#!/bin/sh
+
+. /etc/profile
+
+echo ""
+env | sort
+echo ""
 
 set -e
 set -u
-
-#echo ""
-#env | sort
-#echo ""
+set -x
 
 if [[ -f /etc/os-release ]]
 then
@@ -40,23 +43,35 @@ install_cert_service() {
 
   cd /tmp
 
-  if [ "${BUILD_TYPE}" = "local" ] ; then
+  if [ "${CERT_SERVICE_TYPE}" = "local" ] ; then
     echo "use local sources"
     ls -1 /build/
     mv /build/ruby-icinga-cert-service /tmp/
   else
     git clone https://github.com/bodsch/ruby-icinga-cert-service.git
     cd ruby-icinga-cert-service
-    if [ "${BUILD_TYPE}" = "stable" ] ; then
+    if [ "${CERT_SERVICE_TYPE}" = "stable" ] ; then
       echo "switch to stable Tag v${CERT_SERVICE_VERSION}"
       git checkout tags/${CERT_SERVICE_VERSION} 2> /dev/null
-    elif [ "${BUILD_TYPE}" = "development" ] ; then
+    elif [ "${CERT_SERVICE_TYPE}" = "development" ] ; then
       echo "switch to development Branch"
       git checkout development 2> /dev/null
     fi
   fi
 
   /tmp/ruby-icinga-cert-service/bin/installer.sh
+}
+
+install_vercomp() {
+
+  curl \
+    --silent \
+    --location \
+    --retry 3 \
+    --output /usr/bin/vercomp \
+  https://gist.githubusercontent.com/bodsch/065b16ea3c3deb83af7f41990d2d273c/raw/6ba6d7b43de7cff78b7eaf3959f4546642b76750/vercomp
+
+  chmod +x /usr/bin/vercomp
 }
 
 install_debian() {
@@ -103,6 +118,7 @@ install_debian() {
     netcat-openbsd nagios-nrpe-server openssl pwgen ruby ssmtp tzdata unzip > /dev/null
 
   install_cert_service
+  install_vercomp
 
   apt-get remove --quiet --quiet --assume-yes --purge \
     libffi-dev gcc make git libssl-dev ruby-dev  > /dev/null
@@ -132,7 +148,7 @@ install_alpine() {
   apk upgrade --quiet --no-cache
 
   apk add --quiet --no-cache --virtual .build-deps \
-    libffi-dev g++ make git openssl-dev ruby-dev shadow
+    curl libffi-dev g++ make git openssl-dev ruby-dev shadow
 
   repository=$(grep community /etc/apk/repositories)
 
@@ -149,10 +165,11 @@ install_alpine() {
   cut -d '-' -f1)
 
   apk add --quiet --no-cache \
-    bash bind-tools curl drill expect fping inotify-tools jq mailx mariadb-client \
+    bash bind-tools curl drill expect fping inotify-tools icinga2 jq mailx mariadb-client \
     monitoring-plugins netcat-openbsd nmap nrpe-plugin openssl pwgen ruby ssmtp tzdata unzip
 
   icinga_config_and_version
+  install_vercomp
 
   cp /usr/share/zoneinfo/${TZ} /etc/localtime
   echo ${TZ} > /etc/timezone
@@ -183,6 +200,8 @@ else
   echo "unsupported distribution"
   exit 1
 fi
+
+
 
 
 echo "export BUILD_DATE=${BUILD_DATE}"            > /etc/profile.d/icinga2.sh

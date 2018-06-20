@@ -1,7 +1,8 @@
 
-ARG ICINGA2_VERSION
+#ARG ICINGA2_VERSION
+#FROM bodsch/docker-icinga2:${ICINGA2_VERSION}-alpine
 
-FROM bodsch/docker-icinga2:${ICINGA2_VERSION}-alpine
+FROM alpine:edge
 
 ARG BUILD_DATE
 ARG BUILD_VERSION
@@ -11,7 +12,7 @@ ARG CERT_SERVICE_VERSION
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
-  BUILD_TYPE="stable" \
+  CERT_SERVICE_TYPE="stable" \
   CERT_SERVICE_VERSION="${CERT_SERVICE_VERSION:-0.17.6}" \
   ICINGA2_TYPE="Master"
 

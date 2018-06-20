@@ -1,8 +1,5 @@
 
-
-
 FROM bitnami/minideb:latest
-# FROM bodsch/docker-icinga2:${ICINGA2_VERSION}
 
 ARG BUILD_DATE
 ARG BUILD_VERSION
@@ -13,7 +10,7 @@ ENV \
   TERM=xterm \
   DEBIAN_FRONTEND=noninteractive \
   TZ='Europe/Berlin' \
-  BUILD_TYPE="stable" \
+  CERT_SERVICE_TYPE="stable" \
   CERT_SERVICE_VERSION="${CERT_SERVICE_VERSION:-0.17.6}" \
   ICINGA2_TYPE="Master"
 

@@ -26,10 +26,15 @@ params:
 	@echo " BUILD_DATE     : $(BUILD_DATE)"
 	@echo ""
 
-build: base-alpine base-debian	icinga2-master	icinga2-satellite
+#build: base-alpine base-debian	icinga2-master	icinga2-satellite
+build: base	master	satellite
+
+alpine:	params	base-alpine	icinga2-alpine-master	icinga2-alpine-satellite
+debian:	params	base-debian	icinga2-debian-master	icinga2-debian-satellite
 
 base:	params	base-debian	base-alpine
 master:	params	icinga2-alpine-master	icinga2-debian-master
+satellite:	params	icinga2-alpine-satellite	icinga2-debian-satellite
 
 
 base-debian: params
@@ -90,7 +95,22 @@ icinga2-debian-master: params
 		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-debian-master . ; \
 	cd ..
 
-icinga2-satellite: params
+icinga2-alpine-satellite: params
+	@echo ""
+	@echo " build icinga2-satellite"
+	@echo ""
+	cd icinga2-satellite ; \
+	docker build \
+		--file Dockerfile.alpine \
+		--rm \
+		--compress \
+		--build-arg BUILD_DATE=$(BUILD_DATE) \
+		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
+		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
+		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-alpine-satellite . ; \
+	cd ..
+
+icinga2-debian-satellite: params
 	@echo ""
 	@echo " build icinga2-satellite"
 	@echo ""
@@ -101,8 +121,30 @@ icinga2-satellite: params
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
 		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-satellite . ; \
+		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-debian-satellite . ; \
 	cd ..
+
+compose-debain:	params
+	echo "BUILD_DATE=$(BUILD_DATE)" > .env
+	echo "BUILD_VERSION=$(BUILD_VERSION)" >> .env
+	echo "ICINGA2_VERSION=$(ICINGA2_VERSION)" >> .env
+	docker-compose \
+		--file compose/head.yml \
+		--file compose/database.yml \
+		--file compose/master_debian.yml \
+		--file compose/satellite_debian.yml \
+		config > docker-compose_debian.yml
+
+compose-alpine:	params
+	echo "BUILD_DATE=$(BUILD_DATE)" > .env
+	echo "BUILD_VERSION=$(BUILD_VERSION)" >> .env
+	echo "ICINGA2_VERSION=$(ICINGA2_VERSION)" >> .env
+	docker-compose \
+		--file compose/head.yml \
+		--file compose/database.yml \
+		--file compose/master_alpine.yml \
+		--file compose/satellite_alpine.yml \
+		config > docker-compose_alpine.yml
 
 clean:
 	docker rmi -f `docker images -q ${NS}/${REPO} | uniq`
@@ -113,7 +155,7 @@ shell:
 		--name docker-icinga2-default \
 		--interactive \
 		--tty \
-		$(NS)/$(REPO):$(ICINGA2_VERSION)-alpine-master \
+		$(NS)/$(REPO):$(ICINGA2_VERSION) \
 		/bin/sh
 
 #

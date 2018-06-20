@@ -1,0 +1,8 @@
+---
+version: '3.3'
+
+networks:
+  frontend:
+  backend:
+  database:
+  satellite:

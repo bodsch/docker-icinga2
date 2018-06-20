@@ -13,6 +13,9 @@ EXPOSE 5665 8080
 # ---------------------------------------------------------------------------------------
 
 RUN \
+  echo "export BUILD_DATE=${BUILD_DATE}"            > /etc/profile.d/icinga2.sh && \
+  echo "export BUILD_VERSION=${BUILD_VERSION}"     >> /etc/profile.d/icinga2.sh && \
+  echo "export ICINGA2_VERSION=${ICINGA2_VERSION}" >> /etc/profile.d/icinga2.sh && \
   apk update --quiet --no-cache  && \
   apk upgrade --quiet --no-cache && \
   apk add --quiet --no-cache --virtual .build-deps \
@@ -20,7 +23,8 @@ RUN \
   groupadd -g 1000 icinga && \
   useradd -u 1000 -g icinga -G icinga -d /etc/icinga2 -s /bin/bash icinga && \
   apk add --quiet --no-cache \
-    bash bind-tools curl expect fping inotify-tools icinga2 jq mailx monitoring-plugins mariadb-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby rsync ssmtp tzdata unzip && \
+    bash bind-tools curl expect fping inotify-tools icinga2 jq mailx monitoring-plugins mariadb-client \
+    netcat-openbsd nmap nrpe-plugin openssl pwgen ruby rsync ssmtp tzdata unzip && \
   curl \
     --silent \
     --location \

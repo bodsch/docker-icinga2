@@ -12,6 +12,15 @@ env:
 
 jobs:
   include:
+    - stage: build alpine
+      script:
+        - make alpine
+        - make compose-alpine
+        - docker-compose --file docker-compose_alpine.yml up --build -d
+        - tests/test.sh
+        - docker-compose --file docker-compose_alpine.yml kill
+        - docker-compose --file docker-compose_alpine.yml down
+
     - stage: build, test and push docker image
       script:
         - make build

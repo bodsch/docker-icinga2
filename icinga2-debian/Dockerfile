@@ -10,8 +10,9 @@ ARG BUILD_VERSION
 ARG ICINGA2_VERSION
 
 RUN \
-  echo "export BUILD_DATE=${BUILD_DATE}"          > /etc/profile.d/icinga2.sh && \
-  echo "export BUILD_VERSION=${ICINGA2_VERSION}" >> /etc/profile.d/icinga2.sh && \
+  echo "export BUILD_DATE=${BUILD_DATE}"            > /etc/profile.d/icinga2.sh && \
+  echo "export BUILD_VERSION=${BUILD_VERSION}"     >> /etc/profile.d/icinga2.sh && \
+  echo "export ICINGA2_VERSION=${ICINGA2_VERSION}" >> /etc/profile.d/icinga2.sh && \
   DIST=$(awk -F"[)(]+" '/VERSION=/ {print $2}' /etc/os-release) && \
   chsh -s /bin/bash && \
   ln -sf /bin/bash /bin/sh && \
