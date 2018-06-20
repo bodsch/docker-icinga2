@@ -23,7 +23,7 @@ EOF
 
   # version 2.8 has some changes for certifiacte configuration
   #
-  if [[ "${ICINGA2_VERSION}" == "2.8" ]]
+  if [[ "${ICINGA2_MAJOR_VERSION}" == "2.8" ]]
   then
     # look at https://www.icinga.com/docs/icinga2/latest/doc/16-upgrading-icinga-2/#upgrading-to-v28
     cat << EOF >> /etc/icinga2/features-available/api.conf

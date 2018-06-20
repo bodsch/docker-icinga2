@@ -2,13 +2,13 @@
 
 . /etc/profile
 
-echo ""
-env | sort
-echo ""
+#echo ""
+#env | sort
+#echo ""
 
 set -e
 set -u
-set -x
+#set -x
 
 if [[ -f /etc/os-release ]]
 then
@@ -39,7 +39,7 @@ install_cert_service() {
   echo 'gem: --no-document' >> /etc/gemrc
 
   gem install --quiet --no-rdoc --no-ri \
-    io-console bundler
+    io-console bundler etc
 
   cd /tmp
 

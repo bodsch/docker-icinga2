@@ -1,8 +1,8 @@
 
-#ARG ICINGA2_VERSION
-# FROM bodsch/docker-icinga2:${ICINGA2_VERSION}-alpine
+ARG ICINGA2_VERSION
+FROM bodsch/docker-icinga2:${ICINGA2_VERSION}-alpine
 
-FROM alpine:edge
+# FROM alpine:edge
 
 ARG BUILD_DATE
 ARG BUILD_VERSION
@@ -31,9 +31,6 @@ LABEL \
 # ---------------------------------------------------------------------------------------
 
 RUN \
-  echo "export BUILD_DATE=${BUILD_DATE}"            > /etc/profile.d/icinga2.sh && \
-  echo "export BUILD_VERSION=${BUILD_VERSION}"     >> /etc/profile.d/icinga2.sh && \
-  echo "export ICINGA2_VERSION=${ICINGA2_VERSION}" >> /etc/profile.d/icinga2.sh && \
   echo "export ICINGA2_TYPE=Satellite"             >> /etc/profile.d/icinga2.sh && \
   apk update  --quiet --no-cache  && \
   apk upgrade --quiet --no-cache && \
@@ -42,7 +39,7 @@ RUN \
     netcat-openbsd nrpe-plugin openssl pwgen tzdata unzip && \
   cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
   echo ${TZ} > /etc/timezone && \
-  ln -s /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
+  # ln -s /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command checker mainlog && \
   mkdir -p /run/icinga2/cmd && \
   cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \

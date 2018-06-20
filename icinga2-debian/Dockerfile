@@ -1,5 +1,5 @@
 
-FROM bitnami/minideb:latest as builder
+FROM bitnami/minideb:latest
 
 ENV \
   TERM=xterm \

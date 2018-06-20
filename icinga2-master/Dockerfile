@@ -1,5 +1,8 @@
 
-FROM bitnami/minideb:latest
+ARG ICINGA2_VERSION
+FROM bodsch/docker-icinga2:${ICINGA2_VERSION}-debian
+
+# FROM bitnami/minideb:latest
 
 ARG BUILD_DATE
 ARG BUILD_VERSION

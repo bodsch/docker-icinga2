@@ -1,8 +1,8 @@
 
-#ARG ICINGA2_VERSION
-#FROM bodsch/docker-icinga2:${ICINGA2_VERSION}-alpine
+ARG ICINGA2_VERSION
+FROM bodsch/docker-icinga2:${ICINGA2_VERSION}-alpine
 
-FROM alpine:edge
+# FROM alpine:edge
 
 ARG BUILD_DATE
 ARG BUILD_VERSION
@@ -19,7 +19,7 @@ ENV \
 EXPOSE 5665 8080
 
 LABEL \
-  version="1803" \
+  version="${BUILD_VERSION}" \
   maintainer="Bodo Schulz <bodo@boone-schulz.de>" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Icinga2 Docker Image" \

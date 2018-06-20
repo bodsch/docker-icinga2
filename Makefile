@@ -131,6 +131,7 @@ compose-debain:	params
 	docker-compose \
 		--file compose/head.yml \
 		--file compose/database.yml \
+		--file compose/icingaweb2.yml \
 		--file compose/master_debian.yml \
 		--file compose/satellite_debian.yml \
 		config > docker-compose_debian.yml
@@ -142,6 +143,7 @@ compose-alpine:	params
 	docker-compose \
 		--file compose/head.yml \
 		--file compose/database.yml \
+		--file compose/icingaweb2.yml \
 		--file compose/master_alpine.yml \
 		--file compose/satellite_alpine.yml \
 		config > docker-compose_alpine.yml
