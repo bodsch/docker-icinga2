@@ -3,9 +3,10 @@
 
 creates several containers with different icinga2 characteristics:
 
-- [icinga2](./build-from-source) created from the sourcecode
-- icinga2 as [master](icinga2-master) with a certificats service
-- icinga2 [satellite](icinga2-satellite)
+- [icinga2](./build-from-source) created from the sourcecode (alpine based)
+- [icinga2](./icinga2-debian) debain based icinga2 installation
+- icinga2 as [master](./icinga2-master) with a certificats service
+- icinga2 [satellite](./icinga2-satellite)
 
 ---
 
@@ -22,6 +23,7 @@ creates several containers with different icinga2 characteristics:
 
 # Build
 You can use the included Makefile.
+
 - To build the Container: `make`
 - To remove the builded Docker Image: `make clean`
 - Starts the Container: `make run`
@@ -32,13 +34,16 @@ You can use the included Makefile.
 
 _You can specify an image version by using the `ICINGA2_VERSION` environment variable (This defaults to the "latest" tag)._
 
+_To change this export an other value for `ICINGA2_VERSION` (e.g. `export ICINGA_VERSION=2.8.4`)_
+
+
 # Contribution
 Please read [Contribution](CONTRIBUTIONG.md)
 
 # Development,  Branches (Github Tags)
 The `master` Branch is my *Working Horse* includes the "latest, hot shit" and can be complete broken!
 
-If you want to use something stable, please use a [Taged Version](https://github.com/bodsch/docker-icinga2/tags) or an [Branch](https://github.com/bodsch/docker-icinga2/branches) like `1712` or `1801`
+If you want to use something stable, please use a [Tagged Version](https://github.com/bodsch/docker-icinga2/tags) or an [Branch](https://github.com/bodsch/docker-icinga2/branches) like `1712` or `1801`
 
 # side-channel / custom scripts
 if use need some enhancements, you can add some (bash) scripts and add them via volume to the container:
@@ -55,6 +60,7 @@ if use need some enhancements, you can add some (bash) scripts and add them via 
 
 
 # Availability
+
 I use the official [Icinga2 packages](https://pkgs.alpinelinux.org/packages?name=icinga2&branch=&repo=&arch=&maintainer=) from Apline.
 
 If one of them is removed, please contact Alpine and don't complain here!
@@ -73,6 +79,7 @@ the graphite feature is **experimentally** and not conclusively tested.
 
 
 ## activated Icinga2 Features
+
 - command
 - checker
 - mainlog
