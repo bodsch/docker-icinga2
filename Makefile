@@ -124,7 +124,7 @@ icinga2-debian-satellite: params
 		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-debian-satellite . ; \
 	cd ..
 
-compose-debain:	params
+compose-debian:	params
 	echo "BUILD_DATE=$(BUILD_DATE)" > .env
 	echo "BUILD_VERSION=$(BUILD_VERSION)" >> .env
 	echo "ICINGA2_VERSION=$(ICINGA2_VERSION)" >> .env
