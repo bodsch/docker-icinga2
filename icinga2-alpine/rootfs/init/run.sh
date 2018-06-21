@@ -7,14 +7,15 @@ set -u
 
 . /etc/profile
 
-# if [[ -z ${var+x} ]]; then echo "var is unset"; else echo "var is set to '$var'"; fi
-# if [[ -z ${DEBUG+x} ]]
-# then
-#   if [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]]
-#   then
-#     set -x
-#   fi
-# fi
+if [[ -z ${DEBUG+x} ]]; then echo "DEBUG is unset"; else echo "DEBUG is set to '$DEBUG'"; fi
+
+if [[ ! -z ${DEBUG+x} ]]
+then
+  if [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]]
+  then
+    set -x
+  fi
+fi
 
 [[ -f /etc/environment ]] && . /etc/environment
 

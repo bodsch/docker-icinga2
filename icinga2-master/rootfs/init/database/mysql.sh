@@ -140,13 +140,27 @@ create_config() {
 
   # create the IDO configuration
   #
-  sed -i \
-    -e 's|host \= \".*\"|host \=\ \"'${MYSQL_HOST}'\"|g' \
-    -e 's|port \= \".*\"|port \=\ \"'${MYSQL_PORT}'\"|g' \
-    -e 's|password \= \".*\"|password \= \"'${IDO_PASSWORD}'\"|g' \
-    -e 's|user =\ \".*\"|user =\ \"icinga2\"|g' \
-    -e 's|database =\ \".*\"|database =\ \"'${IDO_DATABASE_NAME}'\"|g' \
-    /etc/icinga2/features-available/ido-mysql.conf
+
+  cat << EOF > /etc/icinga2/features-available/ido-mysql.conf
+
+library "db_ido_mysql"
+
+object IdoMysqlConnection "ido-mysql" {
+  user     = "icinga2"
+  password = "${IDO_PASSWORD}"
+  host     = "${IDO_DATABASE_NAME}"
+  database = "${MYSQL_HOST}"
+  port     = "${MYSQL_PORT}"
+}
+EOF
+
+#  sed -i \
+#    -e 's|host \= \".*\"|host \=\ \"'${MYSQL_HOST}'\"|g' \
+#    -e 's|port \= \".*\"|port \=\ \"'${MYSQL_PORT}'\"|g' \
+#    -e 's|password \= \".*\"|password \= \"'${IDO_PASSWORD}'\"|g' \
+#    -e 's|user =\ \".*\"|user =\ \"icinga2\"|g' \
+#    -e 's|database =\ \".*\"|database =\ \"'${IDO_DATABASE_NAME}'\"|g' \
+#    /etc/icinga2/features-available/ido-mysql.conf
 }
 
 . /init/wait_for/mysql.sh

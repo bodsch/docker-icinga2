@@ -26,12 +26,12 @@ icinga_config_and_version() {
 #  /usr/sbin/icinga2 feature disable command checker mainlog notification
   /usr/sbin/icinga2 feature enable command checker mainlog notification
 
-  echo ""
-  which icinga2
-  icinga2 --version
-  icinga2 daemon --validate
-  icinga2 feature list
-  echo ""
+#  echo ""
+#  which icinga2
+#  icinga2 --version
+#  icinga2 daemon --validate
+#  icinga2 feature list
+#  echo ""
 }
 
 install_cert_service() {
