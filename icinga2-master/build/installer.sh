@@ -80,7 +80,7 @@ install_debian() {
   DIST=$(awk -F"[)(]+" '/VERSION=/ {print $2}' /etc/os-release)
   chsh -s /bin/bash
   ln -sf /bin/bash /bin/sh
-  ln -s  /sbin/killall5 /sbin/killall
+  ln -sf /sbin/killall5 /sbin/killall
   apt-get update  --quiet --quiet > /dev/null
   apt-get dist-upgrade --quiet --quiet > /dev/null
   apt-get install --quiet --quiet --assume-yes --no-install-recommends \

@@ -45,8 +45,6 @@ RUN \
     /etc/apt/sources.list.d/${DIST}-icinga.list && \
   apt-get update --quiet --quiet > /dev/null && \
   ln -s /etc/default /etc/sysconfig && \
-  groupadd -g 1000 icinga && \
-  useradd -u 1000 -g icinga -G icinga -d /etc/icinga2 -s /bin/bash icinga && \
   apt-get --quiet --quiet --assume-yes --no-install-recommends install \
     icinga2-bin \
     icinga2-ido-mysql \
