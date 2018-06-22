@@ -5,16 +5,26 @@
 set -e
 set -u
 
+finish() {
+  rv=$?
+  echo -e "\033[38;5;202m\033[1mexit with signal '${rv}'\033[0m"
+  sleep 4s
+  exit $rv
+}
+
+trap finish SIGINT SIGTERM INT TERM EXIT
+
 . /etc/profile
 
-# if [[ -z ${var+x} ]]; then echo "var is unset"; else echo "var is set to '$var'"; fi
-# if [[ -z ${DEBUG+x} ]]
-# then
-#   if [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]]
-#   then
-#     set -x
-#   fi
-# fi
+# if [[ -z ${DEBUG+x} ]]; then echo "DEBUG is unset"; else echo "DEBUG is set to '$DEBUG'"; fi
+
+if [[ ! -z ${DEBUG+x} ]]
+then
+  if [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]]
+  then
+    set -x
+  fi
+fi
 
 [[ -f /etc/environment ]] && . /etc/environment
 
@@ -56,15 +66,11 @@ custom_scripts() {
 
 run() {
 
-  log_info "---------------------------------------------------"
-  log_info " Icinga ${ICINGA2_TYPE} Version ${ICINGA2_VERSION} - build: ${BUILD_DATE}"
-  log_info "---------------------------------------------------"
+  log_info "prepare system"
 
   . /init/common.sh
 
   prepare
-
-#  . /init/consul.sh
 
   validate_certservice_environment
 
@@ -82,6 +88,10 @@ run() {
   fi
 
   correct_rights
+
+  log_info "---------------------------------------------------"
+  log_info " Icinga ${ICINGA2_TYPE} Version ${ICINGA2_VERSION} - build: ${BUILD_DATE}"
+  log_info "---------------------------------------------------"
 
   custom_scripts
 
@@ -104,21 +114,6 @@ run() {
       nohup /init/runtime/zone_watcher.sh > /dev/stdout 2>&1 &
     fi
   fi
-
-#  if [[ "${CONFIG_BACKEND}" = "consul" ]]
-#  then
-#    wait_for_consul
-#    register_node
-#    set_consul_var  "${HOSTNAME}/version" ${ICINGA2_VERSION}
-#    set_consul_var  "${HOSTNAME}/cert-service/ba/user"      ${CERT_SERVICE_BA_USER}
-#    set_consul_var  "${HOSTNAME}/cert-service/ba/password"  ${CERT_SERVICE_BA_PASSWORD}
-#    set_consul_var  "${HOSTNAME}/cert-service/api/user"     ${CERT_SERVICE_API_USER}
-#    set_consul_var  "${HOSTNAME}/cert-service/api/password" ${CERT_SERVICE_API_PASSWORD}
-#    set_consul_var  "${HOSTNAME}/database/ido/user"         'icinga2'
-#    set_consul_var  "${HOSTNAME}/database/ido/password"     ${IDO_PASSWORD}
-#    set_consul_var  "${HOSTNAME}/database/ido/schema"       ${IDO_DATABASE_NAME}
-##    set_consul_var  "${HOSTNAME}/api/users/"                ""
-#  fi
 
   /usr/sbin/icinga2 \
     daemon \

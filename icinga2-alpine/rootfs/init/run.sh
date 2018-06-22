@@ -64,7 +64,6 @@ custom_scripts() {
 }
 
 
-
 run() {
 
   log_info "prepare system"
