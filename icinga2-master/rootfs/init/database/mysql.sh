@@ -148,8 +148,8 @@ library "db_ido_mysql"
 object IdoMysqlConnection "ido-mysql" {
   user     = "icinga2"
   password = "${IDO_PASSWORD}"
-  host     = "${IDO_DATABASE_NAME}"
-  database = "${MYSQL_HOST}"
+  host     = "${MYSQL_HOST}"
+  database = "${IDO_DATABASE_NAME}"
   port     = "${MYSQL_PORT}"
 }
 EOF

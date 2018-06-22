@@ -16,6 +16,8 @@ remove_satellite_from_master() {
 
 add_satellite_to_master() {
 
+  [[ "${ADD_SATELLITE_TO_MASTER}" = "false" ]] && return
+
   # helper function to create json for the curl commando below
   #
   api_satellite_host() {
@@ -61,6 +63,7 @@ EOF
 #    log_info "${status}"
 #    log_info "${message}"
 
+    # echo '{"error":404.0,"status":"No objects found."}'
     if [[ "${status}" = "404" ]]
     then
 
@@ -259,12 +262,21 @@ request_certificate_from_master() {
   #
   if ( [[ -f ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.key ]] && [[ -f ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.crt ]] )
   then
+    log_info "i found a cert and key file"
     :
   else
+    log_info "start node wizard to create an certificate"
+
     # no certificate found
     # use the node wizard to create a valid certificate request
     #
     expect /init/node-wizard.expect 1> /dev/null
+
+    if [[ $? -gt 0 ]]
+    then
+      log_error "the node wizard had an error! :("
+      exit 1
+    fi
 
     sleep 4s
 

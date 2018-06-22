@@ -24,7 +24,6 @@ services:
     environment:
       - ICINGA2_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
       - LOG_LEVEL=info
-      - DEBUG=1
       - MYSQL_HOST=database
       - MYSQL_ROOT_USER=root
       - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
