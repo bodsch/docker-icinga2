@@ -26,7 +26,7 @@ params:
 	@echo " BUILD_DATE     : $(BUILD_DATE)"
 	@echo ""
 
-#build: base-alpine base-debian	icinga2-master	icinga2-satellite
+
 build: base	master	satellite
 
 alpine:	params	base-alpine	icinga2-alpine-master	icinga2-alpine-satellite
@@ -48,7 +48,7 @@ base-debian: params
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
 		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-debian . ; \
+		--tag $(NS)/$(REPO):debian-$(ICINGA2_VERSION) . ; \
 	cd ..
 
 base-alpine: params
@@ -62,7 +62,7 @@ base-alpine: params
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
 		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-alpine . ; \
+		--tag $(NS)/$(REPO):alpine-$(ICINGA2_VERSION) . ; \
 	cd ..
 
 icinga2-alpine-master: params
@@ -77,7 +77,7 @@ icinga2-alpine-master: params
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
 		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-alpine-master . ; \
+		--tag $(NS)/$(REPO):alpine-master-$(ICINGA2_VERSION) . ; \
 	cd ..
 
 
@@ -92,7 +92,7 @@ icinga2-debian-master: params
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
 		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-debian-master . ; \
+		--tag $(NS)/$(REPO):debian-master-$(ICINGA2_VERSION) . ; \
 	cd ..
 
 icinga2-alpine-satellite: params
@@ -107,7 +107,7 @@ icinga2-alpine-satellite: params
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
 		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-alpine-satellite . ; \
+		--tag $(NS)/$(REPO):alpine-satellite-$(ICINGA2_VERSION) . ; \
 	cd ..
 
 icinga2-debian-satellite: params
@@ -121,7 +121,7 @@ icinga2-debian-satellite: params
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
 		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-debian-satellite . ; \
+		--tag $(NS)/$(REPO):debian-satellite-$(ICINGA2_VERSION) . ; \
 	cd ..
 
 compose-debian:	params
