@@ -1,23 +1,25 @@
 
 ARG ICINGA2_VERSION
-ARG ICINGA2_VCS_REF
+FROM bodsch/docker-icinga2:${ICINGA2_VERSION}-alpine
 
-FROM bodsch/docker-icinga2:${ICINGA2_VERSION}-source-${ICINGA2_VCS_REF}
+# FROM alpine:edge
 
 ARG BUILD_DATE
+ARG BUILD_VERSION
+ARG ICINGA2_VERSION
 ARG CERT_SERVICE_VERSION
 
 ENV \
   TERM=xterm \
   TZ='Europe/Berlin' \
-  BUILD_TYPE="stable" \
+  CERT_SERVICE_TYPE="stable" \
   CERT_SERVICE_VERSION="${CERT_SERVICE_VERSION:-0.17.6}" \
   ICINGA2_TYPE="Master"
 
 EXPOSE 5665 8080
 
 LABEL \
-  version="1803" \
+  version="${BUILD_VERSION}" \
   maintainer="Bodo Schulz <bodo@boone-schulz.de>" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Icinga2 Docker Image" \
@@ -32,48 +34,13 @@ LABEL \
 
 # ---------------------------------------------------------------------------------------
 
+COPY build /build
+
 RUN \
-  apk update --quiet --no-cache  && \
-  apk upgrade --quiet --no-cache && \
-  apk add --quiet --no-cache --virtual .build-deps \
-    libffi-dev g++ make git openssl-dev ruby-dev && \
-  apk add --quiet --no-cache \
-    bash bind-tools curl drill expect fping inotify-tools jq mailx mariadb-client netcat-openbsd nmap nrpe-plugin openssl pwgen ruby ssmtp tzdata unzip && \
-  apk add --no-cache \
-    musl-dbg && \
-  cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
-  echo ${TZ} > /etc/timezone && \
-  ln -s /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
-  /usr/sbin/icinga2 feature enable command checker mainlog notification && \
-  mkdir -p /run/icinga2/cmd && \
-  cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
-  chmod u+s /bin/busybox && \
-  echo 'gem: --no-document' >> /etc/gemrc && \
-  gem install --quiet --no-rdoc --no-ri \
-    io-console bundler && \
-  cd /tmp && \
-  if [ "${BUILD_TYPE}" == "local" ] ; then \
-    echo "use local sources" && \
-    ls -1 /build/ && \
-    mv /build/ruby-icinga-cert-service /tmp/ ; \
-  else \
-    git clone https://github.com/bodsch/ruby-icinga-cert-service.git && \
-    cd ruby-icinga-cert-service && \
-    if [ "${BUILD_TYPE}" == "stable" ] ; then \
-      echo "switch to stable Tag v${CERT_SERVICE_VERSION}" && \
-      git checkout tags/${CERT_SERVICE_VERSION} 2> /dev/null ; \
-    elif [ "${BUILD_TYPE}" == "development" ] ; then \
-      echo "switch to development Branch" && \
-      git checkout development 2> /dev/null ; \
-    fi \
-  fi && \
-  /tmp/ruby-icinga-cert-service/bin/installer.sh && \
-  apk del --quiet --purge .build-deps && \
-  rm -rf \
-    /tmp/* \
-    /var/cache/apk/* \
-    /root/.gem \
-    /root/.bundle
+  # echo "export ICINGA2_TYPE=Master" >> /etc/profile.d/icinga2.sh && \
+  #
+  /build/installer.sh && \
+  rm -rf /build
 
 COPY rootfs/ /
 

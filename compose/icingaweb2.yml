@@ -1,0 +1,29 @@
+---
+version: '3.3'
+
+services:
+  # icingaweb2
+  #
+  icingaweb2:
+    image: bodsch/docker-icingaweb2:latest
+    container_name: icingaweb2
+    hostname: icingaweb2.matrix.lan
+    ports:
+      - 80:80
+    environment:
+      - MYSQL_HOST=database
+      - MYSQL_ROOT_USER=root
+      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
+      - IDO_DATABASE_NAME=icinga2core
+      - IDO_PASSWORD=qUVuLTk9oEDUV0A
+      - ICINGA2_MASTER=icinga2-master.matrix.lan
+      - ICINGA2_CMD_API_USER=root
+      - ICINGA2_CMD_API_PASS=icinga
+      - ICINGAWEB2_USERS=icinga:icinga,foo:bar
+    links:
+      - icinga2-master:icinga2-master.matrix.lan
+      - database
+    networks:
+      - database
+      - frontend
+      - backend

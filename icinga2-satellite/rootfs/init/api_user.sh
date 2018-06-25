@@ -6,6 +6,8 @@ create_api_user() {
   local api_file="/etc/icinga2/conf.d/api-users.conf"
   local api_users=
 
+  [[ -z "${ICINGA2_API_USERS}" ]] && return
+
   # the format are following:
   # username:password,username:password, ...
   # for example:

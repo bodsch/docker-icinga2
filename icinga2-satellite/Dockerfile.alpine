@@ -1,21 +1,21 @@
 
 ARG ICINGA2_VERSION
-ARG ICINGA2_VCS_REF
+FROM bodsch/docker-icinga2:${ICINGA2_VERSION}-alpine
 
-FROM bodsch/docker-icinga2:${ICINGA2_VERSION}-source-${ICINGA2_VCS_REF}
+# FROM alpine:edge
 
 ARG BUILD_DATE
+ARG BUILD_VERSION
+ARG ICINGA2_VERSION
 
 ENV \
   TERM=xterm \
-  TZ='Europe/Berlin' \
-  ICINGA2_TYPE="Satellite" \
-  BUILD_DATE=${BUILD_DATE}
+  TZ='Europe/Berlin'
 
 EXPOSE 5665
 
 LABEL \
-  version="1803" \
+  version="${BUILD_VERSION}" \
   maintainer="Bodo Schulz <bodo@boone-schulz.de>" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Icinga2 Docker Image" \
@@ -31,13 +31,15 @@ LABEL \
 # ---------------------------------------------------------------------------------------
 
 RUN \
-  apk update --quiet --no-cache  && \
+  echo "export ICINGA2_TYPE=Satellite"             >> /etc/profile.d/icinga2.sh && \
+  apk update  --quiet --no-cache  && \
   apk upgrade --quiet --no-cache && \
-  apk add --quiet --no-cache \
-    bash bind-tools curl drill expect fping inotify-tools jq mariadb-client netcat-openbsd nrpe-plugin openssl pwgen tzdata unzip && \
+  apk add     --quiet --no-cache \
+    bash bind-tools curl drill expect fping inotify-tools icinga2 jq netcat-openbsd monitoring-plugins \
+    netcat-openbsd nrpe-plugin openssl pwgen tzdata unzip && \
   cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
   echo ${TZ} > /etc/timezone && \
-  ln -s /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
+  # ln -s /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command checker mainlog && \
   mkdir -p /run/icinga2/cmd && \
   cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \

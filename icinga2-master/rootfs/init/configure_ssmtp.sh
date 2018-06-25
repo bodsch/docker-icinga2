@@ -6,16 +6,6 @@
 #
 [[ "${ICINGA2_TYPE}" != "Master" ]] && return
 
-
-ICINGA2_SSMTP_RELAY_SERVER=${ICINGA2_SSMTP_RELAY_SERVER:-}
-ICINGA2_SSMTP_REWRITE_DOMAIN=${ICINGA2_SSMTP_REWRITE_DOMAIN:-}
-ICINGA2_SSMTP_RELAY_USE_STARTTLS=${ICINGA2_SSMTP_RELAY_USE_STARTTLS:-"false"}
-
-ICINGA2_SSMTP_SENDER_EMAIL=${ICINGA2_SSMTP_SENDER_EMAIL:-}
-ICINGA2_SSMTP_SMTPAUTH_USER=${ICINGA2_SSMTP_SMTPAUTH_USER:-}
-ICINGA2_SSMTP_SMTPAUTH_PASS=${ICINGA2_SSMTP_SMTPAUTH_PASS:-}
-ICINGA2_SSMTP_ALIASES=${ICINGA2_SSMTP_ALIASES:-}
-
 # configure the ssmtp tool to create notification emails
 #
 configure_ssmtp() {
@@ -63,23 +53,26 @@ root:${ICINGA2_SSMTP_SENDER_EMAIL}@${ICINGA2_SSMTP_REWRITE_DOMAIN}:${ICINGA2_SSM
 EOF
 
 
-  [[ -n "${ICINGA2_SSMTP_ALIASES}" ]] && aliases=$(echo ${ICINGA2_SSMTP_ALIASES} | sed -e 's/,/ /g' -e 's/\s+/\n/g' | uniq)
-
-  if [[ ! -z "${aliases}" ]]
+  if [[ -n "${ICINGA2_SSMTP_ALIASES}" ]]
   then
-    # add more aliases
-    #
-    for u in ${aliases}
-    do
-      local=$(echo "${u}" | cut -d: -f1)
-      email=$(echo "${u}" | cut -d: -f2)
+    aliases=$(echo ${ICINGA2_SSMTP_ALIASES} | sed -e 's/,/ /g' -e 's/\s+/\n/g' | uniq)
 
-      cat << EOF >> ${file}
+    if [[ ! -z "${aliases}" ]]
+    then
+      # add more aliases
+      #
+      for u in ${aliases}
+      do
+        local=$(echo "${u}" | cut -d: -f1)
+        email=$(echo "${u}" | cut -d: -f2)
+
+        cat << EOF >> ${file}
 ${local}:${email}:${ICINGA2_SSMTP_RELAY_SERVER}
 EOF
-    done
-  fi
+      done
+    fi
 
+  fi
 }
 
 configure_ssmtp

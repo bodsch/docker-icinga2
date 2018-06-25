@@ -1,0 +1,52 @@
+---
+version: '3.3'
+
+services:
+  # the Icinga2 Master
+  # includes a certificate service to create and provide a icinga certificate
+  icinga2-master:
+#    image: bodsch/docker-icinga2:2.8.4-master-dev
+    build:
+      context: ../icinga2-master
+      dockerfile: Dockerfile
+      args:
+        - BUILD_DATE=${BUILD_DATE}
+        - BUILD_VERSION=${BUILD_VERSION}
+        - ICINGA2_VERSION=${ICINGA2_VERSION}
+        - CERT_SERVICE_VERSION=0.17.6
+    container_name: icinga2-master
+    hostname: icinga2-master.matrix.lan
+    restart: always
+    privileged: true
+    ports:
+      - 5665:5665
+      - 8080:8080
+    environment:
+      - ICINGA2_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
+      - LOG_LEVEL=debug
+      - MYSQL_HOST=database
+      - MYSQL_ROOT_USER=root
+      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
+      - IDO_PASSWORD=qUVuLTk9oEDUV0A
+      # environment variables for the certificates service
+      - ICINGA2_MASTER=icinga2-master.matrix.lan
+      - BASIC_AUTH_USER=admin
+      - BASIC_AUTH_PASS=admin
+      - CERT_SERVICE_BA_USER=admin
+      - CERT_SERVICE_BA_PASSWORD=admin
+      - CERT_SERVICE_API_USER=root
+      - CERT_SERVICE_API_PASSWORD=icinga
+      - CERT_SERVICE_SERVER=icinga2-master
+      - CERT_SERVICE_PORT=8080
+      - CERT_SERVICE_PATH=/
+      - CARBON_HOST=
+      - CARBON_PORT=2003
+      - DEMO_DATA=true
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    links:
+      - database
+    networks:
+      - database
+      - backend
+

@@ -1,0 +1,37 @@
+---
+version: '3.3'
+
+services:
+  # the first icinga2 satellite
+  # ask the master above for an certificate
+  #
+  # this satellite should work, the BA is correct
+  icinga2-satellite-1:
+    build:
+      context: ../icinga2-satellite
+      dockerfile: Dockerfile
+      args:
+        - BUILD_DATE=${BUILD_DATE}
+        - BUILD_VERSION=${BUILD_VERSION}
+        - ICINGA2_VERSION=${ICINGA2_VERSION}
+    container_name: icinga2-satellite-1
+    hostname: icinga2-satellite-1.matrix.lan
+    restart: always
+    privileged: true
+    environment:
+      - ICINGA2_MASTER=icinga2-master.matrix.lan
+      - ICINGA2_PARENT=icinga2-master.matrix.lan
+      - CERT_SERVICE_BA_USER=admin
+      - CERT_SERVICE_BA_PASSWORD=admin
+      - CERT_SERVICE_API_USER=root
+      - CERT_SERVICE_API_PASSWORD=icinga
+      - CERT_SERVICE_SERVER=icinga2-master.matrix.lan
+      - CERT_SERVICE_PORT=8080
+      - CERT_SERVICE_PATH=/
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    links:
+      - icinga2-master:icinga2-master.matrix.lan
+    networks:
+      - backend
+      - satellite
