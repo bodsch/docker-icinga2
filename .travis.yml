@@ -12,20 +12,44 @@ env:
 
 jobs:
   include:
-    - stage: build, test and push docker image
+    - stage: build alpine
       script:
-        - make build
-        - docker-compose --file docker-compose_example.yml up --build -d
+        - make alpine
+        - make compose-alpine
+        - docker-compose --file docker-compose_alpine.yml up --build -d
         - tests/test.sh
-        - docker-compose --file docker-compose_example.yml kill
-        - docker-compose --file docker-compose_example.yml down
+        - docker-compose --file docker-compose_alpine.yml kill
+        - docker-compose --file docker-compose_alpine.yml down
+
+    - stage: build debian
+      script:
+        - make debian
+        - make compose-debian
+        - docker-compose --file docker-compose_debian.yml up --build -d
+        - tests/test.sh
+        - docker-compose --file docker-compose_debian.yml kill
+        - docker-compose --file docker-compose_debian.yml down
+
+    - stage: build alpine and push image
+      script:
+        - make alpine
         - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}
-        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-master
-        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-satellite
-        - docker tag  ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}           ${DOCKER_USERNAME}/docker-icinga2:latest
-        - docker tag  ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-master    ${DOCKER_USERNAME}/docker-icinga2:latest-master
-        - docker tag  ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-satellite ${DOCKER_USERNAME}/docker-icinga2:latest-satellite
-        - docker push ${DOCKER_USERNAME}/docker-icinga2:latest
-        - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-master
-        - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-satellite
+        - docker tag ${DOCKER_USERNAME}/docker-icinga2:alpine-${ICINGA2_VERSION}           ${DOCKER_USERNAME}/docker-icinga2:alpine-latest
+        - docker tag ${DOCKER_USERNAME}/docker-icinga2:alpine-master-${ICINGA2_VERSION}    ${DOCKER_USERNAME}/docker-icinga2:alpine-master-latest
+        - docker tag ${DOCKER_USERNAME}/docker-icinga2:alpine-satellite-${ICINGA2_VERSION} ${DOCKER_USERNAME}/docker-icinga2:alpine-satellite-latest
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:alpine-latest
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:alpine-master-latest
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:alpine-satellite-latest
+        - docker logout
+
+    - stage: build debian and push image
+      script:
+        - make debian
+        - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+        - docker tag ${DOCKER_USERNAME}/docker-icinga2:debian-${ICINGA2_VERSION}           ${DOCKER_USERNAME}/docker-icinga2:debian-latest
+        - docker tag ${DOCKER_USERNAME}/docker-icinga2:debian-master-${ICINGA2_VERSION}    ${DOCKER_USERNAME}/docker-icinga2:debian-master-latest
+        - docker tag ${DOCKER_USERNAME}/docker-icinga2:debian-satellite-${ICINGA2_VERSION} ${DOCKER_USERNAME}/docker-icinga2:debian-satellite-latest
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:debian-latest
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:debian-master-latest
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:debian-satellite-latest
+        - docker logout

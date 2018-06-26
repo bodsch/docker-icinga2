@@ -2,28 +2,36 @@
 #
 #
 
+set -e
+set -u
+
+finish() {
+  rv=$?
+  echo -e "\033[38;5;202m\033[1mexit with signal '${rv}'\033[0m"
+  sleep 4s
+  exit $rv
+}
+
+trap finish SIGINT SIGTERM INT TERM EXIT
+
 . /etc/profile
 
-# set -e
+# if [[ -z ${DEBUG+x} ]]; then echo "DEBUG is unset"; else echo "DEBUG is set to '$DEBUG'"; fi
 
-[[ ${DEBUG} ]] && set -x
+if [[ ! -z ${DEBUG+x} ]]
+then
+  if [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]]
+  then
+    set -x
+  fi
+fi
+
 [[ -f /etc/environment ]] && . /etc/environment
 
-HOSTNAME=$(hostname -f)
-
-export ICINGA2_CERT_DIRECTORY="/etc/icinga2/certs"
-ICINGA2_LIB_DIRECTORY="/var/lib/icinga2"
-
-ICINGA2_VERSION=$(icinga2 --version | head -n1 | awk -F 'version: ' '{printf $2}' | awk -F \. {'print $1 "." $2'} | sed 's|r||')
-[[ "${ICINGA2_VERSION}" = "2.8" ]] && export ICINGA2_CERT_DIRECTORY="/var/lib/icinga2/certs"
-
-export ICINGA2_VERSION
-export ICINGA2_CERT_DIRECTORY
-export ICINGA2_LIB_DIRECTORY
-export HOSTNAME
-
 . /init/output.sh
+. /init/environment.sh
 . /init/runtime/service_handler.sh
+
 [[ -f /usr/bin/vercomp ]] && . /usr/bin/vercomp
 
 # -------------------------------------------------------------------------------------------------
@@ -56,43 +64,34 @@ custom_scripts() {
 }
 
 
-detect_type() {
-
-  if ( [[ -z ${ICINGA2_PARENT} ]] && [[ ! -z ${ICINGA2_MASTER} ]] && [[ "${ICINGA2_MASTER}" == "${HOSTNAME}" ]] )
-  then
-    ICINGA2_TYPE="Master"
-  elif ( [[ ! -z ${ICINGA2_PARENT} ]] && [[ ! -z ${ICINGA2_MASTER} ]] && [[ "${ICINGA2_MASTER}" == "${ICINGA2_PARENT}" ]] )
-  then
-    ICINGA2_TYPE="Satellite"
-  else
-    ICINGA2_TYPE="Agent"
-  fi
-  export ICINGA2_TYPE
-}
-
-
 run() {
 
-  detect_type
-
-  log_info "---------------------------------------------------"
-  log_info "   Icinga ${ICINGA2_TYPE} Version ${BUILD_VERSION} - build: ${BUILD_DATE}"
-  log_info "---------------------------------------------------"
+  log_info "prepare system"
 
   . /init/common.sh
 
   prepare
+
   validate_certservice_environment
 
   version_of_icinga_master
 
-#  . /init/database/mysql.sh
+  [[ "${ICINGA2_TYPE}" = "Master" ]] && . /init/database/mysql.sh
+
   . /init/configure_icinga.sh
   . /init/api_user.sh
-#  . /init/graphite_setup.sh
-#  . /init/configure_ssmtp.sh
+
+  if [[ "${ICINGA2_TYPE}" = "Master" ]]
+  then
+    . /init/graphite_setup.sh
+    . /init/configure_ssmtp.sh
+  fi
 
   correct_rights
+
+  log_info "---------------------------------------------------"
+  log_info " Icinga ${ICINGA2_TYPE} Version ${ICINGA2_VERSION} - build: ${BUILD_DATE}"
+  log_info "---------------------------------------------------"
 
   custom_scripts
 
@@ -118,10 +117,9 @@ run() {
 
   /usr/sbin/icinga2 \
     daemon \
-      --config /etc/icinga2/icinga2.conf \
-      --errorlog /dev/stdout
+    --config /etc/icinga2/icinga2.conf \
+    --errorlog /dev/stdout
 }
-
 
 run
 

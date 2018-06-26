@@ -1,24 +1,5 @@
 
-MYSQL_HOST=${MYSQL_HOST:-""}
-MYSQL_PORT=${MYSQL_PORT:-"3306"}
-
-MYSQL_ROOT_USER=${MYSQL_ROOT_USER:-"root"}
-MYSQL_ROOT_PASS=${MYSQL_ROOT_PASS:-""}
-MYSQL_OPTS=
-
-IDO_DATABASE_NAME=${IDO_DATABASE_NAME:-"icinga2core"}
-
 [[ -z ${MYSQL_HOST} ]] && return
-
-
-if [[ -z ${IDO_PASSWORD} ]]
-then
-  IDO_PASSWORD=$(pwgen -s 15 1)
-
-  log_warn "NO IDO PASSWORD HAS BEEN SET!"
-  log_warn "DATABASE CONNECTIONS ARE NOT RESTART SECURE!"
-  log_warn "DYNAMICALLY GENERATED PASSWORD: '${IDO_PASSWORD}' (ONLY VALID FOR THIS SESSION)"
-fi
 
 MYSQL_OPTS="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_ROOT_PASS} --port=${MYSQL_PORT}"
 
@@ -159,13 +140,27 @@ create_config() {
 
   # create the IDO configuration
   #
-  sed -i \
-    -e 's|host \= \".*\"|host \=\ \"'${MYSQL_HOST}'\"|g' \
-    -e 's|port \= \".*\"|port \=\ \"'${MYSQL_PORT}'\"|g' \
-    -e 's|password \= \".*\"|password \= \"'${IDO_PASSWORD}'\"|g' \
-    -e 's|user =\ \".*\"|user =\ \"icinga2\"|g' \
-    -e 's|database =\ \".*\"|database =\ \"'${IDO_DATABASE_NAME}'\"|g' \
-    /etc/icinga2/features-available/ido-mysql.conf
+
+  cat << EOF > /etc/icinga2/features-available/ido-mysql.conf
+
+library "db_ido_mysql"
+
+object IdoMysqlConnection "ido-mysql" {
+  user     = "icinga2"
+  password = "${IDO_PASSWORD}"
+  host     = "${MYSQL_HOST}"
+  database = "${IDO_DATABASE_NAME}"
+  port     = "${MYSQL_PORT}"
+}
+EOF
+
+#  sed -i \
+#    -e 's|host \= \".*\"|host \=\ \"'${MYSQL_HOST}'\"|g' \
+#    -e 's|port \= \".*\"|port \=\ \"'${MYSQL_PORT}'\"|g' \
+#    -e 's|password \= \".*\"|password \= \"'${IDO_PASSWORD}'\"|g' \
+#    -e 's|user =\ \".*\"|user =\ \"icinga2\"|g' \
+#    -e 's|database =\ \".*\"|database =\ \"'${IDO_DATABASE_NAME}'\"|g' \
+#    /etc/icinga2/features-available/ido-mysql.conf
 }
 
 . /init/wait_for/mysql.sh

@@ -1,18 +1,14 @@
 #
 
-DEMO_DATA=${DEMO_DATA:-'false'}
-USER=
-GROUP=
-ICINGA2_MASTER=${ICINGA2_MASTER:-''}
-ICINGA2_HOST=${ICINGA2_HOST:-${ICINGA2_MASTER}}
-
 version_string() {
-  echo "${1}" | sed 's|r||' | awk -F '-' {'print $1'}
+  echo "${1}" | sed 's|r||' | awk -F '-' '{print $1}'
 }
 
 # compare the version of the Icinga2 Master with the Satellite
 #
 version_of_icinga_master() {
+
+  [[ "${ICINGA2_TYPE}" = "Master" ]] && return
 
   . /init/wait_for/icinga_master.sh
 
@@ -34,7 +30,7 @@ version_of_icinga_master() {
 
     version=$(version_string ${version})
 
-    vercomp ${version} ${BUILD_VERSION}
+    vercomp ${version} ${ICINGA2_VERSION}
     case $? in
         0) op='=';;
         1) op='>';;
@@ -120,11 +116,6 @@ prepare() {
   #
   sed -i "s|^.*\ NodeName\ \=\ .*|const\ NodeName\ \=\ \"${HOSTNAME}\"|g" /etc/icinga2/constants.conf
 
-  # create global zone directories for distributed monitoring
-  #
-  # [[ -d /etc/icinga2/zones.d/global-templates ]] || mkdir -p /etc/icinga2/zones.d/global-templates
-  # [[ -d /etc/icinga2/zones.d/director-global ]] || mkdir -p /etc/icinga2/zones.d/director-global
-
   # create directory for the logfile and change rights
   #
   LOGDIR=$(dirname ${ICINGA2_LOG_DIRECTORY})
@@ -205,14 +196,6 @@ curl_opts() {
   opts="${opts} --silent"
   opts="${opts} --location"
   opts="${opts} --insecure"
-
-
-#  if [ -e ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.pem ]
-#  then
-#    opts="${opts} --capath ${ICINGA2_CERT_DIRECTORY}"
-#    opts="${opts} --cert ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.pem"
-#    opts="${opts} --cacert ${ICINGA2_CERT_DIRECTORY}/ca.crt"
-#  fi
 
   echo ${opts}
 }

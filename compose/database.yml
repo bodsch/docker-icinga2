@@ -1,0 +1,17 @@
+---
+version: '3.3'
+
+services:
+
+  database:
+    image: bodsch/docker-mysql:latest
+    container_name: database
+    hostname: database
+    environment:
+      - MYSQL_SYSTEM_USER=root
+      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - backend
+      - database

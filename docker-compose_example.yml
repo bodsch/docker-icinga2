@@ -9,44 +9,73 @@ networks:
 
 services:
 
+  consul-master:
+    image: bodsch/docker-consul
+    container_name: consul-master
+    hostname: consul-master
+    ports:
+      - 8300:8300
+      - 8301:8301
+      - 8301:8301/udp
+      - 8302:8302
+      - 8302:8302/udp
+      - 8400:8400
+      - 8500:8500
+      - 8600:8600
+      - 8600:8600/udp
+      - 53:53
+    environment:
+      - CONSUL_UI_BETA=true
+    command: 'agent -data-dir /data -server -bootstrap-expect 1 -ui -client=0.0.0.0'
+    networks:
+      - backend
+
   database:
-    image: bodsch/docker-mysql:10.1.28-r1
+    image: bodsch/docker-mysql:latest
     container_name: database
     hostname: database
     environment:
       - MYSQL_SYSTEM_USER=root
       - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
+      - CONFIG_BACKEND=consul
+      - CONSUL=consul-master
     volumes:
       - /etc/localtime:/etc/localtime:ro
-    networks:
-      - database
-
-  # icingaweb2
-  #
-  icingaweb2:
-    image: bodsch/docker-icingaweb2:latest
-    container_name: icingaweb2
-    hostname: icingaweb2.matrix.lan
-    ports:
-      - 80:80
-    environment:
-      - MYSQL_HOST=database
-      - MYSQL_ROOT_USER=root
-      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
-      - IDO_DATABASE_NAME=icinga2core
-      - IDO_PASSWORD=qUVuLTk9oEDUV0A
-      - ICINGA2_MASTER=icinga2-master.matrix.lan
-      - ICINGA2_CMD_API_USER=root
-      - ICINGA2_CMD_API_PASS=icinga
-      - ICINGAWEB2_USERS=icinga:icinga,foo:bar
     links:
-      - icinga2-master:icinga2-master.matrix.lan
-      - database
+      - consul-master
     networks:
-      - database
-      - frontend
       - backend
+      - database
 
+#  # icingaweb2
+#  #
+#  icingaweb2:
+#    image: bodsch/docker-icingaweb2:latest
+#    container_name: icingaweb2
+#    hostname: icingaweb2.matrix.lan
+#    ports:
+#      - 80:80
+#    environment:
+#      - CONFIG_BACKEND=consul
+#      - CONSUL=consul-master
+#      #
+#      - MYSQL_HOST=database
+#      - MYSQL_ROOT_USER=root
+#      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
+#      - IDO_DATABASE_NAME=icinga2core
+#      - IDO_PASSWORD=qUVuLTk9oEDUV0A
+#      - ICINGA2_MASTER=icinga2-master.matrix.lan
+#      - ICINGA2_CMD_API_USER=root
+#      - ICINGA2_CMD_API_PASS=icinga
+#      - ICINGAWEB2_USERS=icinga:icinga,foo:bar
+#    links:
+#      - icinga2-master:icinga2-master.matrix.lan
+#      - database
+#    networks:
+#      - database
+#      - frontend
+#      - backend
+#
   # the Icinga2 Master
   # includes a certificate service to create and provide a icinga certificate
   icinga2-master:
@@ -66,6 +95,9 @@ services:
       - 5665:5665
       - 8080:8080
     environment:
+      - CONFIG_BACKEND=consul
+      - CONSUL=consul-master
+      #
       - ICINGA2_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
       - LOG_LEVEL=debug
       - MYSQL_HOST=database
@@ -90,44 +122,49 @@ services:
       - /etc/localtime:/etc/localtime:ro
     links:
       - database
+      - consul-master
     networks:
       - database
       - backend
 
 
-  # the first icinga2 satellite
-  # ask the master above for an certificate
-  #
-  # this satellite should work, the BA is correct
-  icinga2-satellite-1:
-    build:
-      context: icinga2-satellite
-      dockerfile: Dockerfile
-      args:
-        - BUILD_DATE=${BUILD_DATE}
-        - ICINGA2_VERSION=${ICINGA2_VERSION}
-    container_name: icinga2-satellite-1
-    hostname: icinga2-satellite-1.matrix.lan
-    restart: always
-    privileged: true
-    environment:
-      - ICINGA2_MASTER=icinga2-master.matrix.lan
-      - ICINGA2_PARENT=icinga2-master.matrix.lan
-      - CERT_SERVICE_BA_USER=admin
-      - CERT_SERVICE_BA_PASSWORD=admin
-      - CERT_SERVICE_API_USER=root
-      - CERT_SERVICE_API_PASSWORD=icinga
-      - CERT_SERVICE_SERVER=icinga2-master.matrix.lan
-      - CERT_SERVICE_PORT=8080
-      - CERT_SERVICE_PATH=/
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-    links:
-      - icinga2-master:icinga2-master.matrix.lan
-    networks:
-      - backend
-      - satellite
-
+#  # the first icinga2 satellite
+#  # ask the master above for an certificate
+#  #
+#  # this satellite should work, the BA is correct
+#  icinga2-satellite-1:
+#    build:
+#      context: icinga2-satellite
+#      dockerfile: Dockerfile
+#      args:
+#        - BUILD_DATE=${BUILD_DATE}
+#        - ICINGA2_VERSION=${ICINGA2_VERSION}
+#    container_name: icinga2-satellite-1
+#    hostname: icinga2-satellite-1.matrix.lan
+#    restart: always
+#    privileged: true
+#    environment:
+#      - CONFIG_BACKEND=consul
+#      - CONSUL=consul-master
+#      #
+#      - ICINGA2_MASTER=icinga2-master.matrix.lan
+#      - ICINGA2_PARENT=icinga2-master.matrix.lan
+#      - CERT_SERVICE_BA_USER=admin
+#      - CERT_SERVICE_BA_PASSWORD=admin
+#      - CERT_SERVICE_API_USER=root
+#      - CERT_SERVICE_API_PASSWORD=icinga
+#      - CERT_SERVICE_SERVER=icinga2-master.matrix.lan
+#      - CERT_SERVICE_PORT=8080
+#      - CERT_SERVICE_PATH=/
+#    volumes:
+#      - /etc/localtime:/etc/localtime:ro
+#    links:
+#      - icinga2-master:icinga2-master.matrix.lan
+#      - consul-master
+#    networks:
+#      - backend
+#      - satellite
+#
   # the second icinga2 satellite
   # ask the master above for an certificate
   #

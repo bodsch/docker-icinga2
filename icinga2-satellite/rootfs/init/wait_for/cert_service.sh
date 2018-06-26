@@ -18,17 +18,41 @@ wait_for_icinga_cert_service() {
     )
     then
 
+      log_info "Waiting for the Certificate-Service on host '${CERT_SERVICE_SERVER}' to come up"
+
       RETRY=35
+
+      until [[ ${RETRY} -le 0 ]]
+      do
+        host=$(dig +noadditional +noqr +noquestion +nocmd +noauthority +nostats +nocomments ${CERT_SERVICE_SERVER} | wc -l)
+
+        if [[ $host -eq 0 ]]
+        then
+          RETRY=$(expr ${RETRY} - 1)
+          sleep 10s
+        else
+          break
+        fi
+      done
+
+
       # wait for the running cert-service
       #
       until [[ ${RETRY} -le 0 ]]
       do
-        nc -z ${CERT_SERVICE_SERVER} ${CERT_SERVICE_PORT} < /dev/null > /dev/null
+        # -v              Verbose
+        # -w secs         Timeout for connects and final net reads
+        # -X proto        Proxy protocol: "4", "5" (SOCKS) or "connect"
+        #
+        status=$(nc -v -w1 -X connect ${CERT_SERVICE_SERVER} ${CERT_SERVICE_PORT} 2>&1)
 
-        [[ $? -eq 0 ]] && break
-
-        sleep 5s
-        RETRY=$(expr ${RETRY} - 1)
+        if [[ $(echo "${status}" | grep -c succeeded) -eq 1 ]]
+        then
+          break
+        else
+          sleep 5s
+          RETRY=$(expr ${RETRY} - 1)
+        fi
       done
 
       if [[ ${RETRY} -le 0 ]]

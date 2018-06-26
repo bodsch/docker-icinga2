@@ -10,7 +10,7 @@ log_output() {
 
   level="${1}"
   message="${2}"
-  printf "$(date +"[%Y-%m-%d %H:%M:%S %z]") %b %b\n" "${level}"  "${message}"
+  printf "$(date +"[%Y-%m-%d %H:%M:%S]") %b %b\n" "${level}"  "${message}"
 }
 
 log_info() {

@@ -1,11 +1,62 @@
 #
 
-DEMO_DATA=${DEMO_DATA:-'false'}
-USER=
-GROUP=
-ICINGA2_MASTER=${ICINGA2_MASTER:-''}
-ICINGA2_HOST=${ICINGA2_HOST:-${ICINGA2_MASTER}}
-TICKET_SALT=${TICKET_SALT:-$(pwgen -s 40 1)}
+version_string() {
+  echo "${1}" | sed 's|r||' | awk -F '-' '{print $1}'
+}
+
+# compare the version of the Icinga2 Master with the Satellite
+#
+version_of_icinga_master() {
+
+  [[ "${ICINGA2_TYPE}" = "Master" ]] && return
+
+  . /init/wait_for/icinga_master.sh
+
+  # get the icinga2 version of our master
+  #
+  log_info "compare our version with the master '${ICINGA2_MASTER}'"
+  code=$(curl \
+    --user ${CERT_SERVICE_API_USER}:${CERT_SERVICE_API_PASSWORD} \
+    --silent \
+    --location \
+    --header 'Accept: application/json' \
+    --request GET \
+    --insecure \
+    https://${ICINGA2_MASTER}:5665/v1/status/IcingaApplication )
+
+  if [[ $? -eq 0 ]]
+  then
+    version=$(echo "${code}" | jq --raw-output '.results[].status.icingaapplication.app.version' 2> /dev/null)
+
+    version=$(version_string ${version})
+
+    vercomp ${version} ${ICINGA2_VERSION}
+    case $? in
+        0) op='=';;
+        1) op='>';;
+        2) op='<';;
+    esac
+
+    if [[ "${op}" != "=" ]]
+    then
+      if [[ "${op}" = "<" ]]
+      then
+        log_warn "The version of the master is smaller than that of the satellite!"
+      elif [[ "${op}" = ">" ]]
+      then
+        log_warn "The version of the master is higher than that of the satellite!"
+      fi
+
+      log_warn "The version of the master differs from that of the satellite! (master: ${version} / satellite: ${BUILD_VERSION})"
+      log_warn "Which can lead to problems!"
+    else
+      log_info "The versions between Master and Satellite are identical"
+    fi
+  fi
+}
+
+
+
 
 # prepare the system and icinga to run in the docker environment
 #
@@ -14,27 +65,27 @@ prepare() {
   [[ -d ${ICINGA2_LIB_DIRECTORY}/backup ]] || mkdir -p ${ICINGA2_LIB_DIRECTORY}/backup
   [[ -d ${ICINGA2_CERT_DIRECTORY} ]] || mkdir -p ${ICINGA2_CERT_DIRECTORY}
 
-#   # detect username
-#   #
-#   for u in nagios icinga
-#   do
-#     if [[ "$(getent passwd ${u})" ]]
-#     then
-#       USER="${u}"
-#       break
-#     fi
-#   done
-#
-#   # detect groupname
-#   #
-#   for g in nagios icinga
-#   do
-#     if [[ "$(getent group ${g})" ]]
-#     then
-#       GROUP="${g}"
-#       break
-#     fi
-#   done
+  # detect username
+  #
+  for u in nagios icinga
+  do
+    if [[ "$(getent passwd ${u})" ]]
+    then
+      USER="${u}"
+      break
+    fi
+  done
+
+  # detect groupname
+  #
+  for g in nagios icinga
+  do
+    if [[ "$(getent group ${g})" ]]
+    then
+      GROUP="${g}"
+      break
+    fi
+  done
 
   # read (generated) icinga2.sysconfig and import environment
   # otherwise define variables
@@ -45,14 +96,11 @@ prepare() {
 
     ICINGA2_RUN_DIRECTORY=${ICINGA2_RUN_DIR}
     ICINGA2_LOG_DIRECTORY=${ICINGA2_LOG}
-    USER=${ICINGA2_USER}
-    GROUP=${ICINGA2_GROUP}
+  #  ICINGA2_RUNasUSER=${ICINGA2_USER}
+  #  ICINGA2_RUNasGROUP=${ICINGA2_GROUP}
   else
     ICINGA2_RUN_DIRECTORY=$(/usr/sbin/icinga2 variable get RunDir)
     ICINGA2_LOG_DIRECTORY="/var/log/icinga2/icinga2.log"
-    USER=$(/usr/sbin/icinga2 variable get RunAsUser)
-    GROUP=$(/usr/sbin/icinga2 variable get RunAsGroup)
-
   #  ICINGA2_RUNasUSER=$(/usr/sbin/icinga2 variable get RunAsUser)
   #  ICINGA2_RUNasGROUP=$(/usr/sbin/icinga2 variable get RunAsGroup)
   fi
@@ -67,15 +115,6 @@ prepare() {
   # set NodeName (important for the cert feature!)
   #
   sed -i "s|^.*\ NodeName\ \=\ .*|const\ NodeName\ \=\ \"${HOSTNAME}\"|g" /etc/icinga2/constants.conf
-  sed -i "s|^.*\ TicketSalt\ \=\ .*|const\ TicketSalt\ \=\ \"${TICKET_SALT}\"|g" /etc/icinga2/constants.conf
-
-  # create global zone directories for distributed monitoring
-  #
-  if [[ "${ICINGA2_TYPE}" = "Master" ]]
-  then
-    [[ -d /etc/icinga2/zones.d/global-templates ]] || mkdir -p /etc/icinga2/zones.d/global-templates
-    [[ -d /etc/icinga2/zones.d/director-global ]] || mkdir -p /etc/icinga2/zones.d/director-global
-  fi
 
   # create directory for the logfile and change rights
   #
@@ -155,14 +194,8 @@ curl_opts() {
   opts=""
   opts="${opts} --user ${CERT_SERVICE_API_USER}:${CERT_SERVICE_API_PASSWORD}"
   opts="${opts} --silent"
+  opts="${opts} --location"
   opts="${opts} --insecure"
-
-#  if [ -e ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.pem ]
-#  then
-#    opts="${opts} --capath ${ICINGA2_CERT_DIRECTORY}"
-#    opts="${opts} --cert ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.pem"
-#    opts="${opts} --cacert ${ICINGA2_CERT_DIRECTORY}/ca.crt"
-#  fi
 
   echo ${opts}
 }

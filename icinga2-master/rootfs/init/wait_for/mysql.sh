@@ -3,20 +3,41 @@
 #
 wait_for_database() {
 
-  RETRY=15
+  RETRY=20
+
+  set +e
+  set +u
+
+  until [[ ${RETRY} -le 0 ]]
+  do
+    host=$(dig +noadditional +noqr +noquestion +nocmd +noauthority +nostats +nocomments ${MYSQL_HOST} | wc -l)
+
+    if [[ $host -eq 0 ]]
+    then
+      RETRY=$(expr ${RETRY} - 1)
+      sleep 10s
+    else
+      break
+    fi
+  done
 
   # wait for database
   #
   until [[ ${RETRY} -le 0 ]]
   do
-    nc ${MYSQL_HOST} ${MYSQL_PORT} < /dev/null > /dev/null
+    # -v              Verbose
+    # -w secs         Timeout for connects and final net reads
+    # -X proto        Proxy protocol: "4", "5" (SOCKS) or "connect"
+    #
+    status=$(nc -v -w1 -X connect ${MYSQL_HOST} ${MYSQL_PORT} 2>&1)
 
-    [[ $? -eq 0 ]] && break
-
-    log_info "Waiting for database on host '${MYSQL_HOST}' to come up"
-
-    sleep 13s
-    RETRY=$(expr ${RETRY} - 1)
+    if [[ $(echo "${status}" | grep -c succeeded) -eq 1 ]]
+    then
+      break
+    else
+      sleep 10s
+      RETRY=$(expr ${RETRY} - 1)
+    fi
   done
 
   if [[ ${RETRY} -le 0 ]]
@@ -27,7 +48,7 @@ wait_for_database() {
 
   sleep 2s
 
-  RETRY=10
+  RETRY=15
 
   # must start initdb and do other jobs well
   #
@@ -38,11 +59,14 @@ wait_for_database() {
     [[ $? -eq 0 ]] && break
 
     log_info "wait for the database for her initdb and all other jobs"
-    sleep 13s
+    sleep 10s
     RETRY=$(expr ${RETRY} - 1)
   done
 
   sleep 2s
+
+  set -e
+  set -u
 }
 
 wait_for_database
