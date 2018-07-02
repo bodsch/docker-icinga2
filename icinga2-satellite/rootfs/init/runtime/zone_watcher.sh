@@ -8,6 +8,14 @@
 # in this case, we need only a sync of all 'zones.*' files/directory
 #
 
+if [[ ! -z ${DEBUG+x} ]]
+then
+  if [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]]
+  then
+    set -x
+  fi
+fi
+
 . /init/output.sh
 . /init/runtime/service_handler.sh
 
@@ -35,7 +43,7 @@ inotifywait \
     then
       # only for the ${HOSTNAME}.crt
       #
-      if [[ ${file} =~ ${hostname_f}.crt ]]
+      if [[ ${file} =~ sign_${hostname_f}.json ]]
       then
         log_info "our certificate are replicated."
         log_info "replace the static zone config (if needed)"
