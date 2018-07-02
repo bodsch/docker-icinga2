@@ -35,7 +35,7 @@ inotifywait \
   do
     if [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]]
     then
-      log_info "api zone monitor - The file '$file' appeared in directory '$path' via '$action'"
+      log_debug "api zone monitor - The file '$file' appeared in directory '$path' via '$action'"
     fi
 
     [[ -z "${file}" ]] && continue

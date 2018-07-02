@@ -386,6 +386,12 @@ configure_icinga2_satellite() {
   log_info "waiting for our icinga master '${ICINGA2_MASTER}' to come up"
   . /init/wait_for/icinga_master.sh
 
+  # start icinga to retrieve the data from our master
+  # the zone watcher will kill this instance, when all datas ready!
+  #
+  nohup /init/runtime/zone_watcher.sh > /dev/stdout 2>&1 &
+  sleep 2s
+
   request_certificate_from_master
 
   [[ -f /etc/icinga2/satellite.d/services.conf ]] && cp /etc/icinga2/satellite.d/services.conf /etc/icinga2/conf.d/
@@ -409,9 +415,9 @@ configure_icinga2_satellite() {
     # start icinga to retrieve the data from our master
     # the zone watcher will kill this instance, when all datas ready!
     #
-    nohup /init/runtime/zone_watcher.sh > /dev/stdout 2>&1 &
-    sleep 2s
-    start_icinga
+#     nohup /init/runtime/zone_watcher.sh > /dev/stdout 2>&1 &
+#     sleep 2s
+#     start_icinga
 
     # restart our master
     restart_master
@@ -434,7 +440,7 @@ configure_icinga2_satellite() {
 #      #
 #      nohup /init/runtime/zone_watcher.sh > /dev/stdout 2>&1 &
 #      sleep 2s
-#      start_icinga
+      start_icinga
 #
 #    fi
   fi
