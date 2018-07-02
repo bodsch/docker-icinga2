@@ -48,7 +48,7 @@ inotifywait \
     then
       # only for the ${HOSTNAME}.crt
       #
-      if [[ ${file} =~ ${hostname_f}.crt ]]
+      if [[ ${file} =~ sign_${hostname_f}.json ]]
       then
         log_info "our certificate are replicated."
         log_info "replace the static zone config (if needed)"
