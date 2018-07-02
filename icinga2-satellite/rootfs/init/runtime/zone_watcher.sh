@@ -8,6 +8,14 @@
 # in this case, we need only a sync of all 'zones.*' files/directory
 #
 
+#if [[ ! -z ${DEBUG+x} ]]
+#then
+#  if [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]]
+#  then
+#    set -x
+#  fi
+#fi
+
 . /init/output.sh
 . /init/runtime/service_handler.sh
 
@@ -25,6 +33,11 @@ inotifywait \
   ${monitored_directory} |
   while read path action file
   do
+    if [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]]
+    then
+      log_info "api zone monitor - The file '$file' appeared in directory '$path' via '$action'"
+    fi
+
     [[ -z "${file}" ]] && continue
 
     log_info "api zone monitor - The file '$file' appeared in directory '$path' via '$action'"

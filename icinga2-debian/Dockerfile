@@ -40,13 +40,6 @@ RUN \
   chmod +x /usr/bin/vercomp && \
   curl \
     --silent \
-    --location \
-    --retry 3 \
-    --output /usr/bin/vercomp \
-  https://raw.githubusercontent.com/hugme/Nag_checks/master/check_linux_memory && \
-  chmod +x /usr/lib/monitoring-plugins/check_linux_memory && \
-  curl \
-    --silent \
     https://packages.icinga.com/icinga.key | apt-key add - && \
   echo "deb http://packages.icinga.com/debian icinga-${DIST} main" > \
     /etc/apt/sources.list.d/${DIST}-icinga.list && \
@@ -57,6 +50,14 @@ RUN \
     icinga2-ido-mysql \
     monitoring-plugins \
     > /dev/null && \
+  export MONITORING_PLUGIN_DIR="/usr/share/monitoring-plugins" && \
+  curl \
+    --silent \
+    --location \
+    --retry 3 \
+    --output ${MONITORING_PLUGIN_DIR}/check_linux_memory \
+  https://raw.githubusercontent.com/hugme/Nag_checks/master/check_linux_memory && \
+  chmod +x ${MONITORING_PLUGIN_DIR}/check_linux_memory && \
   mkdir -p /run/icinga2/cmd && \
   cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
   /usr/sbin/icinga2 feature disable command checker mainlog notification && \

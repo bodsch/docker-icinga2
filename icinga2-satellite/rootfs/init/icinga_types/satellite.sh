@@ -406,6 +406,14 @@ configure_icinga2_satellite() {
   #
   if [[ "${RESTART_NEEDED}" = "true" ]]
   then
+    # start icinga to retrieve the data from our master
+    # the zone watcher will kill this instance, when all datas ready!
+    #
+    nohup /init/runtime/zone_watcher.sh > /dev/stdout 2>&1 &
+    sleep 2s
+    start_icinga
+
+    # restart our master
     restart_master
 
     sed -i \
@@ -416,12 +424,19 @@ configure_icinga2_satellite() {
 
     . /init/wait_for/icinga_master.sh
 
-    # start icinga to retrieve the data from our master
-    # the zone watcher will kill this instance, when all datas ready!
-    #
-    nohup /init/runtime/zone_watcher.sh > /dev/stdout 2>&1 &
-    sleep 2s
-    start_icinga
+#    if [[ -f /var/lib/icinga2/backup/sign_icinga2-test-icinga2.json ]]
+#    then
+#      if
+#
+#    else
+#      # start icinga to retrieve the data from our master
+#      # the zone watcher will kill this instance, when all datas ready!
+#      #
+#      nohup /init/runtime/zone_watcher.sh > /dev/stdout 2>&1 &
+#      sleep 2s
+#      start_icinga
+#
+#    fi
   fi
 
   # test the configuration
