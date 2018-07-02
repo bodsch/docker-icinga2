@@ -16,6 +16,8 @@
 #  fi
 #fi
 
+env | grep DEBUG
+
 . /init/output.sh
 . /init/runtime/service_handler.sh
 

@@ -20,7 +20,7 @@ services:
     restart: always
     privileged: true
     environment:
-      - DEBUG=0
+      - DEBUG=1
       - ICINGA2_MASTER=icinga2-master.matrix.lan
       - ICINGA2_PARENT=icinga2-master.matrix.lan
       - CERT_SERVICE_BA_USER=admin
