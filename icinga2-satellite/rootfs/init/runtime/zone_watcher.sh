@@ -33,7 +33,7 @@ inotifywait \
   ${monitored_directory} |
   while read path action file
   do
-    if [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]]
+    if [[ ! -z ${DEBUG+x} ]] && [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]]
     then
       log_debug "api zone monitor - The file '$file' appeared in directory '$path' via '$action'"
     fi
@@ -50,6 +50,11 @@ inotifywait \
       #
       if [[ ${file} =~ sign_${hostname_f}.json ]]
       then
+        if [[ ! -z ${DEBUG+x} ]] && [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]]
+        then
+          ls -1 ${monitored_directory}/*
+        fi
+
         log_info "our certificate are replicated."
         log_info "replace the static zone config (if needed)"
 
