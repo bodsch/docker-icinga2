@@ -32,6 +32,13 @@ RUN \
     --output /usr/bin/vercomp \
   https://gist.githubusercontent.com/bodsch/065b16ea3c3deb83af7f41990d2d273c/raw/6ba6d7b43de7cff78b7eaf3959f4546642b76750/vercomp && \
   chmod +x /usr/bin/vercomp && \
+  curl \
+    --silent \
+    --location \
+    --retry 3 \
+    --output /usr/lib/monitoring-plugins/check_linux_memory \
+  https://raw.githubusercontent.com/hugme/Nag_checks/master/check_linux_memory && \
+  chmod +x /usr/lib/monitoring-plugins/check_linux_memory && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   ln -s /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command checker mainlog notification && \

@@ -17,10 +17,10 @@
  */
 apply Service "ping4" {
   import "generic-service"
-
   check_command = "ping4"
 
   assign where host.address
+  ignore where host.vars.alive_dummy
 }
 /*
 apply Service "ping6" {

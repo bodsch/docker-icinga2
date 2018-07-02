@@ -26,7 +26,7 @@ do
     log_error "clean up and restart."
     log_error "headshot ..."
 
-    icinga_pid=$(ps ax | grep icinga2 | grep -v grep | awk '{print $1}')
+    icinga_pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
 
     [[ -z "${icinga2_pid}" ]] || killall icinga2 > /dev/null 2> /dev/null
 

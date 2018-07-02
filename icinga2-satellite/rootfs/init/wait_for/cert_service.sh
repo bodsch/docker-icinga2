@@ -35,6 +35,7 @@ wait_for_icinga_cert_service() {
         fi
       done
 
+      RETRY=35
 
       # wait for the running cert-service
       #

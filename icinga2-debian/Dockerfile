@@ -40,6 +40,13 @@ RUN \
   chmod +x /usr/bin/vercomp && \
   curl \
     --silent \
+    --location \
+    --retry 3 \
+    --output /usr/bin/vercomp \
+  https://raw.githubusercontent.com/hugme/Nag_checks/master/check_linux_memory && \
+  chmod +x /usr/lib/monitoring-plugins/check_linux_memory && \
+  curl \
+    --silent \
     https://packages.icinga.com/icinga.key | apt-key add - && \
   echo "deb http://packages.icinga.com/debian icinga-${DIST} main" > \
     /etc/apt/sources.list.d/${DIST}-icinga.list && \
