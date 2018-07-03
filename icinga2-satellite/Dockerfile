@@ -32,6 +32,11 @@ LABEL \
 
 RUN \
   echo "export ICINGA2_TYPE=Satellite" >> /etc/profile.d/icinga2.sh && \
+  apt-get clean --quiet --quiet > /dev/null && \
+  rm -rf \
+    /tmp/* \
+    /var/cache/debconf/* \
+    /usr/share/doc/*
 
 COPY rootfs/ /
 

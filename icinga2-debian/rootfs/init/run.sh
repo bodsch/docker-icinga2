@@ -20,7 +20,7 @@ trap finish SIGINT SIGTERM INT TERM EXIT
 
 if [[ ! -z ${DEBUG+x} ]]
 then
-  if [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]]
+  if [[ ! "${DEBUG}" = "true" ]] && ( [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]] )
   then
     set -x
   fi

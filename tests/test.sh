@@ -119,13 +119,24 @@ api_request() {
 
   if [[ $? -eq 0 ]]
   then
+
+    num_endpoints=$(echo "${code}" | jq --raw-output ".results[].status.api.num_endpoints")
+    num_conn_endpoints=$(echo "${code}" | jq --raw-output ".results[].status.api.num_conn_endpoints")
+    num_not_conn_endpoints=$(echo "${code}" | jq --raw-output ".results[].status.api.num_not_conn_endpoints")
+
     echo "api request are successfull"
-    echo "status: "
-    echo "${code}" | jq --raw-output ".results[].status"
+    echo "endpoints summary:"
+    echo "totaly: '${num_endpoints}' / connected: '${num_conn_endpoints}' / not connected: '${num_not_conn_endpoints}'"
+    echo ""
+    echo "connected endpoints: "
+    echo "${code}" | jq --raw-output ".results[].status.api.conn_endpoints"
+    echo ""
+    echo "not connected endpoints: "
+    echo "${code}" | jq --raw-output ".results[].status.api.not_conn_endpoints"
     echo ""
     echo "API zones:"
     echo "${code}" | jq --raw-output ".results[].status.api.zones"
-
+    echo ""
   else
     echo ${code}
     echo "api request failed"
@@ -163,7 +174,6 @@ get_versions() {
     fi
   done
 }
-
 
 
 inspect() {

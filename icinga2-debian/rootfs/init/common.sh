@@ -233,3 +233,13 @@ validate_certservice_environment() {
     export USE_CERT_SERVICE
   fi
 }
+
+
+validate_icinga_config() {
+
+  # test the configuration
+  #
+  /usr/sbin/icinga2 \
+    daemon \
+    --validate
+}
