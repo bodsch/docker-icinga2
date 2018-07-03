@@ -176,12 +176,12 @@ inspect() {
 
 
 echo "wait 5 minutes for start"
- #sleep 5m
+sleep 5m
 
 inspect
 
-# wait_for_icinga_master
-# wait_for_icinga_cert_service
+wait_for_icinga_master
+wait_for_icinga_cert_service
 get_versions
 api_request
 
