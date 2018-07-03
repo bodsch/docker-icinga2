@@ -18,24 +18,11 @@ wait_for_icinga_cert_service() {
     )
     then
 
-      RETRY=35
-      # wait for the running cert-service
-      #
-      until [[ ${RETRY} -le 0 ]]
-      do
-        nc -z ${CERT_SERVICE_SERVER} ${CERT_SERVICE_PORT} < /dev/null > /dev/null
+      . /init/wait_for/dns.sh
+      . /init/wait_for/port.sh
 
-        [[ $? -eq 0 ]] && break
-
-        sleep 5s
-        RETRY=$(expr ${RETRY} - 1)
-      done
-
-      if [[ ${RETRY} -le 0 ]]
-      then
-        log_error "Could not connect to the Certificate-Service '${CERT_SERVICE_SERVER}'"
-        exit 1
-      fi
+      wait_for_dns ${CERT_SERVICE_SERVER}
+      wait_for_port ${CERT_SERVICE_SERVER} ${CERT_SERVICE_PORT} 50
 
       # okay, the web service is available
       # but, we have a problem, when he runs behind a proxy ...
@@ -50,6 +37,8 @@ wait_for_icinga_cert_service() {
 
         health=$(curl \
           --silent \
+          --location \
+          --insecure \
           --request GET \
           --write-out "%{http_code}\n" \
           --request GET \
@@ -62,14 +51,14 @@ wait_for_icinga_cert_service() {
 
         health=
 
-        log_info "wait for the health check for the cert-service on '${CERT_SERVICE_SERVER}'"
+        log_info "wait for the health check for the certificate service on '${CERT_SERVICE_SERVER}'"
         sleep 5s
         RETRY=$(expr ${RETRY} - 1)
       done
 
       if [[ ${RETRY} -le 0 ]]
       then
-        log_error "Could not a Health Check from the Certificate-Service '${CERT_SERVICE_SERVER}'"
+        log_error "The certificate service '${CERT_SERVICE_SERVER}' could not be reached"
         exit 1
       fi
 

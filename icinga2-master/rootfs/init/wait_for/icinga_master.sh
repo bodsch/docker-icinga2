@@ -7,23 +7,13 @@ wait_for_icinga_master() {
   #
   [[ "${ICINGA2_TYPE}" = "Master" ]] && return
 
-  RETRY=50
+  . /init/wait_for/dns.sh
+  . /init/wait_for/port.sh
 
-  until [[ ${RETRY} -le 0 ]]
-  do
-    nc -z ${ICINGA2_MASTER} 5665 < /dev/null > /dev/null
+  wait_for_dns ${ICINGA2_MASTER}
+  wait_for_port ${ICINGA2_MASTER} 5665 50
 
-    [[ $? -eq 0 ]] && break
-
-    sleep 5s
-    RETRY=$(expr ${RETRY} - 1)
-  done
-
-  if [[ ${RETRY} -le 0 ]]
-  then
-    log_error "could not connect to the icinga2 master instance '${ICINGA2_MASTER}'"
-    exit 1
-  fi
+  # log_info "Waiting for icinga2 master on host '${ICINGA2_MASTER}' to come up"
 
   sleep 5s
 }

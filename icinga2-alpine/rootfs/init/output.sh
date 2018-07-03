@@ -15,7 +15,7 @@ log_output() {
 
 log_info() {
   message="${1}"
-  log_output "${NC}" "${message}"
+  log_output "" "${message}"
 }
 
 log_warn() {

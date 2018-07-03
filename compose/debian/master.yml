@@ -23,7 +23,7 @@ services:
       - 8080:8080
     environment:
       - ICINGA2_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
-      - LOG_LEVEL=debug
+      - LOG_LEVEL=info
       - MYSQL_HOST=database
       - MYSQL_ROOT_USER=root
       - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
@@ -41,7 +41,7 @@ services:
       - CERT_SERVICE_PATH=/
       - CARBON_HOST=
       - CARBON_PORT=2003
-      - DEMO_DATA=true
+      - DEMO_DATA=false
     volumes:
       - /etc/localtime:/etc/localtime:ro
     links:

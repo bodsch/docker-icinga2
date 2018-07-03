@@ -132,7 +132,7 @@ api_request() {
 
 get_versions() {
 
-  for s in icinga2-master icinga2-satellite-1
+  for s in icinga2-master icinga2-satellite-1 icinga2-satellite-2 icinga2-satellite-3 icinga2-satellite-4
   do
     ip=$(docker network inspect dockericinga2_backend | jq -r ".[].Containers | to_entries[] | select(.value.Name==\"${s}\").value.IPv4Address" | awk -F "/" '{print $1}')
 
@@ -145,10 +145,17 @@ get_versions() {
       --insecure \
       https://${ip}:5665/v1/status/IcingaApplication)
 
-    version=$(echo "${code}" | jq --raw-output '.results[].status.icingaapplication.app.version' 2> /dev/null)
-    node_name=$(echo "${code}" | jq --raw-output '.results[].status.icingaapplication.app.node_name' 2> /dev/null)
+#     echo "'${s}' : '${code}'"
 
-    echo "service ${s} (${node_name} ${ip}) has version: ${version}"
+    if [[ ! -z "${code}" ]]
+    then
+      version=$(echo "${code}" | jq --raw-output '.results[].status.icingaapplication.app.version' 2> /dev/null)
+      node_name=$(echo "${code}" | jq --raw-output '.results[].status.icingaapplication.app.node_name' 2> /dev/null)
+
+      echo "service ${s} (${node_name} ${ip}) has version: ${version}"
+    else
+      echo "WARNING: '${s}' returned no application status"
+    fi
   done
 }
 
@@ -157,7 +164,7 @@ get_versions() {
 inspect() {
 
   echo "inspect needed containers"
-  for d in database icingaweb2 icinga2-master icinga2-satellite-1
+  for d in database icingaweb2 icinga2-master icinga2-satellite-1 icinga2-satellite-2 icinga2-satellite-3 icinga2-satellite-4
   do
     # docker inspect --format "{{lower .Name}}" ${d}
     docker inspect --format '{{with .State}} {{$.Name}} has pid {{.Pid}} {{end}}' ${d}
@@ -165,18 +172,15 @@ inspect() {
 }
 
 
-
-
-
 echo "wait 5 minutes for start"
-sleep 5m
+ #sleep 5m
 
 inspect
 
-wait_for_icinga_master
-wait_for_icinga_cert_service
+# wait_for_icinga_master
+# wait_for_icinga_cert_service
 get_versions
-api_request
+# api_request
 
 exit 0
 

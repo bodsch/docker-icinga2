@@ -3,27 +3,12 @@
 #
 wait_for_database() {
 
-  RETRY=15
 
-  # wait for database
-  #
-  until [[ ${RETRY} -le 0 ]]
-  do
-    nc ${MYSQL_HOST} ${MYSQL_PORT} < /dev/null > /dev/null
+  . /init/wait_for/dns.sh
+  . /init/wait_for/port.sh
 
-    [[ $? -eq 0 ]] && break
-
-    log_info "Waiting for database on host '${MYSQL_HOST}' to come up"
-
-    sleep 13s
-    RETRY=$(expr ${RETRY} - 1)
-  done
-
-  if [[ ${RETRY} -le 0 ]]
-  then
-    log_error "Could not connect to database on ${MYSQL_HOST}:${MYSQL_PORT}"
-    exit 1
-  fi
+  wait_for_dns ${MYSQL_HOST}
+  wait_for_port ${MYSQL_HOST} ${MYSQL_PORT} 15
 
   sleep 2s
 

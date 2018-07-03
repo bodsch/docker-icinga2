@@ -267,16 +267,26 @@ request_certificate_from_master() {
   else
     log_info "start node wizard to create an certificate"
 
+    wait_for_icinga_master
+
     # no certificate found
     # use the node wizard to create a valid certificate request
     #
+    set +u
+    set +e
+
     expect /init/node-wizard.expect 1> /dev/null
 
     if [[ $? -gt 0 ]]
     then
-      log_error "the node wizard had an error! :("
+      log_error "we detect an problem with the node-wizard."
+      log_error "we'll try again"
+      rm -fv ${ICINGA2_CERT_DIRECTORY}/*
       exit 1
     fi
+
+    set -u
+    set -e
 
     sleep 4s
 

@@ -15,7 +15,7 @@ log_output() {
 
 log_info() {
   message="${1}"
-  log_output "${NC}" "${message}"
+  log_output "" "${message}"
 }
 
 log_warn() {
@@ -33,3 +33,7 @@ log_error() {
   log_output "${RED}${BOLD}ERROR${NC}" "${message}"
 }
 
+log_debug() {
+  message="${1}"
+  log_output "${BOLD}DEBUG${NC}" "${message}"
+}

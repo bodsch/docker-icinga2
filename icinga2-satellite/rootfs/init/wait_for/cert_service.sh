@@ -18,49 +18,11 @@ wait_for_icinga_cert_service() {
     )
     then
 
-      log_info "Waiting for the Certificate-Service on host '${CERT_SERVICE_SERVER}' to come up"
+      . /init/wait_for/dns.sh
+      . /init/wait_for/port.sh
 
-      RETRY=35
-
-      until [[ ${RETRY} -le 0 ]]
-      do
-        host=$(dig +noadditional +noqr +noquestion +nocmd +noauthority +nostats +nocomments ${CERT_SERVICE_SERVER} | wc -l)
-
-        if [[ $host -eq 0 ]]
-        then
-          RETRY=$(expr ${RETRY} - 1)
-          sleep 10s
-        else
-          break
-        fi
-      done
-
-      RETRY=35
-
-      # wait for the running cert-service
-      #
-      until [[ ${RETRY} -le 0 ]]
-      do
-        # -v              Verbose
-        # -w secs         Timeout for connects and final net reads
-        # -X proto        Proxy protocol: "4", "5" (SOCKS) or "connect"
-        #
-        status=$(nc -v -w1 -X connect ${CERT_SERVICE_SERVER} ${CERT_SERVICE_PORT} 2>&1)
-
-        if [[ $(echo "${status}" | grep -c succeeded) -eq 1 ]]
-        then
-          break
-        else
-          sleep 5s
-          RETRY=$(expr ${RETRY} - 1)
-        fi
-      done
-
-      if [[ ${RETRY} -le 0 ]]
-      then
-        log_error "Could not connect to the Certificate-Service '${CERT_SERVICE_SERVER}'"
-        exit 1
-      fi
+      wait_for_dns ${CERT_SERVICE_SERVER}
+      wait_for_port ${CERT_SERVICE_SERVER} ${CERT_SERVICE_PORT} 50
 
       # okay, the web service is available
       # but, we have a problem, when he runs behind a proxy ...
@@ -89,14 +51,14 @@ wait_for_icinga_cert_service() {
 
         health=
 
-        log_info "wait for the health check for the cert-service on '${CERT_SERVICE_SERVER}'"
+        log_info "wait for the health check for the certificate service on '${CERT_SERVICE_SERVER}'"
         sleep 5s
         RETRY=$(expr ${RETRY} - 1)
       done
 
       if [[ ${RETRY} -le 0 ]]
       then
-        log_error "Could not a Health Check from the Certificate-Service '${CERT_SERVICE_SERVER}'"
+        log_error "The certificate service '${CERT_SERVICE_SERVER}' could not be reached"
         exit 1
       fi
 

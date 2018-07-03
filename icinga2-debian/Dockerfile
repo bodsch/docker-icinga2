@@ -23,11 +23,13 @@ RUN \
   useradd -u 1000 -g icinga -G icinga -d /etc/icinga2 -s /bin/bash icinga && \
   apt-get install --quiet --quiet --assume-yes --no-install-recommends \
     bash \
+    bzip2 \
     curl \
     ca-certificates \
-    bzip2 \
+    dnsutils \
     file \
     gnupg2 \
+    pwgen \
     python3.5-minimal \
     xz-utils \
     > /dev/null && \
