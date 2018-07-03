@@ -22,6 +22,9 @@
 monitored_directory="/var/lib/icinga2"
 hostname_f=$(hostname -f)
 
+# DEBUG=1
+counter=0
+
 log_info "start the api zone monitor"
 
 inotifywait \
@@ -40,7 +43,26 @@ inotifywait \
 
     [[ -z "${file}" ]] && continue
 
-    log_info "api zone monitor - The file '$file' appeared in directory '$path' via '$action'"
+    if [[ ${file} =~ ${hostname_f}.crt ]]
+    then
+      log_info "api zone monitor - The file '$file' appeared in directory '$path' via '$action'"
+    fi
+
+    if [[ ${file} =~ ${hostname_f}.crt ]] && [[ "${action}" = "CLOSE_WRITE,CLOSE" ]]
+    then
+      counter=$(expr ${counter} + 1)
+      log_debug "api zone monitor - counter: ${counter}"
+    fi
+
+    if [[ "${action}" = "ATTRIB" ]]
+    then
+      # only for the ${HOSTNAME}.pem
+      #
+      if [[ ${file} =~ ${hostname_f}.pem ]]
+      then
+        log_info "api zone monitor - our pem certificate is created."
+      fi
+    fi
 
     # monitor CLOSE_WRITE,CLOSE
     #
@@ -48,10 +70,15 @@ inotifywait \
     then
       # only for the ${HOSTNAME}.crt
       #
-      if [[ ${file} =~ sign_${hostname_f}.json ]]
+      if [[ ${file} =~ ${hostname_f}.crt ]]
       then
-        log_info "our certificate are replicated."
-        log_info "replace the static zone config (if needed)"
+        if [[ ${counter} -lt 2 ]]
+        then
+          continue
+        fi
+
+        log_info "api zone monitor - our certificate are replicated."
+        log_info "api zone monitor - replace the static zone config (if needed)"
 
         sed -i \
           -e 's|^object Zone ZoneName.*}$|object Zone ZoneName { endpoints = [ NodeName ]; parent = "master" }|g' \
@@ -67,8 +94,8 @@ inotifywait \
       #
       if [[ ${file} =~ ${hostname_f} ]]
       then
-        log_info "the zone configuration for myself has changed."
-        log_info "we must remove the old endpoint configuration from the static zones.conf"
+        log_info "api zone monitor - the zone configuration for myself has changed."
+        log_info "api zone monitor - we must remove the old endpoint configuration from the static zones.conf"
 
         sed -i \
           -e '/^object Endpoint NodeName.*/d' \
@@ -76,16 +103,16 @@ inotifywait \
 
         cp /etc/icinga2/zones.conf ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf
 
-        log_info "we remove also the static global-templates directory"
+        log_info "api zone monitor - we remove also the static global-templates directory"
         [[ -d /etc/icinga2/zones.d/global-templates ]] && rm -rf /etc/icinga2/zones.d/global-templates
 
-        log_info "we remove also the static director-global directory"
+        log_info "api zone monitor - we remove also the static director-global directory"
         [[ -d /etc/icinga2/zones.d/director-global ]] && rm -rf /etc/icinga2/zones.d/director-global
 
         # touch file for later add the satellite to the master over API
         #
         touch /tmp/add_host
-        log_info "now, we need an restart for certificate and zone reloading."
+        log_info "api zone monitor - now, we need an restart for certificate and zone reloading."
 
         # kill myself to finalize
         #

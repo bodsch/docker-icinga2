@@ -2,8 +2,13 @@
 
 # exp_internal 1
 
+log_file -a /tmp/node-wizard.log
+
 log_user 1
-set timeout 3
+
+#dont timeout, let the program run its course, (was mandatory for me)
+set timeout -1;
+#capture all of our output for debugging
 
 spawn icinga2 node wizard
 
@@ -33,6 +38,7 @@ expect -re "endpoint port" {
 
 expect -re "Add more master/satellite endpoints" {
   send -- "n\r"
+  sleep 4
 }
 
 expect -re "Is this information correct" {
