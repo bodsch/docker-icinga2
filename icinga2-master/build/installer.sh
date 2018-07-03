@@ -64,35 +64,36 @@ install_cert_service() {
 
 install_vercomp() {
 
-  curl \
-    --silent \
-    --location \
-    --retry 3 \
-    --output /usr/bin/vercomp \
-  https://gist.githubusercontent.com/bodsch/065b16ea3c3deb83af7f41990d2d273c/raw/6ba6d7b43de7cff78b7eaf3959f4546642b76750/vercomp
-
+  if [[ ! -f /usr/bin/vercomp ]]
+  then
+    curl \
+      --silent \
+      --location \
+      --retry 3 \
+      --output /usr/bin/vercomp \
+    https://gist.githubusercontent.com/bodsch/065b16ea3c3deb83af7f41990d2d273c/raw/6ba6d7b43de7cff78b7eaf3959f4546642b76750/vercomp
+  fi
   chmod +x /usr/bin/vercomp
 }
 
 install_debian() {
 
-
   DIST=$(awk -F"[)(]+" '/VERSION=/ {print $2}' /etc/os-release)
   chsh -s /bin/bash
   ln -sf /bin/bash /bin/sh
   ln -sf /sbin/killall5 /sbin/killall
-  apt-get update  --quiet --quiet > /dev/null
-  apt-get dist-upgrade --quiet --quiet > /dev/null
-  apt-get install --quiet --quiet --assume-yes --no-install-recommends \
-    bash \
-    curl \
-    ca-certificates \
-    bzip2 \
-    file \
-    gnupg2 \
-    python3.5-minimal \
-    xz-utils \
-    > /dev/null
+#  apt-get update  --quiet --quiet > /dev/null
+#  apt-get dist-upgrade --quiet --quiet > /dev/null
+#  apt-get install --quiet --quiet --assume-yes --no-install-recommends \
+#    bash \
+#    curl \
+#    ca-certificates \
+#    bzip2 \
+#    file \
+#    gnupg2 \
+#    python3.5-minimal \
+#    xz-utils \
+#    > /dev/null
 
   curl \
     --silent \

@@ -27,8 +27,12 @@ RUN \
     curl \
     ca-certificates \
     dnsutils \
+    expect \
     file \
     gnupg2 \
+    inotify-tools \
+    jq \
+    netcat-openbsd \
     pwgen \
     python3.5-minimal \
     xz-utils \

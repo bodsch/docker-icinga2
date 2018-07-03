@@ -120,7 +120,10 @@ api_request() {
   if [[ $? -eq 0 ]]
   then
     echo "api request are successfull"
+    echo "status: "
     echo "${code}" | jq --raw-output ".results[].status"
+    echo ""
+    echo "API zones:"
     echo "${code}" | jq --raw-output ".results[].status.api.zones"
 
   else
@@ -180,7 +183,7 @@ inspect
 # wait_for_icinga_master
 # wait_for_icinga_cert_service
 get_versions
-# api_request
+api_request
 
 exit 0
 
