@@ -158,6 +158,8 @@ get_versions() {
       echo "service ${s} (${node_name} ${ip}) has version: ${version}"
     else
       echo "WARNING: '${s}' returned no application status"
+
+      docker logs ${s}
     fi
   done
 }

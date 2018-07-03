@@ -37,8 +37,6 @@ LABEL \
 COPY build /build
 
 RUN \
-  # echo "export ICINGA2_TYPE=Master" >> /etc/profile.d/icinga2.sh && \
-  #
   /build/installer.sh && \
   rm -rf /build
 

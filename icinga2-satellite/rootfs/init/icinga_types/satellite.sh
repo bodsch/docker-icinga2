@@ -42,66 +42,82 @@ cat << EOF
 EOF
   }
 
-  . /init/wait_for/icinga_master.sh
+  retry=5
 
   curl_opts=$(curl_opts)
 
-  # first, check if we already added!
-  #
-  code=$(curl \
-    ${curl_opts} \
-    --header "Accept: application/json" \
-    --request GET \
-    https://${ICINGA2_MASTER}:5665/v1/objects/hosts/$(hostname -f))
+  set +u
+  set +e
 
-  if [[ $? -eq 0 ]]
-  then
+  until [[ ${retry} -le 0 ]]
+  do
 
-    status=$(echo "${code}" | jq --raw-output '.error' 2> /dev/null)
-    message=$(echo "${code}" | jq --raw-output '.status' 2> /dev/null)
+    . /init/wait_for/icinga_master.sh
 
-#    log_info "${status}"
-#    log_info "${message}"
+    # first, check if we already added!
+    #
+    code=$(curl \
+      ${curl_opts} \
+      --header "Accept: application/json" \
+      --request GET \
+      https://${ICINGA2_MASTER}:5665/v1/objects/hosts/$(hostname -f))
 
-    # echo '{"error":404.0,"status":"No objects found."}'
-    if [[ "${status}" = "404" ]]
+    if [[ $? -eq 0 ]]
     then
 
-      # add myself as host
-      #
-      log_info "add myself to my master '${ICINGA2_MASTER}'"
+      status=$(echo "${code}" | jq --raw-output '.error' 2> /dev/null)
+      message=$(echo "${code}" | jq --raw-output '.status' 2> /dev/null)
 
-      code=$(curl \
-        ${curl_opts} \
-        --header "Accept: application/json" \
-        --request PUT \
-        --data "$(api_satellite_host)" \
-        https://${ICINGA2_MASTER}:5665/v1/objects/hosts/$(hostname -f))
+#       log_info "${status}"
+#       log_info "${message}"
 
-#       log_info "${code}"
-
-      if [[ $? -eq 0 ]]
+      # echo '{"error":404.0,"status":"No objects found."}'
+      if [[ "${status}" = "404" ]]
       then
-        status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
-        message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
 
-        log_info "${message}"
+        # add myself as host
+        #
+        log_info "add myself to my master '${ICINGA2_MASTER}'"
+
+        code=$(curl \
+          ${curl_opts} \
+          --header "Accept: application/json" \
+          --request PUT \
+          --data "$(api_satellite_host)" \
+          https://${ICINGA2_MASTER}:5665/v1/objects/hosts/$(hostname -f))
+
+        log_info "${code}"
+
+        if [[ $? -eq 0 ]]
+        then
+          status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
+          message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
+
+          log_info "${message}"
+        else
+          status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
+          message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
+
+          log_error "${message}"
+          # add_satellite_to_master
+        fi
       else
-        status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
-        message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
-
-        log_error "${message}"
-
-        add_satellite_to_master
+        log_info "update host"
+        log_info "missing implementation"
       fi
-    else
 
-      log_info "update host"
-      log_info "missing implementation"
+      break
+    else
+      :
+      # curl error
     fi
-  else
-    :
-  fi
+
+    sleep 5s
+    retry=$(expr ${retry} - 1)
+  done
+
+  set -u
+  set -e
 }
 
 
@@ -422,13 +438,6 @@ configure_icinga2_satellite() {
   #
   if [[ "${RESTART_NEEDED}" = "true" ]]
   then
-    # start icinga to retrieve the data from our master
-    # the zone watcher will kill this instance, when all datas ready!
-    #
-#     nohup /init/runtime/zone_watcher.sh > /dev/stdout 2>&1 &
-#     sleep 2s
-#     start_icinga
-
     # restart our master
     restart_master
 
@@ -440,26 +449,10 @@ configure_icinga2_satellite() {
 
     . /init/wait_for/icinga_master.sh
 
-#    if [[ -f /var/lib/icinga2/backup/sign_icinga2-test-icinga2.json ]]
-#    then
-#      if
-#
-#    else
-#      # start icinga to retrieve the data from our master
-#      # the zone watcher will kill this instance, when all datas ready!
-#      #
-#      nohup /init/runtime/zone_watcher.sh > /dev/stdout 2>&1 &
-#      sleep 2s
-      start_icinga
-#
-#    fi
+    start_icinga
   fi
 
-  # test the configuration
-  #
-  /usr/sbin/icinga2 \
-    daemon \
-    --validate
+  validate_icinga_config
 
   # validation are not successful
   #

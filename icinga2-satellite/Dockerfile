@@ -32,17 +32,6 @@ LABEL \
 
 RUN \
   echo "export ICINGA2_TYPE=Satellite" >> /etc/profile.d/icinga2.sh && \
-#  apt-get update && \
-#  apt-get install --quiet --quiet --assume-yes --no-install-recommends \
-#    bash bind9utils curl dnsutils expect fping inotify-tools jq bsd-mailx mariadb-client \
-#    netcat-openbsd nagios-nrpe-server openssl pwgen ruby ssmtp tzdata unzip > /dev/null && \
-#  /usr/sbin/icinga2 feature enable command checker mainlog && \
-#  cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
-#  apt-get clean --quiet --quiet > /dev/null && \
-  rm -rf \
-    /tmp/* \
-    /var/cache/debconf/* \
-    /usr/share/doc/*
 
 COPY rootfs/ /
 
