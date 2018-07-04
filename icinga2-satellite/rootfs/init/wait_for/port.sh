@@ -25,13 +25,13 @@ wait_for_port() {
     fi
   done
 
-  set -e
-  set -u
-
   if [[ ${retry} -le 0 ]]
   then
     log_error "could not connect to the icinga2 master instance '${server}'"
     exit 1
   fi
+
+  set -e
+  set -u
 }
 

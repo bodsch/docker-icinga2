@@ -24,7 +24,7 @@ set -e
 # configure a icinga2 master instance
 #
 configure_icinga2_master() {
-
+set -x
   enable_icinga_feature api
 
   create_ca
@@ -36,14 +36,12 @@ configure_icinga2_master() {
   if [[ -d /etc/icinga2/zones.d/global-templates ]]
   then
     [[ -f /etc/icinga2/master.d/templates_services.conf ]] && cp /etc/icinga2/master.d/templates_services.conf /etc/icinga2/zones.d/global-templates/
-    [[ -f /etc/icinga2/master.d/checkcommands_linux_memory.conf ]] && cp /etc/icinga2/master.d/checkcommands_linux_memory.conf /etc/icinga2/zones.d/global-templates/
+    # [[ -f /etc/icinga2/master.d/checkcommands_linux_memory.conf ]] && cp /etc/icinga2/master.d/checkcommands_linux_memory.conf /etc/icinga2/zones.d/global-templates/
   fi
-
 
   [[ -f /etc/icinga2/master.d/satellite_services.conf ]] && cp /etc/icinga2/master.d/satellite_services.conf /etc/icinga2/conf.d/
   [[ -f /etc/icinga2/satellite.d/commands.conf ]] && cp /etc/icinga2/satellite.d/commands.conf /etc/icinga2/conf.d/satellite_commands.conf
-
-
+set +x
 }
 
 configure_icinga2_master

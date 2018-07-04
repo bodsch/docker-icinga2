@@ -146,7 +146,7 @@ api_request() {
 
 get_versions() {
 
-  for s in icinga2-master icinga2-satellite-1 icinga2-satellite-2 icinga2-satellite-3 icinga2-satellite-4
+  for s in icinga2-master icinga2-satellite-1
   do
     ip=$(docker network inspect dockericinga2_backend | jq -r ".[].Containers | to_entries[] | select(.value.Name==\"${s}\").value.IPv4Address" | awk -F "/" '{print $1}')
 
@@ -179,7 +179,7 @@ get_versions() {
 inspect() {
 
   echo "inspect needed containers"
-  for d in database icingaweb2 icinga2-master icinga2-satellite-1 icinga2-satellite-2 icinga2-satellite-3 icinga2-satellite-4
+  for d in database icingaweb2 icinga2-master icinga2-satellite-1
   do
     # docker inspect --format "{{lower .Name}}" ${d}
     docker inspect --format '{{with .State}} {{$.Name}} has pid {{.Pid}} {{end}}' ${d}
@@ -187,12 +187,12 @@ inspect() {
 }
 
 echo "wait initial 2 minutes"
-sleep 2m
+# sleep 2m
 
 inspect
 
 echo "wait 8 more minutes for start tests"
-sleep 8m
+# sleep 8m
 
 wait_for_icinga_master
 wait_for_icinga_cert_service

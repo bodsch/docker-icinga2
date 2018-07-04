@@ -20,12 +20,12 @@ wait_for_dns() {
     fi
   done
 
-  set -e
-  set -u
-
   if [[ ${retry} -le 0 ]]
   then
     log_error "could not found dns entry for instance '${server}'"
     exit 1
   fi
+
+  set -e
+  set -u
 }

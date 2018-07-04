@@ -20,6 +20,8 @@ trap finish SIGINT SIGTERM INT TERM EXIT
 
 if [[ ! -z ${DEBUG+x} ]]
 then
+  env | grep DEBUG
+
   if [[ ! "${DEBUG}" = "true" ]] && ( [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]] )
   then
     set -x

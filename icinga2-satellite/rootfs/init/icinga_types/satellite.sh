@@ -282,12 +282,13 @@ request_certificate_from_master() {
     :
   else
     log_info "start node wizard to create an certificate"
-
+    set -x
     wait_for_icinga_master
 
     # no certificate found
     # use the node wizard to create a valid certificate request
     #
+
     set +u
     set +e
 
@@ -303,6 +304,7 @@ request_certificate_from_master() {
 
     set -u
     set -e
+    set +x
 
     sleep 4s
 
@@ -330,11 +332,20 @@ request_certificate_from_master() {
       master_name=$(jq --raw-output .master_name /tmp/sign_${HOSTNAME}.json 2> /dev/null)
       master_ip=$(jq --raw-output .master_ip /tmp/sign_${HOSTNAME}.json 2> /dev/null)
 
-      mv /tmp/sign_${HOSTNAME}.json ${ICINGA2_LIB_DIRECTORY}/backup/
-
       log_info "${message}"
       log_info "  - ${master_name}"
       log_info "  - ${master_ip}"
+
+      if [[ "${master_name}" = "null" ]] || [[ "${master_ip}" = "null" ]]
+      then
+        log_error "restart certifiacte request"
+        rm -f /tmp/sign_${HOSTNAME}.json
+        rm -f ${ICINGA2_CERT_DIRECTORY}/*
+
+        exit 1
+      fi
+
+      mv /tmp/sign_${HOSTNAME}.json ${ICINGA2_LIB_DIRECTORY}/backup/
 
       sleep 5s
 
