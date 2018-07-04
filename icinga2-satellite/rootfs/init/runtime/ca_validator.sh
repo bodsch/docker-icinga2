@@ -110,8 +110,10 @@ do
         :
       fi
     fi
+  else
+    log_warn "i can't find the sign file '${sign_file}'"
+    log_warn "That's a problem"
   fi
-
 
   . /init/wait_for/cert_service.sh
   validate_local_ca

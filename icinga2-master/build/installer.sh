@@ -8,7 +8,6 @@
 
 set -e
 set -u
-#set -x
 
 if [[ -f /etc/os-release ]]
 then
