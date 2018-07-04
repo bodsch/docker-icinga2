@@ -6,6 +6,10 @@ REPO     := docker-icinga2
 
 BUILD_DATE      := $(shell date +%Y-%m-%d)
 BUILD_VERSION   := $(shell date +%y%m)
+
+CERT_SERVICE_TYPE    ?= stable
+CERT_SERVICE_VERSION ?= 0.18.0
+
 ICINGA2_VERSION ?= 2.8.4
 
 ICINGA2_VERSION ?= latest
@@ -80,6 +84,8 @@ icinga2-alpine-master: params
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
 		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
+		--build-arg CERT_SERVICE_TYPE=${CERT_SERVICE_TYPE} \
+		--build-arg CERT_SERVICE_VERSION=${CERT_SERVICE_VERSION} \
 		--tag $(NS)/$(REPO):alpine-master-$(ICINGA2_VERSION) . ; \
 	cd ..
 
@@ -95,6 +101,8 @@ icinga2-debian-master: params
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
 		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
+		--build-arg CERT_SERVICE_TYPE=${CERT_SERVICE_TYPE} \
+		--build-arg CERT_SERVICE_VERSION=${CERT_SERVICE_VERSION} \
 		--tag $(NS)/$(REPO):debian-master-$(ICINGA2_VERSION) . ; \
 	cd ..
 

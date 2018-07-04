@@ -282,7 +282,7 @@ request_certificate_from_master() {
     :
   else
     log_info "start node wizard to create an certificate"
-    set -x
+
     wait_for_icinga_master
 
     # no certificate found
@@ -304,7 +304,6 @@ request_certificate_from_master() {
 
     set -u
     set -e
-    set +x
 
     sleep 4s
 
@@ -331,8 +330,10 @@ request_certificate_from_master() {
       message=$(jq --raw-output .message /tmp/sign_${HOSTNAME}.json 2> /dev/null)
       master_name=$(jq --raw-output .master_name /tmp/sign_${HOSTNAME}.json 2> /dev/null)
       master_ip=$(jq --raw-output .master_ip /tmp/sign_${HOSTNAME}.json 2> /dev/null)
+      date=$(jq --raw-output .date /tmp/sign_${HOSTNAME}.json 2> /dev/null)
 
       log_info "${message}"
+      log_info "  - ${date}"
       log_info "  - ${master_name}"
       log_info "  - ${master_ip}"
 

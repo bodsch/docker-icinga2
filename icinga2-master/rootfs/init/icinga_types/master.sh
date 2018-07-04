@@ -24,7 +24,7 @@ set -e
 # configure a icinga2 master instance
 #
 configure_icinga2_master() {
-set -x
+
   enable_icinga_feature api
 
   create_ca
@@ -41,7 +41,6 @@ set -x
 
   [[ -f /etc/icinga2/master.d/satellite_services.conf ]] && cp /etc/icinga2/master.d/satellite_services.conf /etc/icinga2/conf.d/
   [[ -f /etc/icinga2/satellite.d/commands.conf ]] && cp /etc/icinga2/satellite.d/commands.conf /etc/icinga2/conf.d/satellite_commands.conf
-set +x
 }
 
 configure_icinga2_master

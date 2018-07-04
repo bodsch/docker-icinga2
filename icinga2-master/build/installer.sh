@@ -39,7 +39,7 @@ install_cert_service() {
   echo 'gem: --no-document' >> /etc/gemrc
 
   gem install --quiet --no-rdoc --no-ri \
-    io-console bundler etc
+    io-console bundler
 
   cd /tmp
 
@@ -82,6 +82,9 @@ install_debian() {
   chsh -s /bin/bash
   ln -sf /bin/bash /bin/sh
   ln -sf /sbin/killall5 /sbin/killall
+
+  echo "alias killall='killall -9'" >> /root/.bash_aliases
+
 #  apt-get update  --quiet --quiet > /dev/null
 #  apt-get dist-upgrade --quiet --quiet > /dev/null
 #  apt-get install --quiet --quiet --assume-yes --no-install-recommends \
