@@ -25,13 +25,6 @@ RUN \
   apk add --quiet --no-cache \
     bash bind-tools curl expect fping inotify-tools icinga2 jq mailx monitoring-plugins mariadb-client \
     netcat-openbsd nmap nrpe-plugin openssl pwgen ruby rsync ssmtp tzdata unzip && \
-  curl \
-    --silent \
-    --location \
-    --retry 3 \
-    --output /usr/bin/vercomp \
-  https://gist.githubusercontent.com/bodsch/065b16ea3c3deb83af7f41990d2d273c/raw/6ba6d7b43de7cff78b7eaf3959f4546642b76750/vercomp && \
-  chmod +x /usr/bin/vercomp && \
   export MONITORING_PLUGIN_DIR="/usr/lib/monitoring-plugins" && \
   curl \
     --silent \
@@ -74,5 +67,8 @@ HEALTHCHECK \
   --retries=12 \
   --start-period=10s \
   CMD ps ax | grep -v grep | grep -c $(cat /run/icinga2/icinga2.pid) || exit 1
+
+# ENTRYPOINT "/usr/sbin/icinga2 daemon"
+#     --log-level debug"
 
 CMD ["/bin/bash"]

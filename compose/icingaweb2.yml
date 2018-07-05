@@ -20,6 +20,7 @@ services:
       - ICINGA2_CMD_API_USER=root
       - ICINGA2_CMD_API_PASS=icinga
       - ICINGAWEB2_USERS=icinga:icinga,foo:bar
+      - ICINGAWEB_DIRECTOR='false'
     links:
       - icinga2-master:icinga2-master.matrix.lan
       - database

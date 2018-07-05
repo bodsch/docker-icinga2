@@ -117,8 +117,7 @@ run() {
 
   /usr/sbin/icinga2 \
     daemon \
-    --config /etc/icinga2/icinga2.conf \
-    --errorlog /dev/stdout
+    --log-level debug
 }
 
 run
