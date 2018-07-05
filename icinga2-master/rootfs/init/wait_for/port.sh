@@ -5,9 +5,6 @@ wait_for_port() {
   local port=${2}
   local retry=${3:-30}
 
-  set +e
-  set +u
-
   until [[ ${retry} -le 0 ]]
   do
     # -v              Verbose
@@ -24,9 +21,6 @@ wait_for_port() {
       retry=$(expr ${retry} - 1)
     fi
   done
-
-  set -e
-  set -u
 
   if [[ ${retry} -le 0 ]]
   then

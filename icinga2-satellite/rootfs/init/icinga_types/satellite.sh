@@ -46,9 +46,6 @@ EOF
 
   curl_opts=$(curl_opts)
 
-  set +u
-  set +e
-
   until [[ ${retry} -le 0 ]]
   do
 
@@ -115,9 +112,6 @@ EOF
     sleep 5s
     retry=$(expr ${retry} - 1)
   done
-
-  set -u
-  set -e
 }
 
 
@@ -156,10 +150,13 @@ endpoint_configuration() {
 
   zones_file="/etc/icinga2/zones.conf"
   backup_zones_file="${ICINGA2_LIB_DIRECTORY}/backup/zones.conf"
+  master_json="${ICINGA2_LIB_DIRECTORY}/backup/sign_${HOSTNAME}.json"
 
   hostname_f=$(hostname -f)
   api_endpoint="${ICINGA2_LIB_DIRECTORY}/api/zones/${hostname_f}/_etc/${hostname_f}.conf"
   ca_file="${ICINGA2_LIB_DIRECTORY}/certs/ca.crt"
+
+  initial_zone=$(grep -c "initial zones.conf" ${zones_file})
 
   # restore zone backup
   #
@@ -168,8 +165,6 @@ endpoint_configuration() {
     log_info "restore old zones.conf"
 
     cp ${backup_zones_file} ${zones_file}
-
-    master_json="${ICINGA2_LIB_DIRECTORY}/backup/sign_${HOSTNAME}.json"
 
     if [[ -f ${master_json} ]]
     then
@@ -188,7 +183,7 @@ endpoint_configuration() {
     fi
   fi
 
-  if [[ $(grep -c "initial zones.conf" ${zones_file} ) -eq 1 ]]
+  if [[ ${initial_zone} -eq 1 ]]
   then
     log_info "first run"
 
@@ -288,10 +283,6 @@ request_certificate_from_master() {
     # no certificate found
     # use the node wizard to create a valid certificate request
     #
-
-    set +u
-    set +e
-
     expect /init/node-wizard.expect 1> /dev/null
 
     if [[ $? -gt 0 ]]
@@ -301,9 +292,6 @@ request_certificate_from_master() {
       rm -fv ${ICINGA2_CERT_DIRECTORY}/*
       exit 1
     fi
-
-    set -u
-    set -e
 
     sleep 4s
 
@@ -340,9 +328,7 @@ request_certificate_from_master() {
       if [[ "${master_name}" = "null" ]] || [[ "${master_ip}" = "null" ]]
       then
         log_error "restart certifiacte request"
-        rm -f /tmp/sign_${HOSTNAME}.json
         rm -f ${ICINGA2_CERT_DIRECTORY}/*
-
         exit 1
       fi
 
@@ -360,6 +346,8 @@ request_certificate_from_master() {
       # TODO
       # wat nu?
     fi
+
+
 
     endpoint_configuration
   fi

@@ -111,8 +111,15 @@ do
       fi
     fi
   else
-    log_warn "i can't find the sign file '${sign_file}'"
-    log_warn "That's a problem"
+    log_error "i can't find the sign file '${sign_file}'"
+    log_error "That's a problem"
+    log_error "This satellite will be reset and restarted"
+
+set -x
+    icinga_pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
+    [[ -z "${icinga2_pid}" ]] || killall icinga2 > /dev/null 2> /dev/null
+
+    exit 1
   fi
 
   . /init/wait_for/cert_service.sh
@@ -120,12 +127,12 @@ do
 
   if [[ ! -f ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.key ]]
   then
-    log_error "the validation of our CA was not successful."
-    log_error "clean up and restart."
-    log_error "headshot ..."
+    log_error "The validation of our CA was not successful."
+    log_error "That's a problem"
+    log_error "This satellite will be reset and restarted"
 
+set -x
     icinga_pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
-
     [[ -z "${icinga2_pid}" ]] || killall icinga2 > /dev/null 2> /dev/null
 
     exit 1

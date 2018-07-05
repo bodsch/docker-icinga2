@@ -4,9 +4,6 @@ wait_for_dns() {
   local server=${1}
   local retry=${2:-30}
 
-  set +e
-  set +u
-
   until [[ ${retry} -le 0 ]]
   do
     host=$(dig +noadditional +noqr +noquestion +nocmd +noauthority +nostats +nocomments ${server} | wc -l)
@@ -25,7 +22,4 @@ wait_for_dns() {
     log_error "could not found dns entry for instance '${server}'"
     exit 1
   fi
-
-  set -e
-  set -u
 }

@@ -11,12 +11,10 @@ restore_backup() {
   if [[ -d ${ICINGA2_LIB_DIRECTORY}/backup ]]
   then
     log_info "restore backup"
-set +e
+
     [[ -f ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf ]] && cp -a ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf /etc/icinga2/zones.conf
     [[ -d ${ICINGA2_LIB_DIRECTORY}/backup/zones.d ]]    && cp -ar ${ICINGA2_LIB_DIRECTORY}/backup/zones.d/* /etc/icinga2/zones.d/
     [[ -f ${ICINGA2_LIB_DIRECTORY}/backup/conf.d/api-users.conf ]] && cp -a ${ICINGA2_LIB_DIRECTORY}/backup/conf.d/api-users.conf /etc/icinga2/conf.d/api-users.conf
-
-set -e
   fi
 }
 

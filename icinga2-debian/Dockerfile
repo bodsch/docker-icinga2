@@ -64,9 +64,12 @@ RUN \
     --output ${MONITORING_PLUGIN_DIR}/check_linux_memory \
   https://raw.githubusercontent.com/hugme/Nag_checks/master/check_linux_memory && \
   chmod +x ${MONITORING_PLUGIN_DIR}/check_linux_memory && \
-  mkdir -p /run/icinga2/cmd && \
-  cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
   /usr/sbin/icinga2 feature disable command checker mainlog notification && \
+  mkdir -p /etc/icinga2/objects.d && \
+  mkdir -p /run/icinga2/cmd && \
+  mkdir -p /etc/icinga2/zones.d/global-templates && \
+  mkdir -p /etc/icinga2/zones.d/director-global && \
+  cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
   rm -f /etc/apt/sources.list.d/* && \
   apt-get clean --quiet --quiet > /dev/null && \
   echo "" && \

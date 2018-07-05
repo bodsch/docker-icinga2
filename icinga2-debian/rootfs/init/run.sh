@@ -2,8 +2,8 @@
 #
 #
 
-set -e
-set -u
+set +e
+set +u
 
 finish() {
   rv=$?

@@ -186,14 +186,7 @@ inspect() {
   done
 }
 
-echo "wait initial 2 minutes"
-sleep 2m
-
 inspect
-
-echo "wait 4 more minutes for start tests"
-sleep 4m
-
 wait_for_icinga_master
 wait_for_icinga_cert_service
 get_versions

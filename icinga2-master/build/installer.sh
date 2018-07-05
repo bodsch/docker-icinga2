@@ -82,7 +82,7 @@ install_debian() {
   ln -sf /bin/bash /bin/sh
   ln -sf /sbin/killall5 /sbin/killall
 
-  echo "alias killall='killall -9'" >> /root/.bash_aliases
+  echo "alias killall='killall -9'" >> /root/.bashrc
 
 #  apt-get update  --quiet --quiet > /dev/null
 #  apt-get dist-upgrade --quiet --quiet > /dev/null

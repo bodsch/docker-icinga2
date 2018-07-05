@@ -5,9 +5,6 @@ wait_for_port() {
   local port=${2}
   local retry=${3:-30}
 
-  set +e
-  set +u
-
   until [[ ${retry} -le 0 ]]
   do
     # -v              Verbose
@@ -30,8 +27,5 @@ wait_for_port() {
     log_error "could not connect to the icinga2 master instance '${server}'"
     exit 1
   fi
-
-  set -e
-  set -u
 }
 

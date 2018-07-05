@@ -17,6 +17,7 @@ jobs:
         - make alpine
         - make compose-alpine
         - docker-compose --file docker-compose_alpine.yml up --build -d
+        - sleep 4m
         - tests/test.sh
         - docker-compose --file docker-compose_alpine.yml kill
         - docker-compose --file docker-compose_alpine.yml down
@@ -26,6 +27,7 @@ jobs:
         - make debian
         - make compose-debian
         - docker-compose --file docker-compose_debian.yml up --build -d
+        - sleep 4m
         - tests/test.sh
         - docker-compose --file docker-compose_debian.yml kill
         - docker-compose --file docker-compose_debian.yml down
