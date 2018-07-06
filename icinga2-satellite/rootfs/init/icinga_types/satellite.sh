@@ -91,6 +91,8 @@ EOF
           message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
 
           log_info "${message}"
+
+          touch /tmp/final
         else
           status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
           message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
@@ -138,8 +140,13 @@ restart_master() {
     status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
     message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
 
-    log_error "${code}"
-    log_error "${message}"
+    log_debug "status: ${status}"
+
+    if [[ ! -z "${code}" ]] && [[ ! -z "${message}" ]]
+    then
+      log_error "${code}"
+      log_error "${message}"
+    fi
   fi
 }
 
@@ -464,8 +471,6 @@ configure_icinga2_satellite() {
 
   if [[ -e /tmp/add_host ]] && [[ ! -e /tmp/final ]]
   then
-    touch /tmp/final
-
     add_satellite_to_master
 
     sleep 10s

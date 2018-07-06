@@ -104,6 +104,12 @@ do
           log_error "and we're not connected to the master yet."
           log_error "That's a problem"
           log_error "This satellite will be reset and restarted"
+
+set -x
+          icinga_pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
+
+          [[ $(echo -e "${icinga_pid}" | wc -w) -gt 0 ]] && log_debug "kill ya"
+
         fi
       else
         # DAS GEHT?

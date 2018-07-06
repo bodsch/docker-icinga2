@@ -24,15 +24,7 @@ RUN \
   useradd -u 1000 -g icinga -G icinga -d /etc/icinga2 -s /bin/bash icinga && \
   apk add --quiet --no-cache \
     bash bind-tools curl expect fping inotify-tools icinga2 jq mailx monitoring-plugins mariadb-client \
-    netcat-openbsd nmap nrpe-plugin openssl pwgen ruby rsync ssmtp tzdata unzip && \
-  export MONITORING_PLUGIN_DIR="/usr/lib/monitoring-plugins" && \
-  curl \
-    --silent \
-    --location \
-    --retry 3 \
-    --output ${MONITORING_PLUGIN_DIR}/check_linux_memory \
-  https://raw.githubusercontent.com/hugme/Nag_checks/master/check_linux_memory && \
-  chmod +x ${MONITORING_PLUGIN_DIR}/check_linux_memory && \
+    netcat-openbsd nmap nrpe-plugin openssl pwgen ruby rsync ssmtp strace tzdata unzip && \
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   ln -s /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command checker mainlog notification && \
@@ -67,8 +59,5 @@ HEALTHCHECK \
   --retries=12 \
   --start-period=10s \
   CMD ps ax | grep -v grep | grep -c $(cat /run/icinga2/icinga2.pid) || exit 1
-
-# ENTRYPOINT "/usr/sbin/icinga2 daemon"
-#     --log-level debug"
 
 CMD ["/bin/bash"]

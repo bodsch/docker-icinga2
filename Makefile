@@ -156,8 +156,10 @@ compose-alpine:	params
 		--file compose/database.yml \
 		--file compose/icingaweb2.yml \
 		--file compose/alpine/master.yml \
-		--file compose/alpine/satellite.yml \
 		config > docker-compose_alpine.yml
+
+
+#		--file compose/alpine/satellite.yml \
 
 clean:
 	docker rmi -f `docker images -q ${NS}/${REPO} | uniq`

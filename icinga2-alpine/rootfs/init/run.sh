@@ -5,10 +5,19 @@
 set +e
 set +u
 
+ICINGA2_PARAMS=
+STRACE=$(which strace)
+STRACE=
+[[ -z "${STRACE}" ]] || STRACE_OPTS="-r -f -e trace=open,stat,process -s 512 -o /tmp/icinga2.trace"
+# [[ -z "${STRACE}" ]] || STRACE_OPTS="-r -f -o /tmp/icinga2.trace"
+
 finish() {
   rv=$?
   echo -e "\033[38;5;202m\033[1mexit with signal '${rv}'\033[0m"
   sleep 4s
+
+  [[ -f /tmp/icinga2.trace ]] && cat /tmp/icinga2.trace
+
   exit $rv
 }
 
@@ -23,6 +32,7 @@ then
   if [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]]
   then
     set -x
+    ICINGA2_PARAMS="--log-level debug"
   fi
 fi
 
@@ -115,9 +125,13 @@ run() {
     fi
   fi
 
+  # strace -tfp PID will monitor the PID process's system calls,
+  # thus we can debug/monitor our process/program status.
+
+  ${STRACE} ${STRACE_OPTS} \
   /usr/sbin/icinga2 \
     daemon \
-    --log-level debug
+    ${ICINGA2_PARAMS}
 }
 
 run
