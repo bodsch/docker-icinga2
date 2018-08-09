@@ -5,6 +5,8 @@
 set +e
 set +u
 
+ICINGA2_PARAMS=
+
 finish() {
   rv=$?
   echo -e "\033[38;5;202m\033[1mexit with signal '${rv}'\033[0m"
@@ -25,16 +27,16 @@ then
   if [[ ! "${DEBUG}" = "true" ]] && ( [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]] )
   then
     set -x
+    ICINGA2_PARAMS="--log-level debug"
   fi
 fi
 
 [[ -f /etc/environment ]] && . /etc/environment
 
 . /init/output.sh
+. /usr/bin/vercomp
 . /init/environment.sh
 . /init/runtime/service_handler.sh
-
-[[ -f /usr/bin/vercomp ]] && . /usr/bin/vercomp
 
 # -------------------------------------------------------------------------------------------------
 
@@ -67,6 +69,12 @@ custom_scripts() {
 
 
 run() {
+
+  if [[ "${ICINGA2_TYPE}" = "Master" ]]
+  then
+    # env | grep ICINGA | sort
+    nohup /usr/local/icinga2-cert-service/bin/icinga2-cert-service.rb > /dev/stdout 2>&1 &
+  fi
 
   log_info "prepare system"
 
@@ -106,7 +114,7 @@ run() {
     nohup /init/runtime/inotify.sh > /dev/stdout 2>&1 &
 
     # env | grep ICINGA | sort
-    nohup /usr/local/icinga2-cert-service/bin/icinga2-cert-service.rb > /dev/stdout 2>&1 &
+    # nohup /usr/local/icinga2-cert-service/bin/icinga2-cert-service.rb > /dev/stdout 2>&1 &
   else
     :
     nohup /init/runtime/ca_validator.sh > /dev/stdout 2>&1 &
@@ -119,8 +127,7 @@ run() {
 
   /usr/sbin/icinga2 \
     daemon \
-    --config /etc/icinga2/icinga2.conf \
-    --errorlog /dev/stdout
+    ${ICINGA2_PARAMS}
 }
 
 run

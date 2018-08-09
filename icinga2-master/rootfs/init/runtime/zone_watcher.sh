@@ -76,7 +76,9 @@ inotifywait \
 
         # kill myself to finalize
         #
-        killall icinga2
+        icinga_pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
+        [[ -z "${icinga2_pid}" ]] || killall icinga2 > /dev/null 2> /dev/null
+        # killall icinga2
         exit 1
       fi
     fi

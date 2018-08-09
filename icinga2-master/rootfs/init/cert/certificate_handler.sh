@@ -10,6 +10,9 @@ create_ca() {
   then
     log_info "create new CA"
 
+    log_debug "'${HOSTNAME}'"
+    log_debug "'$(hostname -f)'"
+
     [[ -f ${PKI_KEY_FILE} ]] && rm -rf ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}*
 
     icinga2 api setup

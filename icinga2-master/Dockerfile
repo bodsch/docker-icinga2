@@ -36,9 +36,58 @@ LABEL \
 
 COPY build /build
 
+#RUN \
+#  /build/installer.sh && \
+#  rm -rf /build
+
 RUN \
-  /build/installer.sh && \
-  rm -rf /build
+  echo "export BUILD_DATE=${BUILD_DATE}"            > /etc/profile.d/icinga2.sh && \
+  echo "export BUILD_VERSION=${BUILD_VERSION}"     >> /etc/profile.d/icinga2.sh && \
+  echo "export ICINGA2_TYPE=Master"                >> /etc/profile.d/icinga2.sh && \
+  echo "export ICINGA2_VERSION=${ICINGA2_VERSION}" >> /etc/profile.d/icinga2.sh && \
+  apt-get update  --quiet --quiet > /dev/null && \
+  apt-get --quiet --quiet --assume-yes --no-install-recommends install \
+    libffi-dev g++ make git libssl-dev ruby-dev \
+    bind9utils bsd-mailx mariadb-client \
+    nagios-nrpe-server openssl ruby ssmtp \
+    > /dev/null && \
+  echo 'gem: --no-document' >> /etc/gemrc && \
+  gem install --quiet --no-rdoc --no-ri \
+    io-console bundler && \
+  cd /tmp && \
+  echo "install icinga-cert-service" && \
+  if [ "${CERT_SERVICE_TYPE}" = "local" ] ; then \
+    echo "use local sources" ; \
+    mv /build/ruby-icinga-cert-service /tmp/ ; \
+  else \
+    git clone https://github.com/bodsch/ruby-icinga-cert-service.git ; \
+    cd ruby-icinga-cert-service ; \
+    if [ "${CERT_SERVICE_TYPE}" = "stable" ] ; then \
+      echo "switch to stable Tag v${CERT_SERVICE_VERSION}" ; \
+      git checkout tags/${CERT_SERVICE_VERSION} 2> /dev/null ; \
+    elif [ "${CERT_SERVICE_TYPE}" = "development" ] ; then \
+      echo "switch to development Branch" ; \
+      git checkout development 2> /dev/null ; \
+    fi \
+  fi && \
+  /tmp/ruby-icinga-cert-service/bin/installer.sh && \
+  cd / && \
+  apt-get remove --quiet --quiet --assume-yes --purge \
+    libffi-dev gcc make git libssl-dev ruby-dev  > /dev/null && \
+  apt-get clean --quiet --quiet > /dev/null && \
+  apt autoremove --assume-yes && \
+  rm -rf \
+    /tmp/* \
+    /var/cache/debconf/* \
+    /usr/share/doc/* \
+    /root/.gem \
+    /root/.bundle && \
+  echo "" && \
+  which icinga2 && \
+  icinga2 --version && \
+  icinga2 daemon --validate && \
+  icinga2 feature list && \
+  echo ""
 
 COPY rootfs/ /
 

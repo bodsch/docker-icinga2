@@ -92,13 +92,22 @@ prepare() {
   #
   if [[ -f /etc/icinga2/icinga2.sysconfig ]]
   then
+    ls -l /etc/icinga2/icinga2.sysconfig
+    cat /etc/icinga2/icinga2.sysconfig
+
     . /etc/icinga2/icinga2.sysconfig
 
     ICINGA2_RUN_DIRECTORY=${ICINGA2_RUN_DIR}
     ICINGA2_LOG_DIRECTORY=${ICINGA2_LOG}
+  fi
+
+  # no entries, also use the icinga2 way
+  #
+  if [[ -z ${ICINGA2_RUN_DIRECTORY} ]] && [[ -z ${ICINGA2_LOG_DIRECTORY} ]]
+  then
   #  ICINGA2_RUNasUSER=${ICINGA2_USER}
   #  ICINGA2_RUNasGROUP=${ICINGA2_GROUP}
-  else
+  #else
     ICINGA2_RUN_DIRECTORY=$(/usr/sbin/icinga2 variable get RunDir)
     ICINGA2_LOG_DIRECTORY="/var/log/icinga2/icinga2.log"
   #  ICINGA2_RUNasUSER=$(/usr/sbin/icinga2 variable get RunAsUser)

@@ -13,15 +13,17 @@ RUN \
   echo "export BUILD_DATE=${BUILD_DATE}"            > /etc/profile.d/icinga2.sh && \
   echo "export BUILD_VERSION=${BUILD_VERSION}"     >> /etc/profile.d/icinga2.sh && \
   echo "export ICINGA2_VERSION=${ICINGA2_VERSION}" >> /etc/profile.d/icinga2.sh && \
-  DIST=$(awk -F"[)(]+" '/VERSION=/ {print $2}' /etc/os-release) && \
   chsh -s /bin/bash && \
   ln -sf /bin/bash /bin/sh && \
-  ln -s  /sbin/killall5 /sbin/killall && \
   apt-get update  --quiet --quiet > /dev/null && \
   apt-get dist-upgrade --quiet --quiet > /dev/null && \
   groupadd -g 1000 icinga && \
   useradd -u 1000 -g icinga -G icinga -d /etc/icinga2 -s /bin/bash icinga && \
+  for u in uucp news proxy backup list irc gnats ; do \
+    userdel $u ; \
+  done && \
   apt-get install --quiet --quiet --assume-yes --no-install-recommends \
+    apt-utils \
     bash \
     bzip2 \
     curl \
@@ -29,12 +31,16 @@ RUN \
     dnsutils \
     expect \
     file \
+    fping \
     gnupg2 \
     inotify-tools \
     jq \
     netcat-openbsd \
+    psmisc \
     pwgen \
     python3.5-minimal \
+    tzdata \
+    unzip \
     xz-utils \
     > /dev/null && \
   curl \
@@ -44,6 +50,7 @@ RUN \
     --output /usr/bin/vercomp \
   https://gist.githubusercontent.com/bodsch/065b16ea3c3deb83af7f41990d2d273c/raw/6ba6d7b43de7cff78b7eaf3959f4546642b76750/vercomp && \
   chmod +x /usr/bin/vercomp && \
+  DIST=$(awk -F"[)(]+" '/VERSION=/ {print $2}' /etc/os-release) && \
   curl \
     --silent \
     https://packages.icinga.com/icinga.key | apt-key add - && \
@@ -56,14 +63,6 @@ RUN \
     icinga2-ido-mysql \
     monitoring-plugins \
     > /dev/null && \
-  export MONITORING_PLUGIN_DIR="/usr/share/monitoring-plugins" && \
-  curl \
-    --silent \
-    --location \
-    --retry 3 \
-    --output ${MONITORING_PLUGIN_DIR}/check_linux_memory \
-  https://raw.githubusercontent.com/hugme/Nag_checks/master/check_linux_memory && \
-  chmod +x ${MONITORING_PLUGIN_DIR}/check_linux_memory && \
   /usr/sbin/icinga2 feature disable command checker mainlog notification && \
   mkdir -p /etc/icinga2/objects.d && \
   mkdir -p /run/icinga2/cmd && \

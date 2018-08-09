@@ -2,8 +2,6 @@
 ARG ICINGA2_VERSION
 FROM bodsch/docker-icinga2:alpine-${ICINGA2_VERSION}
 
-# FROM alpine:edge
-
 ARG BUILD_DATE
 ARG BUILD_VERSION
 ARG ICINGA2_VERSION
@@ -40,17 +38,6 @@ RUN \
   rm -rf /build
 
 COPY rootfs/ /
-
-WORKDIR "/etc/icinga2"
-
-VOLUME [ "/etc/icinga2", "/var/lib/icinga2" ]
-
-HEALTHCHECK \
-  --interval=5s \
-  --timeout=2s \
-  --retries=12 \
-  --start-period=10s \
-  CMD ps ax | grep -v grep | grep -c "/usr/lib/icinga2/sbin/icinga2" || exit 1
 
 CMD [ "/init/run.sh" ]
 

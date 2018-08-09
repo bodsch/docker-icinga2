@@ -126,6 +126,7 @@ restart_master() {
   # restart the master to activate the zone
   #
   log_info "restart the master '${ICINGA2_MASTER}' to activate the zone"
+set -x
   code=$(curl \
     --user ${CERT_SERVICE_API_USER}:${CERT_SERVICE_API_PASSWORD} \
     --silent \
@@ -148,6 +149,7 @@ restart_master() {
       log_error "${message}"
     fi
   fi
+set +x
 }
 
 
@@ -353,8 +355,6 @@ request_certificate_from_master() {
       # TODO
       # wat nu?
     fi
-
-
 
     endpoint_configuration
   fi

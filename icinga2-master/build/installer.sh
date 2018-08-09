@@ -2,12 +2,13 @@
 
 . /etc/profile
 
-#echo ""
-#env | sort
-#echo ""
+echo ""
+env | sort
+echo ""
 
 set -e
 set -u
+set -x
 
 if [[ -f /etc/os-release ]]
 then
@@ -75,7 +76,7 @@ install_vercomp() {
   chmod +x /usr/bin/vercomp
 }
 
-install_debian() {
+ install_debian() {
 
   DIST=$(awk -F"[)(]+" '/VERSION=/ {print $2}' /etc/os-release)
   chsh -s /bin/bash
@@ -203,9 +204,6 @@ else
   echo "unsupported distribution"
   exit 1
 fi
-
-
-
 
 echo "export BUILD_DATE=${BUILD_DATE}"            > /etc/profile.d/icinga2.sh
 echo "export BUILD_VERSION=${BUILD_VERSION}"     >> /etc/profile.d/icinga2.sh

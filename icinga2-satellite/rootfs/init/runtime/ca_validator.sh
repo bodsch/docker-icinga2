@@ -105,10 +105,11 @@ do
           log_error "That's a problem"
           log_error "This satellite will be reset and restarted"
 
-set -x
+#set -x
           icinga_pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
-
-          [[ $(echo -e "${icinga_pid}" | wc -w) -gt 0 ]] && log_debug "kill ya"
+#          [[ $(echo -e "${icinga_pid}" | wc -w) -gt 0 ]] && log_debug "kill ya"
+          [[ $(echo -e "${icinga_pid}" | wc -w) -gt 0 ]] && killall icinga2 > /dev/null 2> /dev/null
+          exit 1
 
         fi
       else
@@ -121,7 +122,7 @@ set -x
     log_error "That's a problem"
     log_error "This satellite will be reset and restarted"
 
-set -x
+#set -x
     icinga_pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
     [[ -z "${icinga2_pid}" ]] || killall icinga2 > /dev/null 2> /dev/null
 
@@ -137,7 +138,7 @@ set -x
     log_error "That's a problem"
     log_error "This satellite will be reset and restarted"
 
-set -x
+#set -x
     icinga_pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
     [[ -z "${icinga2_pid}" ]] || killall icinga2 > /dev/null 2> /dev/null
 

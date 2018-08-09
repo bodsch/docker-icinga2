@@ -8,12 +8,9 @@ BUILD_DATE      := $(shell date +%Y-%m-%d)
 BUILD_VERSION   := $(shell date +%y%m)
 
 CERT_SERVICE_TYPE    ?= stable
-CERT_SERVICE_VERSION ?= 0.18.0
+CERT_SERVICE_VERSION ?= 0.18.1
 
-ICINGA2_VERSION ?= 2.8.4
-
-ICINGA2_VERSION ?= latest
-export
+ICINGA2_VERSION ?= 2.9.1
 
 default:
 	@echo ""
@@ -21,10 +18,25 @@ default:
 	@echo ""
 	@echo "  params                 Print build parameter"
 	@echo "  build                  Build images"
+	@echo "  alpine                 meta target for the following 3 sub targets:"
+	@echo "   base-alpine              build a base container for"
+	@echo "   icinga2-alpine-master    build an icinga2 master"
+	@echo "   icinga2-alpine-satellite build an icinga2 satellite"
+	@echo "  compose-alpine         creates an demo docker-compose.yaml for alpine"
+	@echo "  debian                 meta target for the followinf 3 sub targets:"
+	@echo "   base-debian              build a base container for"
+	@echo "   icinga2-debian-master    build an icinga2 master"
+	@echo "   icinga2-debian-satellite build an icinga2 satellite"
+	@echo "  compose-debian         creates an demop docker-compose.yaml for debain"
+	@echo "  base                   builds all base container"
+	@echo "  master                 builds all icinga2 masters"
+	@echo "  satellite              builds all icinga2 satellites"
+	@echo "  compose-debian         creates an demo docker-compose.yaml for debain"
 #	@echo "  version                Print version of images"
-	@echo "  test                   Test images"
-	@echo "  publish                Publish images"
+#	@echo "  publish                Publish images"
 	@echo ""
+	@echo "  list                   list all conatiner with a $(REPO) tag"
+	@echo "  clean                  remove all conatiner with a $(REPO) tag"
 
 
 params:
@@ -58,6 +70,48 @@ base-debian: params
 		--tag $(NS)/$(REPO):debian-$(ICINGA2_VERSION) . ; \
 	cd ..
 
+icinga2-debian-master: params
+	@echo ""
+	@echo " build debian based icinga2-master"
+	@echo ""
+	cd icinga2-master ; \
+	docker build \
+		--rm \
+		--compress \
+		--build-arg BUILD_DATE=$(BUILD_DATE) \
+		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
+		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
+		--build-arg CERT_SERVICE_TYPE=${CERT_SERVICE_TYPE} \
+		--build-arg CERT_SERVICE_VERSION=${CERT_SERVICE_VERSION} \
+		--tag $(NS)/$(REPO):debian-master-$(ICINGA2_VERSION) . ; \
+	cd ..
+
+icinga2-debian-satellite: params
+	@echo ""
+	@echo " build icinga2-satellite"
+	@echo ""
+	cd icinga2-satellite ; \
+	docker build \
+		--rm \
+		--compress \
+		--build-arg BUILD_DATE=$(BUILD_DATE) \
+		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
+		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
+		--tag $(NS)/$(REPO):debian-satellite-$(ICINGA2_VERSION) . ; \
+	cd ..
+
+compose-debian:	params
+	echo "BUILD_DATE=$(BUILD_DATE)" > .env
+	echo "BUILD_VERSION=$(BUILD_VERSION)" >> .env
+	echo "ICINGA2_VERSION=$(ICINGA2_VERSION)" >> .env
+	docker-compose \
+		--file compose/head.yml \
+		--file compose/database.yml \
+		--file compose/icingaweb2.yml \
+		--file compose/debian/master.yml \
+		--file compose/debian/satellite.yml \
+		config > docker-compose_debian.yml
+
 base-alpine: params
 	@echo ""
 	@echo " build alpine based icinga2 base container"
@@ -89,23 +143,6 @@ icinga2-alpine-master: params
 		--tag $(NS)/$(REPO):alpine-master-$(ICINGA2_VERSION) . ; \
 	cd ..
 
-
-icinga2-debian-master: params
-	@echo ""
-	@echo " build debian based icinga2-master"
-	@echo ""
-	cd icinga2-master ; \
-	docker build \
-		--rm \
-		--compress \
-		--build-arg BUILD_DATE=$(BUILD_DATE) \
-		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
-		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-		--build-arg CERT_SERVICE_TYPE=${CERT_SERVICE_TYPE} \
-		--build-arg CERT_SERVICE_VERSION=${CERT_SERVICE_VERSION} \
-		--tag $(NS)/$(REPO):debian-master-$(ICINGA2_VERSION) . ; \
-	cd ..
-
 icinga2-alpine-satellite: params
 	@echo ""
 	@echo " build icinga2-satellite"
@@ -121,31 +158,6 @@ icinga2-alpine-satellite: params
 		--tag $(NS)/$(REPO):alpine-satellite-$(ICINGA2_VERSION) . ; \
 	cd ..
 
-icinga2-debian-satellite: params
-	@echo ""
-	@echo " build icinga2-satellite"
-	@echo ""
-	cd icinga2-satellite ; \
-	docker build \
-		--rm \
-		--compress \
-		--build-arg BUILD_DATE=$(BUILD_DATE) \
-		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
-		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-		--tag $(NS)/$(REPO):debian-satellite-$(ICINGA2_VERSION) . ; \
-	cd ..
-
-compose-debian:	params
-	echo "BUILD_DATE=$(BUILD_DATE)" > .env
-	echo "BUILD_VERSION=$(BUILD_VERSION)" >> .env
-	echo "ICINGA2_VERSION=$(ICINGA2_VERSION)" >> .env
-	docker-compose \
-		--file compose/head.yml \
-		--file compose/database.yml \
-		--file compose/icingaweb2.yml \
-		--file compose/debian/master.yml \
-		--file compose/debian/satellite.yml \
-		config > docker-compose_debian.yml
 
 compose-alpine:	params
 	echo "BUILD_DATE=$(BUILD_DATE)" > .env
@@ -170,7 +182,7 @@ shell:
 		--name docker-icinga2-default \
 		--interactive \
 		--tty \
-		$(NS)/$(REPO):$(ICINGA2_VERSION) \
+		$(NS)/$(REPO):debian-master-$(ICINGA2_VERSION) \
 		/bin/sh
 
 #
@@ -183,6 +195,3 @@ publish:
 	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)
 	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)-master
 	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)-satellite
-
-compose: params
-	docker-compose --file docker-compose_example.yml up --build

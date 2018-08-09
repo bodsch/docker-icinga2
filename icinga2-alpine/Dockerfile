@@ -1,5 +1,6 @@
 
-FROM alpine:edge
+FROM frolvlad/alpine-glibc:alpine-3.8
+# FROM alpine:edge
 
 ENV \
   TZ='Europe/Berlin'
@@ -25,6 +26,10 @@ RUN \
   apk add --quiet --no-cache \
     bash bind-tools curl expect fping inotify-tools icinga2 jq mailx monitoring-plugins mariadb-client \
     netcat-openbsd nmap nrpe-plugin openssl pwgen ruby rsync ssmtp strace tzdata unzip && \
+  #
+  apk add --quiet --no-cache \
+    musl musl-dev musl-dbg musl-utils && \
+  #
   cp /etc/icinga2/conf.d.example/* /etc/icinga2/conf.d/ && \
   ln -s /usr/lib/nagios/plugins/* /usr/lib/monitoring-plugins/ && \
   /usr/sbin/icinga2 feature enable command checker mainlog notification && \

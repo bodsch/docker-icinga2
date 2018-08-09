@@ -39,10 +39,9 @@ fi
 [[ -f /etc/environment ]] && . /etc/environment
 
 . /init/output.sh
+. /usr/bin/vercomp
 . /init/environment.sh
 . /init/runtime/service_handler.sh
-
-[[ -f /usr/bin/vercomp ]] && . /usr/bin/vercomp
 
 # -------------------------------------------------------------------------------------------------
 

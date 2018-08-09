@@ -37,20 +37,19 @@ EOF
 
   # version 2.8 has some changes for certifiacte configuration
   #
-  if [[ "${ICINGA2_MAJOR_VERSION}" == "2.8" ]]
+  if [[ "${ICINGA2_MAJOR_VERSION}" == "2.7" ]]
   then
-    # look at https://www.icinga.com/docs/icinga2/latest/doc/16-upgrading-icinga-2/#upgrading-to-v28
     cat << EOF >> /etc/icinga2/features-available/api.conf
+  # look at https://www.icinga.com/docs/icinga2/latest/doc/16-upgrading-icinga-2/#upgrading-to-v28
+  cert_path = SysconfDir + "/icinga2/pki/" + NodeName + ".crt"
+  key_path = SysconfDir + "/icinga2/pki/" + NodeName + ".key"
+  ca_path = SysconfDir + "/icinga2/pki/ca.crt"
 }
 EOF
   # < version 2.8, we must add the path to the certificate
   #
   else
-
     cat << EOF >> /etc/icinga2/features-available/api.conf
-  cert_path = SysconfDir + "/icinga2/pki/" + NodeName + ".crt"
-  key_path = SysconfDir + "/icinga2/pki/" + NodeName + ".key"
-  ca_path = SysconfDir + "/icinga2/pki/ca.crt"
 }
 EOF
   fi
