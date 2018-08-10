@@ -8,8 +8,8 @@ services:
   # this satellite should work, the BA is correct
   icinga2-satellite-1:
     build:
-      context: ../icinga2-satellite
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: Dockerfile.satellite
       args:
         - BUILD_DATE=${BUILD_DATE}
         - BUILD_VERSION=${BUILD_VERSION}
@@ -39,8 +39,8 @@ services:
 
   icinga2-satellite-2:
     build:
-      context: ../icinga2-satellite
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: Dockerfile.satellite
       args:
         - BUILD_DATE=${BUILD_DATE}
         - BUILD_VERSION=${BUILD_VERSION}

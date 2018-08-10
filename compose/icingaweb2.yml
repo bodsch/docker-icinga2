@@ -5,7 +5,7 @@ services:
   # icingaweb2
   #
   icingaweb2:
-    image: bodsch/docker-icingaweb2:latest
+    image: bodsch/docker-icingaweb2:2.6.1
     container_name: icingaweb2
     hostname: icingaweb2.matrix.lan
     ports:

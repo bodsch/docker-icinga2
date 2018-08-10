@@ -1,7 +1,0 @@
-#!/bin/sh
-#
-# dummy check host check
-
-echo -e "$(date +"%Y-%m-%d %H:%M:%S") $(hostname -f)"
-
-exit 0
