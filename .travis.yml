@@ -16,9 +16,8 @@ jobs:
     - stage: build debian
       script:
         - make
-        - make compose-debian
         - docker-compose --file docker-compose.yml up --build -d
-        - sleep 4m
+        - sleep 5m
         - tests/test.sh
         - docker-compose --file docker-compose.yml kill
         - docker-compose --file docker-compose.yml down

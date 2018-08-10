@@ -10,30 +10,25 @@ CERTIFICATE_PORT=${CERTIFICATE_PORT:-8080}
 CERTIFICATE_PATH=${CERTIFICATE_PATH:-/}
 
 CURL=$(which curl 2> /dev/null)
-NC=$(which ncat 2> /dev/null)
-NC_OPTS="-z"
-
-if [[ -z "${NC}" ]]
-then
-  NC=$(which nc 2> /dev/null)
-  NC_OPTS=
-fi
-
 
 # wait for the Icinga2 Master
 #
 wait_for_icinga_master() {
 
   echo "wait for the icinga2 master"
-  RETRY=35
+
+  # now wait for ssh port
+  RETRY=40
   until [[ ${RETRY} -le 0 ]]
   do
-    ${NC} ${NC_OPTS} ${ICINGA2_MASTER} 5665 < /dev/null > /dev/null
-
-    [[ $? -eq 0 ]] && break
-
-    sleep 5s
-    RETRY=$(expr ${RETRY} - 1)
+    timeout 1 bash -c "cat < /dev/null > /dev/tcp/${ICINGA2_MASTER}/5665" 2> /dev/null
+    if [ $? -eq 0 ]
+    then
+      break
+    else
+      sleep 10s
+      RETRY=$(expr ${RETRY} - 1)
+    fi
   done
 
   if [[ $RETRY -le 0 ]]
@@ -57,12 +52,14 @@ wait_for_icinga_cert_service() {
   #
   until [[ ${RETRY} -le 0 ]]
   do
-    ${NC} ${NC_OPTS} ${CERTIFICATE_SERVER} ${CERTIFICATE_PORT} < /dev/null > /dev/null
-
-    [[ $? -eq 0 ]] && break
-
-    sleep 5s
-    RETRY=$(expr ${RETRY} - 1)
+    timeout 1 bash -c "cat < /dev/null > /dev/tcp/${CERTIFICATE_SERVER}/${CERTIFICATE_PORT}" 2> /dev/null
+    if [ $? -eq 0 ]
+    then
+      break
+    else
+      sleep 10s
+      RETRY=$(expr ${RETRY} - 1)
+    fi
   done
 
   if [[ $RETRY -le 0 ]]
@@ -187,8 +184,11 @@ inspect() {
 }
 
 inspect
-wait_for_icinga_master
 wait_for_icinga_cert_service
+wait_for_icinga_master
+
+sleep 1m
+
 get_versions
 api_request
 
