@@ -62,7 +62,7 @@ icinga2-master: params
 		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
 		--build-arg CERT_SERVICE_TYPE=${CERT_SERVICE_TYPE} \
 		--build-arg CERT_SERVICE_VERSION=${CERT_SERVICE_VERSION} \
-		--tag $(NS)/$(REPO):master-$(ICINGA2_VERSION) .
+		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-master .
 
 icinga2-satellite: params
 	@echo ""
@@ -75,7 +75,7 @@ icinga2-satellite: params
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
 		--build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-		--tag $(NS)/$(REPO):satellite-$(ICINGA2_VERSION) .
+		--tag $(NS)/$(REPO):$(ICINGA2_VERSION)-satellite .
 
 compose-file:	params
 	echo "BUILD_DATE=$(BUILD_DATE)" > .env
@@ -85,8 +85,8 @@ compose-file:	params
 		--file compose/head.yml \
 		--file compose/database.yml \
 		--file compose/icingaweb2.yml \
-		--file compose/debian/master.yml \
-		--file compose/debian/satellite.yml \
+		--file compose/master.yml \
+		--file compose/satellite.yml \
 		config > docker-compose.yml
 
 clean:
@@ -99,17 +99,17 @@ master-shell:
 		--hostname icinga2-master.matrix.lan \
 		--interactive \
 		--tty \
-		$(NS)/$(REPO):master-$(ICINGA2_VERSION) \
+		$(NS)/$(REPO):$(ICINGA2_VERSION)-master \
 		/bin/bash
 
 satellite-shell:
 	docker run \
 		--rm \
-		--name icinga2-master \
-		--hostname icinga2-master.matrix.lan \
+		--name icinga2-satellite \
+		--hostname icinga2-satellite.matrix.lan \
 		--interactive \
 		--tty \
-		$(NS)/$(REPO):satellite-$(ICINGA2_VERSION) \
+		$(NS)/$(REPO):$(ICINGA2_VERSION)-satellite \
 		/bin/bash
 
 #
