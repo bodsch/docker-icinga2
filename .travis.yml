@@ -16,7 +16,7 @@ jobs:
     - stage: build and test
       script:
         - make
-        - cocker-compose build
+        - docker-compose build
         - docker-compose up -d
         - sleep 5m
         - tests/test.sh
