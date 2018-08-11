@@ -3,7 +3,6 @@
 #
 wait_for_database() {
 
-
   . /init/wait_for/dns.sh
   . /init/wait_for/port.sh
 

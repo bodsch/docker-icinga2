@@ -139,8 +139,8 @@ do
     log_error "This satellite will be reset and restarted"
 
 #set -x
-    icinga_pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
-    [[ -z "${icinga2_pid}" ]] || killall icinga2 > /dev/null 2> /dev/null
+    pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
+    [[ -z "${pid}" ]] || killall icinga2 > /dev/null 2> /dev/null
 
     exit 1
   fi
