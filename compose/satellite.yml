@@ -2,10 +2,7 @@
 version: '3.3'
 
 services:
-  # the first icinga2 satellite
-  # ask the master above for an certificate
-  #
-  # this satellite should work, the BA is correct
+
   icinga2-satellite-1:
     build:
       context: ..

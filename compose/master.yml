@@ -5,7 +5,6 @@ services:
   # the Icinga2 Master
   # includes a certificate service to create and provide a icinga certificate
   icinga2-master:
-#    image: bodsch/docker-icinga2:2.8.4-master-dev
     build:
       context: ..
       dockerfile: Dockerfile.master
@@ -24,11 +23,11 @@ services:
       - 8080:8080
     environment:
       - ICINGA2_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
-      - LOG_LEVEL=debug
+      - LOG_LEVEL=info
       - MYSQL_HOST=database
       - MYSQL_ROOT_USER=root
-      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
-      - IDO_PASSWORD=qUVuLTk9oEDUV0A
+      - MYSQL_ROOT_PASS=${MYSQL_ROOT_PASS}
+      - IDO_PASSWORD=${IDO_PASSWORD}
       # environment variables for the certificates service
       - ICINGA2_MASTER=icinga2-master.matrix.lan
       - BASIC_AUTH_USER=admin

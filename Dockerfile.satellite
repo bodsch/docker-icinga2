@@ -1,10 +1,6 @@
 
 FROM debian:9-slim
 
-ENV \
-  TERM=xterm \
-  DEBIAN_FRONTEND=noninteractive
-
 ARG BUILD_DATE
 ARG BUILD_VERSION
 ARG ICINGA2_VERSION
@@ -18,73 +14,13 @@ EXPOSE 5665
 
 # ---------------------------------------------------------------------------------------
 
+ADD build /build
+
 RUN \
-  echo "export BUILD_DATE=${BUILD_DATE}"            > /etc/profile.d/icinga2.sh && \
-  echo "export BUILD_VERSION=${BUILD_VERSION}"     >> /etc/profile.d/icinga2.sh && \
-  echo "export ICINGA2_VERSION=${ICINGA2_VERSION}" >> /etc/profile.d/icinga2.sh && \
-  echo "export ICINGA2_TYPE=Satellite"             >> /etc/profile.d/icinga2.sh && \
-  chsh -s /bin/bash && \
-  ln -sf /bin/bash /bin/sh && \
-  apt-get update && \
-  apt-get dist-upgrade && \
-  apt-get install --assume-yes \
-    ca-certificates \
-    curl \
-    gnupg && \
-  DIST=$(awk -F"[)(]+" '/VERSION=/ {print $2}' /etc/os-release) && \
-  curl \
-    --silent \
-    https://packages.icinga.com/icinga.key | apt-key add - && \
-  echo "deb http://packages.icinga.com/debian icinga-${DIST} main" > \
-    /etc/apt/sources.list.d/${DIST}-icinga.list && \
-  apt-get update && \
-  ln -s /etc/default /etc/sysconfig && \
-  apt-get install --assume-yes --no-install-recommends \
-    icinga2-bin \
-    icinga2-ido-mysql \
-    monitoring-plugins \
-    mariadb-client \
-    dnsutils \
-    expect \
-    file \
-    fping \
-    inotify-tools \
-    jq \
-    netcat-openbsd \
-    psmisc \
-    pwgen \
-    python3.5-minimal \
-    tzdata \
-    unzip \
-    xz-utils && \
-  curl \
-    --silent \
-    --location \
-    --retry 3 \
-    --output /usr/bin/vercomp \
-  https://gist.githubusercontent.com/bodsch/065b16ea3c3deb83af7f41990d2d273c/raw/6ba6d7b43de7cff78b7eaf3959f4546642b76750/vercomp && \
-  chmod +x /usr/bin/vercomp && \
-  mkdir -p /etc/icinga2/objects.d && \
-  mkdir -p /run/icinga2/cmd && \
-  mkdir -p /etc/icinga2/zones.d/global-templates && \
-  mkdir -p /etc/icinga2/zones.d/director-global && \
-  cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
-  rm -f /etc/apt/sources.list.d/* && \
-  apt-get clean --quiet --quiet > /dev/null && \
-  echo "" && \
-  which icinga2 && \
-  icinga2 --version && \
-  icinga2 daemon --validate && \
-  icinga2 feature list && \
-  echo "" && \
-  apt-get clean --quiet --quiet > /dev/null && \
-  apt autoremove --assume-yes && \
+  export ICINGA2_TYPE=Satellite && \
+  /build/installer.sh && \
   rm -rf \
-    /tmp/* \
-    /var/cache/debconf/* \
-    /usr/share/doc/* \
-    /root/.gem \
-    /root/.bundle
+    /build
 
 COPY rootfs/ /
 
@@ -117,97 +53,3 @@ LABEL \
   com.microscaling.license="GNU General Public License v3.0"
 
 # ---------------------------------------------------------------------------------------
-
-
-
-###  chsh -s /bin/bash && \
-###  ln -sf /bin/bash /bin/sh && \
-###  apt-get update  --quiet --quiet > /dev/null && \
-###  apt-get dist-upgrade --quiet --quiet > /dev/null && \
-###  apt-get install --assume-yes \
-###    curl \
-###    ca-certificates \
-###    > /dev/null && \
-###  DIST=$(awk -F"[)(]+" '/VERSION=/ {print $2}' /etc/os-release) && \
-###  curl \
-###    --silent \
-###    https://packages.icinga.com/icinga.key | apt-key add - && \
-###  echo "deb http://packages.icinga.com/debian icinga-${DIST} main" > \
-###    /etc/apt/sources.list.d/${DIST}-icinga.list && \
-###  apt-get update --quiet --quiet > /dev/null && \
-###  ln -s /etc/default /etc/sysconfig && \
-###  apt-get --assume-yes install \
-###    bzip2 \
-###    dnsutils \
-###    expect \
-###    file \
-###    fping \
-###    gnupg2 \
-###    inotify-tools \
-###    jq \
-###    netcat-openbsd \
-###    psmisc \
-###    pwgen \
-###    python3.5-minimal \
-###    tzdata \
-###    unzip \
-###    xz-utils \
-###    expect \
-###    inotify-tools \
-###    icinga2-bin \
-###    icinga2-ido-mysql \
-###    inotify-tools \
-###    jq \
-###    monitoring-plugins \
-###    netcat-openbsd \
-###    psmisc \
-###    pwgen \
-###    python3.5-minimal \
-###    tzdata \
-###    unzip \
-###    xz-utils \
-###    > /dev/null && \
-###  for u in uucp news proxy backup list irc gnats ; do \
-###    userdel $u ; \
-###  done
-###
-###
-####  apt-get clean --quiet --quiet > /dev/null && \
-####  rm -rf \
-####    /tmp/* \
-####    /var/cache/debconf/* \
-####    /usr/share/doc/*
-###
-###COPY rootfs/ /
-###
-####WORKDIR "/etc/icinga2"
-####
-####VOLUME [ "/etc/icinga2", "/var/lib/icinga2" ]
-####
-####HEALTHCHECK \
-####  --interval=5s \
-####  --timeout=2s \
-####  --retries=12 \
-####  --start-period=10s \
-####  CMD ps ax | grep -v grep | grep -c $(cat /run/icinga2/icinga2.pid) || exit 1
-###
-###CMD [ "/init/run.sh" ]
-###
-#### ---------------------------------------------------------------------------------------
-###
-###LABEL \
-###  version="${BUILD_VERSION}" \
-###  maintainer="Bodo Schulz <bodo@boone-schulz.de>" \
-###  org.label-schema.build-date=${BUILD_DATE} \
-###  org.label-schema.name="Icinga2 Docker Image" \
-###  org.label-schema.description="Inofficial Icinga2 Docker Image" \
-###  org.label-schema.url="https://www.icinga.org/" \
-###  org.label-schema.vcs-url="https://github.com/bodsch/docker-icinga2" \
-###  org.label-schema.vendor="Bodo Schulz" \
-###  org.label-schema.version=${ICINGA2_VERSION} \
-###  org.label-schema.schema-version="1.0" \
-###  com.microscaling.docker.dockerfile="/Dockerfile" \
-###  com.microscaling.license="GNU General Public License v3.0"
-###
-#### ---------------------------------------------------------------------------------------
-###

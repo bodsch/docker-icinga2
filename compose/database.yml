@@ -9,7 +9,7 @@ services:
     hostname: database
     environment:
       - MYSQL_SYSTEM_USER=root
-      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
+      - MYSQL_ROOT_PASS=${MYSQL_ROOT_PASS}
     volumes:
       - /etc/localtime:/etc/localtime:ro
     networks:

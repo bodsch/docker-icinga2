@@ -81,6 +81,8 @@ compose-file:	params
 	echo "BUILD_DATE=$(BUILD_DATE)" > .env
 	echo "BUILD_VERSION=$(BUILD_VERSION)" >> .env
 	echo "ICINGA2_VERSION=$(ICINGA2_VERSION)" >> .env
+	echo "MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC" >> .env
+	echo "IDO_PASSWORD=qUVuLTk9oEDUV0A" >> .env
 	docker-compose \
 		--file compose/head.yml \
 		--file compose/database.yml \
