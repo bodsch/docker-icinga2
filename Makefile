@@ -8,7 +8,7 @@ BUILD_DATE      := $(shell date +%Y-%m-%d)
 BUILD_VERSION   := $(shell date +%y%m)
 
 CERT_SERVICE_TYPE    ?= stable
-CERT_SERVICE_VERSION ?= 0.18.1
+CERT_SERVICE_VERSION ?= 0.18.2
 
 ICINGA2_VERSION ?= 2.9.1
 
@@ -120,7 +120,10 @@ satellite-shell:
 list:
 	-docker images $(NS)/$(REPO)*
 
-#publish:
-#	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)
-#	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)-master
-#	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)-satellite
+release:
+	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)-master
+	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)-satellite
+#	docker tag $(NS)/$(REPO):$(ICINGA2_VERSION)-master    $(NS)/$(REPO):latest-master
+#        docker tag $(NS)/$(REPO):$(ICINGA2_VERSION)-satellite $(NS)/$(REPO):latest-satellite
+#	docker push $(NS)/$(REPO):latest-master
+#        docker push $(NS)/$(REPO):latest-satellite

@@ -3,7 +3,7 @@
 set -e
 
 CERT_SERVICE_TYPE=${CERT_SERVICE_TYPE:-stable}
-CERT_SERVICE_VERSION=${CERT_SERVICE_VERSION:-0.18.1}
+CERT_SERVICE_VERSION=${CERT_SERVICE_VERSION:-0.18.2}
 
 export APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1
 
@@ -121,11 +121,11 @@ install_icinga_cert_service() {
 cleanup() {
 
   apt-get remove --assume-yes --purge \
-    apt-utils libffi-dev gcc make git libssl-dev ruby-dev  > /dev/null && \
+    apt-utils libffi-dev gcc make git libssl-dev ruby-dev  > /dev/null
 
-  rm -f /etc/apt/sources.list.d/* && \
-  apt-get clean > /dev/null && \
-  apt autoremove --assume-yes
+  rm -f /etc/apt/sources.list.d/*
+  apt-get clean > /dev/null
+  apt autoremove --assume-yes > /dev/null
 
   rm -rf \
     /tmp/* \
