@@ -18,17 +18,17 @@ jobs:
         - make
         - docker-compose build
         - docker-compose up -d
-        - sleep 5m
+        - sleep 6m
         - tests/test.sh
         - docker-compose kill
         - docker-compose down
 
-#    - stage: build and push image
-#      script:
-#        - make
-#        - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-#        - docker tag ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-master    ${DOCKER_USERNAME}/docker-icinga2:latest-master
-#        - docker tag ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-satellite ${DOCKER_USERNAME}/docker-icinga2:latest-satellite
-#        - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-master
-#        - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-satellite
-#        - docker logout
+    - stage: build and push image
+      script:
+        - make
+        - docker tag ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-master    ${DOCKER_USERNAME}/docker-icinga2:latest-master
+        - docker tag ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-satellite ${DOCKER_USERNAME}/docker-icinga2:latest-satellite
+        - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-master
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-satellite
+        - docker logout
