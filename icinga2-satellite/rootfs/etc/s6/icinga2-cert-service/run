@@ -1,7 +1,0 @@
-#! /bin/sh
-
-PROGARGS=""
-PROGHOME="/"
-PROGNAME="/usr/local/bin/rest-service.rb"
-
-exec ${PROGNAME} ${PROGARGS}
