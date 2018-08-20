@@ -6,8 +6,11 @@ ICINGA2_API_USER="root"
 ICINGA2_API_PASSWORD="icinga"
 
 CERTIFICATE_SERVER=${CERTIFICATE_SERVER:-${ICINGA2_MASTER}}
-CERTIFICATE_PORT=${CERTIFICATE_PORT:-8080}
-CERTIFICATE_PATH=${CERTIFICATE_PATH:-/}
+CERTIFICATE_PORT=${CERTIFICATE_PORT:-443}
+CERTIFICATE_PATH=${CERTIFICATE_PATH:-/cert-service/}
+
+[[ ${CERTIFICATE_PORT} = *443 ]] && protocol=https || protocol=http
+export CERT_SERVICE_PROTOCOL=${protocol}
 
 CURL=$(which curl 2> /dev/null)
 
@@ -78,13 +81,14 @@ wait_for_icinga_cert_service() {
   #
   until [[ ${RETRY} -le 0 ]]
   do
-
     health=$(${CURL} \
       --silent \
+      --location \
+      --insecure \
       --request GET \
       --write-out "%{http_code}\n" \
       --request GET \
-      http://${CERTIFICATE_SERVER}:${CERTIFICATE_PORT}${CERTIFICATE_PATH}/v2/health-check)
+      ${CERT_SERVICE_PROTOCOL}://${CERTIFICATE_SERVER}:${CERTIFICATE_PORT}${CERTIFICATE_PATH}/v2/health-check)
 
     if ( [[ $? -eq 0 ]] && [[ "${health}" == "healthy200" ]] )
     then
@@ -108,10 +112,10 @@ wait_for_icinga_cert_service() {
 api_request() {
 
   code=$(curl \
-    --silent \
     --user ${ICINGA2_API_USER}:${ICINGA2_API_PASSWORD} \
-    --header 'Accept: application/json' \
+    --silent \
     --insecure \
+    --header 'Accept: application/json' \
     https://${ICINGA2_MASTER}:${ICINGA2_API_PORT}/v1/status/ApiListener)
 
   if [[ $? -eq 0 ]]
@@ -150,10 +154,8 @@ get_versions() {
     code=$(curl \
       --user ${ICINGA2_API_USER}:${ICINGA2_API_PASSWORD} \
       --silent \
-      --location \
-      --header 'Accept: application/json' \
-      --request GET \
       --insecure \
+      --header 'Accept: application/json' \
       https://${ip}:5665/v1/status/IcingaApplication)
 
 #     echo "'${s}' : '${code}'"
@@ -187,7 +189,7 @@ inspect
 wait_for_icinga_cert_service
 wait_for_icinga_master
 
-sleep 1m
+# sleep 1m
 
 get_versions
 api_request

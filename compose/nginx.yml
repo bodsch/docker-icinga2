@@ -1,0 +1,26 @@
+---
+version: '3.3'
+
+services:
+  nginx:
+    restart: always
+    image: bodsch/docker-nginx:1.14.0
+    container_name: nginx
+    hostname: nginx
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - icinga2-master
+      - icingaweb2
+    links:
+      - icinga2-master
+      - icingaweb2:icingaweb2.matrix.lan
+    volumes:
+      - ./ssl/cert.pem:/etc/nginx/secure/localhost/cert.pem:ro
+      - ./ssl/key.pem:/etc/nginx/secure/localhost/key.pem:ro
+      - ./ssl/dh.pem:/etc/nginx/secure/localhost/dh.pem:ro
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - frontend
+      - backend

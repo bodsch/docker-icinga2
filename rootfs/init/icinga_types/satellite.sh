@@ -108,15 +108,15 @@ restart_master() {
 
   . /init/wait_for/icinga_master.sh
 
+  curl_opts=$(curl_opts)
+
   # restart the master to activate the zone
   #
   log_info "restart the master '${ICINGA2_MASTER}' to activate the zone"
   code=$(curl \
-    --user ${CERT_SERVICE_API_USER}:${CERT_SERVICE_API_PASSWORD} \
-    --silent \
+    ${curl_opts} \
     --header 'Accept: application/json' \
     --request POST \
-    --insecure \
     https://${ICINGA2_MASTER}:5665/v1/actions/shutdown-process)
 ##    https://${ICINGA2_MASTER}:5665/v1/actions/restart-process ) # <- since 2.9.1 not functional?
 
@@ -285,12 +285,13 @@ request_certificate_from_master() {
     code=$(curl \
       --user ${CERT_SERVICE_BA_USER}:${CERT_SERVICE_BA_PASSWORD} \
       --silent \
-      --request GET \
+      --location \
+      --insecure \
       --header "X-API-USER: ${CERT_SERVICE_API_USER}" \
       --header "X-API-PASSWORD: ${CERT_SERVICE_API_PASSWORD}" \
       --write-out "%{http_code}\n" \
       --output /tmp/sign_${HOSTNAME}.json \
-      http://${CERT_SERVICE_SERVER}:${CERT_SERVICE_PORT}${CERT_SERVICE_PATH}v2/sign/${HOSTNAME})
+      ${CERT_SERVICE_PROTOCOL}://${CERT_SERVICE_SERVER}:${CERT_SERVICE_PORT}${CERT_SERVICE_PATH}v2/sign/${HOSTNAME})
 
     if ( [[ $? -eq 0 ]] && [[ ${code} == 200 ]] )
     then
@@ -367,7 +368,6 @@ configure_icinga2_satellite() {
   #      this comes now from the master
   #
   endpoint_configuration
-
 
   log_info "waiting for our cert-service on '${CERT_SERVICE_SERVER}' to come up"
   . /init/wait_for/cert_service.sh

@@ -15,7 +15,7 @@
 
 . /init/cert/certificate_handler.sh
 
-log_info "start the ca validator for '${HOSTNAME}'"
+log_info "start the CA validator for '${HOSTNAME}'"
 
 while true
 do
@@ -57,11 +57,21 @@ do
 #    log_debug "old: $(date -d @${timestamp})  (${date})"
 #    log_debug "new: $(date -d @${current_timestamp})"
 
+    curl_opts=
+    if [[ -f ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.pem ]]
+    then
+      curl_opts="${curl_opts} --capath ${ICINGA2_CERT_DIRECTORY}"
+      curl_opts="${curl_opts} --cert ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.pem"
+      curl_opts="${curl_opts} --cacert ${ICINGA2_CERT_DIRECTORY}/ca.crt"
+    else
+      curl_opts="--insecure"
+    fi
+
     code=$(curl \
-      --silent \
       --user ${CERT_SERVICE_API_USER}:${CERT_SERVICE_API_PASSWORD} \
+      --silent \
+      ${curl_opts} \
       --header 'Accept: application/json' \
-      --insecure \
       https://${ICINGA2_MASTER}:${ICINGA2_API_PORT}/v1/status/ApiListener)
 
     if [[ $? -eq 0 ]]
@@ -105,12 +115,11 @@ do
           log_error "That's a problem"
           log_error "This satellite will be reset and restarted"
 
-#set -x
-          icinga_pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
-#          [[ $(echo -e "${icinga_pid}" | wc -w) -gt 0 ]] && log_debug "kill ya"
-          [[ $(echo -e "${icinga_pid}" | wc -w) -gt 0 ]] && killall icinga2 > /dev/null 2> /dev/null
+set -x
+          pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
+          [[ $(echo -e "${pid}" | wc -w) -gt 0 ]] && killall icinga2 > /dev/null 2> /dev/null
           exit 1
-
+set +x
         fi
       else
         # DAS GEHT?
@@ -122,11 +131,11 @@ do
     log_error "That's a problem"
     log_error "This satellite will be reset and restarted"
 
-#set -x
-    icinga_pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
-    [[ -z "${icinga2_pid}" ]] || killall icinga2 > /dev/null 2> /dev/null
-
+set -x
+    pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
+    [[ -z "${pid}" ]] || killall icinga2 > /dev/null 2> /dev/null
     exit 1
+set +x
   fi
 
   . /init/wait_for/cert_service.sh
@@ -138,11 +147,11 @@ do
     log_error "That's a problem"
     log_error "This satellite will be reset and restarted"
 
-#set -x
+set -x
     pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
     [[ -z "${pid}" ]] || killall icinga2 > /dev/null 2> /dev/null
-
     exit 1
+set +x
   fi
 
   sleep 5m

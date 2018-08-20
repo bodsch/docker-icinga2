@@ -18,10 +18,8 @@ version_of_icinga_master() {
   code=$(curl \
     --user ${CERT_SERVICE_API_USER}:${CERT_SERVICE_API_PASSWORD} \
     --silent \
-    --location \
-    --header 'Accept: application/json' \
-    --request GET \
     --insecure \
+    --header 'Accept: application/json' \
     https://${ICINGA2_MASTER}:5665/v1/status/IcingaApplication )
 
   if [[ $? -eq 0 ]]

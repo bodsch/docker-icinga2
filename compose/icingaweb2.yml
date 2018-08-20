@@ -9,7 +9,7 @@ services:
     container_name: icingaweb2
     hostname: icingaweb2.matrix.lan
     ports:
-      - 80:80
+      - 80
     environment:
       - MYSQL_HOST=database
       - MYSQL_ROOT_USER=root

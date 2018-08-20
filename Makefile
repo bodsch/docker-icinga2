@@ -8,7 +8,7 @@ BUILD_DATE      := $(shell date +%Y-%m-%d)
 BUILD_VERSION   := $(shell date +%y%m)
 
 CERT_SERVICE_TYPE    ?= stable
-CERT_SERVICE_VERSION ?= 0.18.2
+CERT_SERVICE_VERSION ?= 0.18.3
 
 ICINGA2_VERSION ?= 2.9.1
 
@@ -85,6 +85,7 @@ compose-file:	params
 	echo "IDO_PASSWORD=qUVuLTk9oEDUV0A" >> .env
 	docker-compose \
 		--file compose/head.yml \
+		--file compose/nginx.yml \
 		--file compose/database.yml \
 		--file compose/icingaweb2.yml \
 		--file compose/master.yml \
@@ -123,7 +124,7 @@ list:
 release:
 	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)-master
 	docker push $(NS)/$(REPO):$(ICINGA2_VERSION)-satellite
-#	docker tag $(NS)/$(REPO):$(ICINGA2_VERSION)-master    $(NS)/$(REPO):latest-master
-#        docker tag $(NS)/$(REPO):$(ICINGA2_VERSION)-satellite $(NS)/$(REPO):latest-satellite
-#	docker push $(NS)/$(REPO):latest-master
-#        docker push $(NS)/$(REPO):latest-satellite
+	docker tag $(NS)/$(REPO):$(ICINGA2_VERSION)-master    $(NS)/$(REPO):latest-master
+	docker tag $(NS)/$(REPO):$(ICINGA2_VERSION)-satellite $(NS)/$(REPO):latest-satellite
+	docker push $(NS)/$(REPO):latest-master
+	docker push $(NS)/$(REPO):latest-satellite

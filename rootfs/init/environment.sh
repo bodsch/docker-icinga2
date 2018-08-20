@@ -76,6 +76,10 @@ then
   export CERT_SERVICE_PORT=${CERT_SERVICE_PORT:-"80"}
   export CERT_SERVICE_PATH=${CERT_SERVICE_PATH:-"/"}
 fi
+
+[[ ${CERT_SERVICE_PORT} = *443 ]] && protocol=https || protocol=http
+export CERT_SERVICE_PROTOCOL=${protocol}
+
 export PKI_CMD="icinga2 pki"
 export PKI_KEY_FILE="${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.key"
 export PKI_CSR_FILE="${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.csr"

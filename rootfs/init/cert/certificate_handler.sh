@@ -83,12 +83,13 @@ validate_local_ca() {
     code=$(curl \
       --user ${CERT_SERVICE_BA_USER}:${CERT_SERVICE_BA_PASSWORD} \
       --silent \
-      --request GET \
+      --location \
+      --insecure \
       --header "X-API-USER: ${CERT_SERVICE_API_USER}" \
       --header "X-API-KEY: ${CERT_SERVICE_API_PASSWORD}" \
       --write-out "%{http_code}\n" \
       --output /tmp/validate_ca_${HOSTNAME}.json \
-      http://${CERT_SERVICE_SERVER}:${CERT_SERVICE_PORT}${CERT_SERVICE_PATH}/v2/validate/${checksum})
+      ${CERT_SERVICE_PROTOCOL}://${CERT_SERVICE_SERVER}:${CERT_SERVICE_PORT}${CERT_SERVICE_PATH}/v2/validate/${checksum})
 
     if ( [[ $? -eq 0 ]] && [[ "${code}" = "200" ]] )
     then

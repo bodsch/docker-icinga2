@@ -28,7 +28,6 @@ wait_for_icinga_cert_service() {
       # but, we have a problem, when he runs behind a proxy ...
       # eg.: https://monitoring-proxy.tld/cert-cert-service
       #
-
       RETRY=30
       # wait for the cert-service health check behind a proxy
       #
@@ -39,10 +38,8 @@ wait_for_icinga_cert_service() {
           --silent \
           --location \
           --insecure \
-          --request GET \
           --write-out "%{http_code}\n" \
-          --request GET \
-          http://${CERT_SERVICE_SERVER}:${CERT_SERVICE_PORT}${CERT_SERVICE_PATH}v2/health-check)
+          ${CERT_SERVICE_PROTOCOL}://${CERT_SERVICE_SERVER}:${CERT_SERVICE_PORT}${CERT_SERVICE_PATH}v2/health-check)
 
         if ( [[ $? -eq 0 ]] && [[ "${health}" == "healthy200" ]] )
         then
