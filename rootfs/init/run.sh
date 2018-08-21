@@ -24,7 +24,7 @@ if [[ ! -z ${DEBUG+x} ]]
 then
   env | grep DEBUG
 
-  if [[ ! "${DEBUG}" = "true" ]] && ( [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]] )
+  if ( [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]] )
   then
     set -x
     ICINGA2_PARAMS="--log-level debug"

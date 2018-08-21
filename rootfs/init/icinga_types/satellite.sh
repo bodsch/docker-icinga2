@@ -38,7 +38,23 @@ cat << EOF
       "satellite": "true",
       "disks": {
         "disk /": {
-          "disk_partitions": "/"
+          "disk_partitions": "/",
+          "disk_exclude_type": [
+            "none",
+            "tmpfs",
+            "sysfs",
+            "proc",
+            "configfs",
+            "devtmpfs",
+            "devfs",
+            "mtmfs",
+            "tracefs",
+            "cgroup",
+            "fuse.gvfsd-fuse",
+            "fuse.gvfs-fuse-daemon",
+            "fdescfs",
+            "nsfs"
+          ]
         }
       },
       "memory": "true"

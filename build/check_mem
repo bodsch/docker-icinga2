@@ -1,69 +1,75 @@
 #!/usr/bin/env bash
 
-#Set script name
-SCRIPT=`basename ${BASH_SOURCE[0]}`
+# set script name
+SCRIPT=$(basename ${BASH_SOURCE[0]})
 
-#Set default values
-optMW=95
-optMC=98
-optSW=95
-optSC=98
+# set default values
+opt_memory_warning=95
+opt_memory_critical=98
+opt_swap_warning=95
+opt_swap_critical=98
 
 # help function
-function printHelp {
-  echo -e \\n"Help for $SCRIPT"\\n
-  echo -e "Basic usage: $SCRIPT -w {warning} -c {critical} -W {warning} -C {critical}"\\n
-  echo "Command switches are optional, default values for warning is 95% and critical is 98%"
-  echo "-w - Sets warning value for Memory Usage. Default is 95%"
-  echo "-c - Sets critical value for Memory Usage. Default is 98%"
-  echo "-W - Sets warning value for Swap Usage. Default is 95%"
-  echo "-C - Sets critical value for Swap Usage. Default is 98%"
-  echo -e "-h  - Displays this help message"\\n
-  echo -e "Example: $SCRIPT -w 80 -c 90 -W 40 -C 60"\\n
-  echo -e \\n\\n"Author: Lukasz Gogolin, lukasz.gogolin@gmail.com"
-  echo -e "Git: http://bitbucket.org/lgogolin/nagios_plugins"
-  exit 1
+function usage {
+  echo -e "Help for ${SCRIPT}\n"
+  echo -e "Basic usage: ${SCRIPT} -w {warning} -c {critical} -W {warning} -C {critical}\n"
+  echo -e "Command switches are optional, default values for warning is 95% and critical is 98%"
+  echo -e "-w - Sets warning value for memory usage. Default is 95%"
+  echo -e "-c - Sets critical value for memory usage. Default is 98%"
+  echo -e "-W - Sets warning value for swap usage. Default is 95%"
+  echo -e "-C - Sets critical value for swap usage. Default is 98%"
+  echo -e "-h - Displays this help message\n"
+  echo -e "Example: ${SCRIPT} -w 80 -c 90 -W 40 -C 60\n"
+  exit 0
 }
 
 # regex to check is OPTARG an integer
 re='^[0-9]+$'
 
 while getopts :w:c:W:C:h FLAG; do
-  case $FLAG in
+  case ${FLAG} in
     w)
-      if ! [[ $OPTARG =~ $re ]] ; then
-        echo "error: Not a number" >&2; exit 1
+      if ! [[ ${OPTARG} =~ ${re} ]]
+      then
+        echo "ERROR: warning value for memory usage is not a number" >&2
+        exit 1
       else
-        optMW=$OPTARG
+        opt_memory_warning=${OPTARG}
       fi
       ;;
     c)
-      if ! [[ $OPTARG =~ $re ]] ; then
-        echo "error: Not a number" >&2; exit 1
+      if ! [[ ${OPTARG} =~ ${re} ]]
+      then
+        echo "ERROR: critical value for memory usage is not a number" >&2
+        exit 1
       else
-        optMC=$OPTARG
+        opt_memory_critical=${OPTARG}
       fi
       ;;
     W)
-      if ! [[ $OPTARG =~ $re ]] ; then
-        echo "error: Not a number" >&2; exit 1
+      if ! [[ ${OPTARG} =~ ${re} ]]
+      then
+        echo "ERROR: warning value for swap usage is not a number" >&2
+        exit 1
       else
-        optSW=$OPTARG
+        opt_swap_warning=${OPTARG}
       fi
       ;;
     C)
-      if ! [[ $OPTARG =~ $re ]] ; then
-        echo "error: Not a number" >&2; exit 1
+      if ! [[ ${OPTARG} =~ ${re} ]]
+      then
+        echo "ERROR: critical value for swap usage is not a number" >&2
+        exit 1
       else
-        optSC=$OPTARG
+        opt_swap_critical=${OPTARG}
       fi
       ;;
     h)
-      printHelp
+      usage
       ;;
     \?)
-      echo -e \\n"Option - $OPTARG not allowed."
-      printHelp
+      echo -e "\nOption - ${OPTARG} not allowed.\n"
+      usage
       exit 2
       ;;
   esac
@@ -71,54 +77,69 @@ done
 
 shift $((OPTIND-1))
 
+if [[ -e /proc/meminfo ]]
+then
+set -x
+  array=( $(cat /proc/meminfo | \
+    egrep 'MemTotal|MemFree|Buffers|Cached|SwapTotal|SwapFree' | \
+    awk '{print $1 " " $2}' | \
+    tr '\n' ' ' | \
+    tr -d ':' | \
+    awk '{ printf("%i %i %i %i %i %i %i", $2, $4, $6, $8, $10, $12, $14) }') )
 
+set +x
+  memory_total_k=${array[0]}
+  memory_total_b=$((${memory_total_k}*1024))
+  memory_free_k=${array[1]}
+  memory_free_b=$((${memory_free_k}*1024))
+  memory_buffer_k=${array[2]}
+  memory_buffer_b=$((${memory_buffer_k}*1024))
+  memory_cached_k=${array[3]}
+  memory_cached_b=$((${memory_cached_k}*1024))
+  memory_total_m=$((${memory_total_k}/1024))
+  memory_free_m=$((${memory_free_k}/1024))
+  memory_buffer_m=$((${memory_buffer_k}/1024))
+  memory_cached_m=$((${memory_cached_k}/1024))
+  memory_used_b=$((${memory_total_b}-${memory_free_b}-${memory_buffer_b}-${memory_cached_b}))
+  memory_used_m=$((${memory_total_m}-${memory_free_m}-${memory_buffer_m}-${memory_cached_m}))
+  memory_used_percent=$(((${memory_used_b}*100)/${memory_total_b}))
 
+  swap_total_k=${array[5]}
+  swap_total_b=$((${swap_total_k}*1024))
+  swap_free_k=${array[6]}
+  swap_free_b=$((${swap_free_k}*1024))
+  swap_used_k=$((${swap_total_k}-${swap_free_k}))
+  swap_used_b=$((${swap_used_k}*1024))
+  swap_total_m=$((${swap_total_k}/1024))
+  swap_free_m=$((${swap_free_k}/1024))
+  swap_used_m=$((${swap_total_m}-${swap_free_m}))
 
+  swap_used_percent=0
 
-array=( $(cat /proc/meminfo | egrep 'MemTotal|MemFree|Buffers|Cached|SwapTotal|SwapFree' |awk '{print $1 " " $2}' |tr '\n' ' ' |tr -d ':' |awk '{ printf("%i %i %i %i %i %i %i", $2, $4, $6, $8, $10, $12, $14) }') )
+  if [[ ${swap_total_k} -gt 0 ]]
+  then
+    swap_used_percent=$(((${swap_used_k}*100)/${swap_total_k}))
+  fi
 
-memTotal_k=${array[0]}
-memTotal_b=$(($memTotal_k*1024))
-memFree_k=${array[1]}
-memFree_b=$(($memFree_k*1024))
-memBuffer_k=${array[2]}
-memBuffer_b=$(($memBuffer_k*1024))
-memCache_k=${array[3]}
-memCache_b=$(($memCache_k*1024))
-memTotal_m=$(($memTotal_k/1024))
-memFree_m=$(($memFree_k/1024))
-memBuffer_m=$(($memBuffer_k/1024))
-memCache_m=$(($memCache_k/1024))
-memUsed_b=$(($memTotal_b-$memFree_b-$memBuffer_b-$memCache_b))
-memUsed_m=$(($memTotal_m-$memFree_m-$memBuffer_m-$memCache_m))
-memUsedPrc=$((($memUsed_b*100)/$memTotal_b))
+  message="swap    - size: ${swap_total_m} MB, used: ${swap_used_m} MB, used percent: ${swap_used_percent}%<br>"
+  message="${message}memory  - size: ${memory_total_m} MB, used: ${memory_used_m} MB, used percent: ${memory_used_percent}%"
+  message="${message} |"
+  message="${message} MEM_TOTAL=${memory_total_b};;;; MEM_USED=${memory_used_b};;;; MEM_CACHED=${memory_cached_b};;;; MEM_BUFFER=${memory_buffer_b};;;;"
+  message="${message} SWAP_TOTAL=${swap_total_b};;;; SWAP_USED=${swap_used_b};;;;"
 
-swapTotal_k=${array[5]}
-swapTotal_b=$(($swapTotal_k*1024))
-swapFree_k=${array[6]}
-swapFree_b=$(($swapFree_k*1024))
-swapUsed_k=$(($swapTotal_k-$swapFree_k))
-swapUsed_b=$(($swapUsed_k*1024))
-swapTotal_m=$(($swapTotal_k/1024))
-swapFree_m=$(($swapFree_k/1024))
-swapUsed_m=$(($swapTotal_m-$swapFree_m))
+  echo -e "${message}"
 
-if [ $swapTotal_k -eq 0 ]; then
-    swapUsedPrc=0
+  if [[ ${memory_used_percent} -ge ${opt_memory_critical} ]] || [[ ${swap_used_percent} -ge ${opt_swap_critical} ]]
+  then
+    $(exit 2)
+  elif [[ ${memory_used_percent} -ge ${opt_memory_warning} ]] || [[ ${swap_used_percent} -ge ${opt_swap_warning} ]]
+  then
+    $(exit 1)
+  else
+    $(exit 0)
+  fi
+
 else
-    swapUsedPrc=$((($swapUsed_k*100)/$swapTotal_k))
-fi
-
-message="[MEMORY] Total: $memTotal_m MB - Used: $memUsed_m MB - $memUsedPrc% [SWAP] Total: $swapTotal_m MB - Used: $swapUsed_m MB - $swapUsedPrc% | MTOTAL=$memTotal_b;;;; MUSED=$memUsed_b;;;; MCACHE=$memCache_b;;;; MBUFFER=$memBuffer_b;;;; STOTAL=$swapTotal_b;;;; SUSED=$swapUsed_b;;;;"
-
-
-if [ $memUsedPrc -ge $optMC ] || [ $swapUsedPrc -ge $optSC ]; then
-  echo -e $message
-  $(exit 2)
-elif [ $memUsedPrc -ge $optMW ] || [ $swapUsedPrc -ge $optSW ]; then
-  echo -e $message
-  $(exit 1)
-else
-  echo -e $message
-  $(exit 0)
+  echo -e "UNKNOWN - /proc/meminfo is not available"
+  $(exit 3)
 fi

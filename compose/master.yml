@@ -23,6 +23,7 @@ services:
       - 8080:8080
     environment:
       - ICINGA2_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
+      - DEBUG=0
       - LOG_LEVEL=INFO
       - MYSQL_HOST=database
       - MYSQL_ROOT_USER=root
