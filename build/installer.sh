@@ -75,6 +75,8 @@ install_icinga2() {
   mkdir -p /etc/icinga2/zones.d/global-templates
   mkdir -p /etc/icinga2/zones.d/director-global
   cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed
+
+  cp /build/check_mem /usr/lib/nagios/plugins/check_mem
 }
 
 install_tools_for_master() {

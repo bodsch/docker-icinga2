@@ -23,6 +23,7 @@ apply Service "ping4" {
   ignore where host.vars.alive_dummy
 }
 
+/*
 apply Service for (disk => config in host.vars.disks) {
   import "generic-service"
 
@@ -31,6 +32,7 @@ apply Service for (disk => config in host.vars.disks) {
   vars += config
   assign where host.name == NodeName
 }
+*/
 
 apply Service "icinga" {
   import "generic-service"

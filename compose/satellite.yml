@@ -26,7 +26,10 @@ services:
       - CERT_SERVICE_PORT=443
       - CERT_SERVICE_PATH=/cert-service/
     volumes:
-      - /etc/localtime:/etc/localtime:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /sys:/sys:ro
+      - /dev:/dev:ro
     links:
       - icinga2-master:icinga2-master.matrix.lan
     networks:

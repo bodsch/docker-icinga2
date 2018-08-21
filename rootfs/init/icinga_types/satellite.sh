@@ -25,16 +25,24 @@ cat << EOF
 {
   "templates": [ "satellite-host" ],
   "attrs": {
-    "vars.os": "Docker",
-    "vars.remote_endpoint": "${fqdn}",
-    "vars.satellite": "true",
+    "command_endpoint": "${fqdn}",
+    "enable_notifications": true,
+    "groups": ["icinga-satellites"],
     "max_check_attempts": "2",
     "check_interval": "30",
     "retry_interval": "10",
-    "enable_notifications": true,
     "zone": "${fqdn}",
-    "command_endpoint": "${fqdn}",
-    "groups": ["icinga-satellites"]
+    "vars": {
+      "os": "Docker",
+      "remote_endpoint": "${fqdn}",
+      "satellite": "true",
+      "disks": {
+        "disk /": {
+          "disk_partitions": "/"
+        }
+      },
+      "memory": "true"
+    }
   }
 }
 EOF
@@ -83,6 +91,8 @@ EOF
         message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
 
         log_info "${message}"
+
+        touch /tmp/final
       else
         status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
         message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
@@ -132,8 +142,12 @@ restart_master() {
       sleep $(random)s
       . /init/wait_for/icinga_master.sh
     else
-      log_error "${code}"
-      log_error "${message}"
+      log_debug "status: ${status}"
+      if [[ ! -z "${code}" ]] && [[ ! -z "${message}" ]]
+      then
+        log_error "${code}"
+        log_error "${message}"
+      fi
     fi
   fi
 }
@@ -429,8 +443,6 @@ configure_icinga2_satellite() {
 
   if [[ -e /tmp/add_host ]] && [[ ! -e /tmp/final ]]
   then
-    touch /tmp/final
-
     add_satellite_to_master
 
     sleep 10s
