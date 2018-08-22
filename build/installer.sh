@@ -77,6 +77,7 @@ install_icinga2() {
   cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed
 
   cp /build/check_mem /usr/lib/nagios/plugins/check_mem
+  cp /build/check_ssl_cert /usr/lib/nagios/plugins/check_ssl_cert
 }
 
 install_tools_for_master() {

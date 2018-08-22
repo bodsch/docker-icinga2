@@ -407,7 +407,9 @@ configure_icinga2_satellite() {
 
   request_certificate_from_master
 
-  [[ -f /etc/icinga2/satellite.d/services.conf ]] && cp /etc/icinga2/satellite.d/services.conf /etc/icinga2/conf.d/
+  # 2018-08-22 disabled for replication tests
+  #
+  #[[ -f /etc/icinga2/satellite.d/services.conf ]] && cp /etc/icinga2/satellite.d/services.conf /etc/icinga2/conf.d/
   [[ -f /etc/icinga2/satellite.d/commands.conf ]] && cp /etc/icinga2/satellite.d/commands.conf /etc/icinga2/conf.d/satellite_commands.conf
 
   # REALLY BAD HACK ..

@@ -34,6 +34,7 @@ configure_icinga2_master() {
   if [[ -d /etc/icinga2/zones.d/global-templates ]]
   then
     [[ -f /etc/icinga2/master.d/templates_services.conf ]] && cp /etc/icinga2/master.d/templates_services.conf /etc/icinga2/zones.d/global-templates/
+    [[ -f /etc/icinga2/satellite.d/services.conf ]]        && cp /etc/icinga2/satellite.d/services.conf        /etc/icinga2/zones.d/global-templates/
   fi
 
   [[ -f /etc/icinga2/master.d/satellite_services.conf ]] && cp /etc/icinga2/master.d/satellite_services.conf /etc/icinga2/conf.d/

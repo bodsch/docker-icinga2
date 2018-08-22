@@ -79,7 +79,6 @@ shift $((OPTIND-1))
 
 if [[ -e /proc/meminfo ]]
 then
-set -x
   array=( $(cat /proc/meminfo | \
     egrep 'MemTotal|MemFree|Buffers|Cached|SwapTotal|SwapFree' | \
     awk '{print $1 " " $2}' | \
@@ -87,7 +86,6 @@ set -x
     tr -d ':' | \
     awk '{ printf("%i %i %i %i %i %i %i", $2, $4, $6, $8, $10, $12, $14) }') )
 
-set +x
   memory_total_k=${array[0]}
   memory_total_b=$((${memory_total_k}*1024))
   memory_free_k=${array[1]}
