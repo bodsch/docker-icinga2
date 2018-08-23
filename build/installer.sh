@@ -65,6 +65,7 @@ install_icinga2() {
     psmisc \
     pwgen \
     python3.5-minimal \
+    libtext-english-perl \
     tzdata \
     unzip \
     xz-utils \
