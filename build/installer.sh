@@ -80,6 +80,26 @@ install_icinga2() {
   cp /build/check_ssl_cert /usr/lib/nagios/plugins/check_ssl_cert
 }
 
+install_tools() {
+
+  apt-get install --assume-yes \
+    python3-pip \
+    git \
+    > dev/null
+
+#  cd /tmp
+#  git clone https://github.com/taladar/http-observatory-cli
+#
+#  cd http-observatory-cli
+#
+#  pip3 install --quiet --requirement requirements.txt
+#  python3 -W ignore::UserWarning:distutils.dist setup.py install --quiet > /dev/null
+#
+#  cd ~
+
+  pip3 install httpobs-cli --quiet > /dev/null
+}
+
 install_tools_for_master() {
 
   apt-get --assume-yes --no-install-recommends install \
@@ -124,7 +144,8 @@ install_icinga_cert_service() {
 cleanup() {
 
   apt-get remove --assume-yes --purge \
-    apt-utils libffi-dev gcc make git libssl-dev ruby-dev  > /dev/null
+    apt-utils libffi-dev gcc make git libssl-dev ruby-dev python3-pip git \
+    > /dev/null
 
   rm -f /etc/apt/sources.list.d/*
   apt-get clean > /dev/null
@@ -135,6 +156,7 @@ cleanup() {
     /var/cache/debconf/* \
     /usr/share/doc/* \
     /root/.gem \
+    /root/.cache \
     /root/.bundle 2> /dev/null
 }
 
@@ -156,6 +178,7 @@ init
 install_apt_update
 vercomp
 install_icinga2
+# install_tools
 
 if [[ $ICINGA2_TYPE == "Master" ]]
 then

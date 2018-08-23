@@ -150,54 +150,54 @@ usage() {
 # trap passing the signal name
 # see https://stackoverflow.com/questions/2175647/is-it-possible-to-detect-which-trap-signal-in-bash/2175751#2175751
 trap_with_arg() {
-    func="$1" ; shift
-    for sig ; do
-	# shellcheck disable=SC2064
-        trap "$func $sig" "$sig"
-    done
+  func="$1" ; shift
+  for sig ; do
+    # shellcheck disable=SC2064
+    trap "$func $sig" "$sig"
+  done
 }
 
 ################################################################################
 # Cleanup temporary files
 remove_temporary_files() {
-    if [ -n "${DEBUG}" ] ; then
-        echo "[DBG] cleaning up temporary files"
-        # shellcheck disable=SC2086
-        echo $TEMPORARY_FILES | tr '\ ' '\n' | sed 's/^/[DBG]   /'
-    fi
+  if [ -n "${DEBUG}" ] ; then
+    echo "[DBG] cleaning up temporary files"
     # shellcheck disable=SC2086
-    if [ -n "$TEMPORARY_FILES" ]; then
-        rm -f $TEMPORARY_FILES
-    fi
+    echo $TEMPORARY_FILES | tr '\ ' '\n' | sed 's/^/[DBG]   /'
+  fi
+  # shellcheck disable=SC2086
+  if [ -n "$TEMPORARY_FILES" ]; then
+    rm -f $TEMPORARY_FILES
+  fi
 }
 
 ################################################################################
 # Cleanup when exiting
 cleanup() {
-    SIGNAL=$1
-    if [ -n "${DEBUG}" ] ; then
-	echo "[DBG] signal caught $SIGNAL"
-    fi
-    remove_temporary_files
-    # shellcheck disable=SC2086
-    trap - $SIGNALS
-    exit
+  SIGNAL=$1
+  if [ -n "${DEBUG}" ] ; then
+    echo "[DBG] signal caught $SIGNAL"
+  fi
+  remove_temporary_files
+  # shellcheck disable=SC2086
+  trap - $SIGNALS
+  exit
 }
 
 create_temporary_file() {
 
-    # create a temporary file
-    TEMPFILE="$( mktemp -t "${0##*/}XXXXXX" 2> /dev/null )"
-    if [ -z "${TEMPFILE}" ] || [ ! -w "${TEMPFILE}" ] ; then
-        unknown 'temporary file creation failure.'
-    fi
+  # create a temporary file
+  TEMPFILE="$( mktemp -t "${0##*/}XXXXXX" 2> /dev/null )"
+  if [ -z "${TEMPFILE}" ] || [ ! -w "${TEMPFILE}" ] ; then
+    unknown 'temporary file creation failure.'
+  fi
 
-    if [ -n "${DEBUG}" ] ; then
-	echo "[DBG] temporary file $TEMPFILE created"
-    fi
+  if [ -n "${DEBUG}" ] ; then
+    echo "[DBG] temporary file $TEMPFILE created"
+  fi
 
-    # add the file to the list of temporary files
-    TEMPORARY_FILES="$TEMPORARY_FILES $TEMPFILE"
+  # add the file to the list of temporary files
+  TEMPORARY_FILES="$TEMPORARY_FILES $TEMPFILE"
 
 }
 
@@ -206,12 +206,12 @@ create_temporary_file() {
 # Params
 #   $1 error message
 critical() {
-    if [ -n "${HOST}" ] ; then
-        tmp=" ${HOST}"
-    fi
-    remove_temporary_files
-    printf '%s CRITICAL%s: %s%s%s\n' "${SHORTNAME}" "${tmp}" "$1" "${PERFORMANCE_DATA}" "${LONG_OUTPUT}"
-    exit 2
+  if [ -n "${HOST}" ] ; then
+    tmp=" ${HOST}"
+  fi
+  remove_temporary_files
+  printf '%s CRITICAL%s: %s%s%s\n' "${SHORTNAME}" "${tmp}" "$1" "${PERFORMANCE_DATA}" "${LONG_OUTPUT}"
+  exit 2
 }
 
 ################################################################################
@@ -219,12 +219,12 @@ critical() {
 # Param
 #   $1 warning message
 warning() {
-    if [ -n "${HOST}" ] ; then
-        tmp=" ${HOST}"
-    fi
-    remove_temporary_files
-    printf '%s WARN%s: %s%s%s\n' "${SHORTNAME}" "${tmp}" "$1" "${PERFORMANCE_DATA}" "${LONG_OUTPUT}"
-    exit 1
+  if [ -n "${HOST}" ] ; then
+    tmp=" ${HOST}"
+  fi
+  remove_temporary_files
+  printf '%s WARN%s: %s%s%s\n' "${SHORTNAME}" "${tmp}" "$1" "${PERFORMANCE_DATA}" "${LONG_OUTPUT}"
+  exit 1
 }
 
 ################################################################################
@@ -232,12 +232,12 @@ warning() {
 # Param
 #   $1 message
 unknown() {
-    if [ -n "${HOST}" ] ; then
-        tmp=" ${HOST}"
-    fi
-    remove_temporary_files
-    printf '%s UNKNOWN%s: %s\n' "${SHORTNAME}" "${tmp}" "$1"
-    exit 3
+  if [ -n "${HOST}" ] ; then
+    tmp=" ${HOST}"
+  fi
+  remove_temporary_files
+  printf '%s UNKNOWN%s: %s\n' "${SHORTNAME}" "${tmp}" "$1"
+  exit 3
 }
 
 ################################################################################
@@ -386,14 +386,14 @@ fetch_certificate() {
            echo "[DBG] ${HOST} is an IPv6 address"
        fi
        if [ -z "${HOST##*[*}" ] ; then
-	   if [ -n "${DEBUG}" ] ; then
+     if [ -n "${DEBUG}" ] ; then
                echo "[DBG] ${HOST} is already specified with brakcets"
-	   fi
+     fi
        else
-	   if [ -n "${DEBUG}" ] ; then
+     if [ -n "${DEBUG}" ] ; then
                echo "[DBG] adding brackets to ${HOST}"
-	   fi
-	   HOST="[${HOST}]"
+     fi
+     HOST="[${HOST}]"
        fi
     else
        if [ -n "${DEBUG}" ] ; then
@@ -417,7 +417,7 @@ fetch_certificate() {
                 exec_with_timeout "$TIMEOUT" "echo 'Q' | $OPENSSL s_client ${CLIENT} ${CLIENTPASS} -starttls ${PROTOCOL} -connect $HOST:$PORT ${SERVERNAME} -verify 6 ${ROOT_CA} ${SSL_VERSION} ${SSL_VERSION_DISABLED} ${SSL_AU} 2> ${ERROR} 1> ${CERT}"
                 RET=$?
                 ;;
-	    xmpp)
+      xmpp)
                 exec_with_timeout "$TIMEOUT" "echo 'Q' | $OPENSSL s_client ${CLIENT} ${CLIENTPASS} -starttls ${PROTOCOL} -connect $HOST:$XMPPPORT ${XMPPHOST} -verify 6 ${ROOT_CA} ${SSL_VERSION} ${SSL_VERSION_DISABLED} ${SSL_AU} 2> ${ERROR} 1> ${CERT}"
                 RET=$?
                 ;;
@@ -801,7 +801,7 @@ main() {
             -p|--port)
                 if [ $# -gt 1 ]; then
                     PORT="$2"
-		    XMPPPORT="$2"
+        XMPPPORT="$2"
                     shift 2
                 else
                     unknown "-p,--port requires an argument"
@@ -840,9 +840,9 @@ main() {
                 fi
                 ;;
             --require-ocsp-stapling)
-		REQUIRE_OCSP_STAPLING=1
-		shift
-		;;
+    REQUIRE_OCSP_STAPLING=1
+    shift
+    ;;
             --require-san)
                 REQUIRE_SAN=1
                 shift
@@ -896,8 +896,8 @@ main() {
                     unknown "-w,--warning requires an argument"
                 fi
                 ;;
-	    --xmpphost)
-		if [ $# -gt 1 ]; then
+      --xmpphost)
+    if [ $# -gt 1 ]; then
                     XMPPHOST="$2"
                     shift 2
                 else
@@ -1040,21 +1040,21 @@ main() {
 
     # curl
     if [ -z "${CURL_BIN}" ] ; then
-	if [ -n "${SSL_LAB_ASSESSMENT}" ] || [ -n "${OCSP}" ] ; then
-	    if [ -n "${DEBUG}" ] ; then
-		echo "[DBG] cURL binary needed. SSL Labs = ${SSL_LAB_ASSESSMENT}, OCSP = ${OCSP}"
-		echo "[DBG] cURL binary not specified"
-	    fi
+  if [ -n "${SSL_LAB_ASSESSMENT}" ] || [ -n "${OCSP}" ] ; then
+      if [ -n "${DEBUG}" ] ; then
+    echo "[DBG] cURL binary needed. SSL Labs = ${SSL_LAB_ASSESSMENT}, OCSP = ${OCSP}"
+    echo "[DBG] cURL binary not specified"
+      fi
             check_required_prog curl
             CURL_BIN=$PROG
-	    if [ -n "${DEBUG}" ] ; then
-		echo "[DBG] cURL available: ${CURL_BIN}"
-	    fi
-	else
-	    if [ -n "${DEBUG}" ] ; then
-		echo "[DBG] cURL binary not needed. SSL Labs = ${SSL_LAB_ASSESSMENT}, OCSP = ${OCSP}"
-	    fi
-	fi
+      if [ -n "${DEBUG}" ] ; then
+    echo "[DBG] cURL available: ${CURL_BIN}"
+      fi
+  else
+      if [ -n "${DEBUG}" ] ; then
+    echo "[DBG] cURL binary not needed. SSL Labs = ${SSL_LAB_ASSESSMENT}, OCSP = ${OCSP}"
+      fi
+  fi
     fi
 
     # Expect (optional)
@@ -1148,17 +1148,17 @@ main() {
         echo "[DBG] OpenSSL binary: ${OPENSSL}"
         echo "[DBG] OpenSSL version: $( ${OPENSSL} version )"
 
-	OPENSSL_DIR="$( ${OPENSSL} version -d | sed -E 's/OPENSSLDIR: "([^"]*)"/\1/' )"
+  OPENSSL_DIR="$( ${OPENSSL} version -d | sed -E 's/OPENSSLDIR: "([^"]*)"/\1/' )"
 
-	echo "[DBG] OpenSSL configuration directory: ${OPENSSL_DIR}"
+  echo "[DBG] OpenSSL configuration directory: ${OPENSSL_DIR}"
 
-	DEFAULT_CA=0
-	if [ -f "${OPENSSL_DIR}"/cert.pem ] ; then
-	    DEFAULT_CA="$( grep -c BEGIN "${OPENSSL_DIR}"/cert.pem )"
-	elif [ -f "${OPENSSL_DIR}"/certs ] ; then
-	    DEFAULT_CA="$( grep -c BEGIN "${OPENSSL_DIR}"/certs )"
-	fi
-	echo "[DBG] ${DEFAULT_CA} root certificates installed by default"
+  DEFAULT_CA=0
+  if [ -f "${OPENSSL_DIR}"/cert.pem ] ; then
+      DEFAULT_CA="$( grep -c BEGIN "${OPENSSL_DIR}"/cert.pem )"
+  elif [ -f "${OPENSSL_DIR}"/certs ] ; then
+      DEFAULT_CA="$( grep -c BEGIN "${OPENSSL_DIR}"/certs )"
+  fi
+  echo "[DBG] ${DEFAULT_CA} root certificates installed by default"
 
         echo "[DBG] System info: $( uname -a )"
         echo "[DBG] Date computation: ${DATETYPE}"
@@ -1206,11 +1206,11 @@ main() {
 
     else
 
-	if [ -n "${XMPPHOST}" ] ; then
-	    unknown " s_client' does not support '-xmpphost'"
-	fi
+  if [ -n "${XMPPHOST}" ] ; then
+      unknown " s_client' does not support '-xmpphost'"
+  fi
 
-	XMPPHOST=
+  XMPPHOST=
 
         if [ -n "${VERBOSE}" ] ; then
             echo "'${OPENSSL} s_client' does not support '-xmpphost': disabling 'to' attribute"
@@ -1221,9 +1221,9 @@ main() {
     ################################################################################
     # check if openssl s_client supports the SSL TLS version
     if [ -n "${SSL_VERSION}" ] ; then
-	if ! "${OPENSSL}" s_client -help 2>&1 | grep -q -- "${SSL_VERSION}" ; then
-	    unknown "OpenSSL does not support the ${SSL_VERSION} version"
-	fi
+  if ! "${OPENSSL}" s_client -help 2>&1 | grep -q -- "${SSL_VERSION}" ; then
+      unknown "OpenSSL does not support the ${SSL_VERSION} version"
+  fi
     fi
 
     ################################################################################
@@ -1235,13 +1235,13 @@ main() {
 
     if [ -n "${OCSP}" ] ; then
 
-	create_temporary_file; ISSUER_CERT_TMP=$TEMPFILE
-	create_temporary_file; ISSUER_CERT_TMP2=$TEMPFILE
+  create_temporary_file; ISSUER_CERT_TMP=$TEMPFILE
+  create_temporary_file; ISSUER_CERT_TMP2=$TEMPFILE
 
     fi
 
     if [ -n "${REQUIRE_OCSP_STAPLING}" ] ; then
-	create_temporary_file; OCSP_RESPONSE_TMP=$TEMPFILE
+  create_temporary_file; OCSP_RESPONSE_TMP=$TEMPFILE
     fi
 
     if [ -n "${VERBOSE}" ] ; then
@@ -1359,10 +1359,10 @@ main() {
 
         SERIAL="$($OPENSSL x509 -in "${CERT}" -serial -noout  | sed -e "s/^serial=//")"
 
-	FINGERPRINT="$($OPENSSL x509 -in "${CERT}" -fingerprint -sha1 -noout  | sed -e "s/^SHA1 Fingerprint=//")"
+  FINGERPRINT="$($OPENSSL x509 -in "${CERT}" -fingerprint -sha1 -noout  | sed -e "s/^SHA1 Fingerprint=//")"
 
-	# TO DO: we just take the first result: a loop over all the hosts should
-	# shellcheck disable=SC2086
+  # TO DO: we just take the first result: a loop over all the hosts should
+  # shellcheck disable=SC2086
         OCSP_URI="$($OPENSSL "${OPENSSL_COMMAND}" ${OPENSSL_PARAMS} -in "${CERT}" -ocsp_uri -noout | head -n 1)"
     fi
 
@@ -1393,23 +1393,23 @@ main() {
     # Check OCSP stapling
     if [ -n "${REQUIRE_OCSP_STAPLING}" ] ; then
 
-	if [ -n "${VERBOSE}" ] ; then
-       	    echo "checking OCSP stapling"
-	fi
+  if [ -n "${VERBOSE}" ] ; then
+             echo "checking OCSP stapling"
+  fi
 
-	exec_with_timeout "$TIMEOUT" "echo QUIT | openssl s_client -connect ${HOST}:${PORT} ${SERVERNAME} -status 2> /dev/null | grep -A 17 'OCSP response:' > $OCSP_RESPONSE_TMP"
+  exec_with_timeout "$TIMEOUT" "echo QUIT | openssl s_client -connect ${HOST}:${PORT} ${SERVERNAME} -status 2> /dev/null | grep -A 17 'OCSP response:' > $OCSP_RESPONSE_TMP"
 
-	if [ -n "${DEBUG}" ] ; then
-	    sed 's/^/[DBG]\ /' "${OCSP_RESPONSE_TMP}"
-	fi
+  if [ -n "${DEBUG}" ] ; then
+      sed 's/^/[DBG]\ /' "${OCSP_RESPONSE_TMP}"
+  fi
 
-	if ! grep -q 'Next Update' "${OCSP_RESPONSE_TMP}" ; then
-	    critical "OCSP stapling not enabled"
-	else
-	    if [ -n "${VERBOSE}" ] ; then
-       		echo "  OCSP stapling enabled"
-	    fi
-	fi
+  if ! grep -q 'Next Update' "${OCSP_RESPONSE_TMP}" ; then
+      critical "OCSP stapling not enabled"
+  else
+      if [ -n "${VERBOSE}" ] ; then
+           echo "  OCSP stapling enabled"
+      fi
+  fi
 
     fi
 
@@ -1422,7 +1422,7 @@ main() {
         echo "[DBG] CA_O       = ${CA_O}"
         echo "[DBG] CA_CN      = ${CA_CN}"
         echo "[DBG] SERIAL     = ${SERIAL}"
-	echo "[DBG] FINGERPRINT= ${FINGERPRINT}"
+  echo "[DBG] FINGERPRINT= ${FINGERPRINT}"
         echo "[DBG] OCSP_URI   = ${OCSP_URI}"
         echo "[DBG] ISSUER_URI = ${ISSUER_URI}"
         echo "[DBG] ${SIGNATURE_ALGORITHM}"
@@ -1469,7 +1469,7 @@ main() {
             if ! echo "${VALID_ATTRIBUTES}" | grep -q ",${ATTR}," ; then
                 unknown "Invalid certificate attribute: ${ATTR}"
             else
-		# shellcheck disable=SC2086
+    # shellcheck disable=SC2086
                 value="$(${OPENSSL} "${OPENSSL_COMMAND}" ${OPENSSL_PARAMS} -in "${CERT}" -noout -nameopt utf8,oneline,-esc_msb  -"${ATTR}" | sed -e "s/.*=//")"
                 LONG_OUTPUT="${LONG_OUTPUT}\\n${ATTR}: ${value}"
             fi
@@ -1491,7 +1491,7 @@ main() {
     # Compute for how many days the certificate will be valid
     if [ -n "${DATETYPE}" ]; then
 
-	# shellcheck disable=SC2086
+  # shellcheck disable=SC2086
         CERT_END_DATE=$($OPENSSL "${OPENSSL_COMMAND}" ${OPENSSL_PARAMS} -in "${CERT}" -noout ${OPENSSL_ENDDATE_OPTION} | sed -e "s/.*=//")
 
         OLDLANG=$LANG
@@ -2064,7 +2064,7 @@ EOF
             echo "[DBG] OCSP: host = ${OCSP_HOST}"
         fi
 
-	if [ -n "${OCSP_HOST}" ] ; then
+  if [ -n "${OCSP_HOST}" ] ; then
 
             # check if -header is supported
             OCSP_HEADER=""
@@ -2073,91 +2073,91 @@ EOF
             # so we check if the major version is greater than 0
             if "${OPENSSL}" version | grep -q '^LibreSSL' || [ "$( ${OPENSSL} version | sed -e 's/OpenSSL \([0-9]\).*/\1/g' )" -gt 0 ] ; then
 
-		if [ -n "${DEBUG}" ] ; then
+    if [ -n "${DEBUG}" ] ; then
                     echo "[DBG] openssl ocsp supports the -header option"
-		fi
+    fi
 
-		# the -header option was first accepting key and value separated by space. The newer versions are using key=value
-		KEYVALUE=""
-		if openssl ocsp -help 2>&1 | grep header | grep -q 'key=value' ; then
+    # the -header option was first accepting key and value separated by space. The newer versions are using key=value
+    KEYVALUE=""
+    if openssl ocsp -help 2>&1 | grep header | grep -q 'key=value' ; then
                     if [ -n "${DEBUG}" ] ; then
-			echo "[DBG] openssl ocsp -header requires 'key=value'"
+      echo "[DBG] openssl ocsp -header requires 'key=value'"
                     fi
                     KEYVALUE=1
-		else
+    else
                     if [ -n "${DEBUG}" ] ; then
-			echo "[DBG] openssl ocsp -header requires 'key value'"
+      echo "[DBG] openssl ocsp -header requires 'key value'"
                     fi
-		fi
+    fi
 
-		# http_proxy is sometimes lower- and sometimes uppercase. Programs usually check both
-		# shellcheck disable=SC2154
-		if [ -n "${http_proxy}" ] ; then
+    # http_proxy is sometimes lower- and sometimes uppercase. Programs usually check both
+    # shellcheck disable=SC2154
+    if [ -n "${http_proxy}" ] ; then
                     HTTP_PROXY="${http_proxy}"
-		fi
+    fi
 
-		if [ -n "${HTTP_PROXY:-}" ] ; then
+    if [ -n "${HTTP_PROXY:-}" ] ; then
 
                     if [ -n "${KEYVALUE}" ] ; then
-			if [ -n "${DEBUG}" ] ; then
+      if [ -n "${DEBUG}" ] ; then
                             echo "[DBG] executing $OPENSSL ocsp -no_nonce -issuer ${ISSUER_CERT} -cert ${CERT} -host ${HTTP_PROXY#*://} -path ${OCSP_URI} -header HOST=${OCSP_HOST}"
-			fi
-			OCSP_RESP="$($OPENSSL ocsp -no_nonce -issuer "${ISSUER_CERT}" -cert "${CERT}" -host "${HTTP_PROXY#*://}" -path "${OCSP_URI}" -header HOST="${OCSP_HOST}" 2>&1 )"
+      fi
+      OCSP_RESP="$($OPENSSL ocsp -no_nonce -issuer "${ISSUER_CERT}" -cert "${CERT}" -host "${HTTP_PROXY#*://}" -path "${OCSP_URI}" -header HOST="${OCSP_HOST}" 2>&1 )"
                     else
-			if [ -n "${DEBUG}" ] ; then
+      if [ -n "${DEBUG}" ] ; then
                             echo "[DBG] executing $OPENSSL ocsp -no_nonce -issuer ${ISSUER_CERT} -cert ${CERT} -host ${HTTP_PROXY#*://} -path ${OCSP_URI} -header HOST ${OCSP_HOST}"
-			fi
-			OCSP_RESP="$($OPENSSL ocsp -no_nonce -issuer "${ISSUER_CERT}" -cert "${CERT}" -host "${HTTP_PROXY#*://}" -path "${OCSP_URI}" -header HOST "${OCSP_HOST}" 2>&1 )"
+      fi
+      OCSP_RESP="$($OPENSSL ocsp -no_nonce -issuer "${ISSUER_CERT}" -cert "${CERT}" -host "${HTTP_PROXY#*://}" -path "${OCSP_URI}" -header HOST "${OCSP_HOST}" 2>&1 )"
                     fi
 
-		else
+    else
 
                     if [ -n "${KEYVALUE}" ] ; then
-			if [ -n "${DEBUG}" ] ; then
+      if [ -n "${DEBUG}" ] ; then
                             echo "[DBG] executing $OPENSSL ocsp -no_nonce -issuer ${ISSUER_CERT} -cert ${CERT}  -url ${OCSP_URI} ${OCSP_HEADER} -header HOST=${OCSP_HOST}"
-			fi
+      fi
                         OCSP_RESP="$($OPENSSL ocsp -no_nonce -issuer "${ISSUER_CERT}" -cert "${CERT}" -url "${OCSP_URI}" -header "HOST=${OCSP_HOST}" 2>&1 )"
                     else
-			if [ -n "${DEBUG}" ] ; then
-			    echo "[DBG] executing $OPENSSL ocsp -no_nonce -issuer ${ISSUER_CERT} -cert ${CERT}  -url ${OCSP_URI} ${OCSP_HEADER} -header HOST ${OCSP_HOST}"
-			fi
-			OCSP_RESP="$($OPENSSL ocsp -no_nonce -issuer "${ISSUER_CERT}" -cert "${CERT}" -url "${OCSP_URI}" -header HOST "${OCSP_HOST}" 2>&1 )"
+      if [ -n "${DEBUG}" ] ; then
+          echo "[DBG] executing $OPENSSL ocsp -no_nonce -issuer ${ISSUER_CERT} -cert ${CERT}  -url ${OCSP_URI} ${OCSP_HEADER} -header HOST ${OCSP_HOST}"
+      fi
+      OCSP_RESP="$($OPENSSL ocsp -no_nonce -issuer "${ISSUER_CERT}" -cert "${CERT}" -url "${OCSP_URI}" -header HOST "${OCSP_HOST}" 2>&1 )"
                     fi
 
-		fi
+    fi
 
-		if [ -n "${DEBUG}" ] ; then
+    if [ -n "${DEBUG}" ] ; then
                     echo "${OCSP_RESP}" | sed 's/^/[DBG] OCSP: response = /'
-		fi
+    fi
 
-		if echo "${OCSP_RESP}" | grep -qi "revoked" ; then
+    if echo "${OCSP_RESP}" | grep -qi "revoked" ; then
                     critical "certificate is revoked"
-		elif ! echo "${OCSP_RESP}" | grep -qi "good" ; then
+    elif ! echo "${OCSP_RESP}" | grep -qi "good" ; then
 
                     if [ -n "${HTTP_PROXY:-}" ] ; then
-			OCSP_RESP="$($OPENSSL ocsp -no_nonce -issuer "${ISSUER_CERT}" -cert "${CERT}" -host "${HTTP_PROXY#*://}" -path "${OCSP_URI}" "${OCSP_HEADER}" 2>&1 )"
+      OCSP_RESP="$($OPENSSL ocsp -no_nonce -issuer "${ISSUER_CERT}" -cert "${CERT}" -host "${HTTP_PROXY#*://}" -path "${OCSP_URI}" "${OCSP_HEADER}" 2>&1 )"
                     else
-			OCSP_RESP="$($OPENSSL ocsp -no_nonce -issuer "${ISSUER_CERT}" -cert "${CERT}" -url "${OCSP_URI}" "${OCSP_HEADER}" 2>&1 )"
+      OCSP_RESP="$($OPENSSL ocsp -no_nonce -issuer "${ISSUER_CERT}" -cert "${CERT}" -url "${OCSP_URI}" "${OCSP_HEADER}" 2>&1 )"
                     fi
                     critical "${OCSP_RESP}"
 
-		fi
+    fi
 
             else
 
-		if [ -n "${VERBOSE}" ] ; then
+    if [ -n "${VERBOSE}" ] ; then
                     echo "openssl ocsp does not support the -header option: disabling OCSP checks"
-		fi
+    fi
 
             fi
 
-	else
+  else
 
-	    if [ -n "${VERBOSE}" ] ; then
+      if [ -n "${VERBOSE}" ] ; then
                 echo "no OCSP host found: disabling OCSP checks"
-	    fi
+      fi
 
-	fi
+  fi
 
     fi
 
