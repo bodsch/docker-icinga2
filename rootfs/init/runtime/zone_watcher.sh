@@ -76,10 +76,12 @@ inotifywait \
 
         # kill myself to finalize
         #
+set -x
         pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
-        [[ -z "${pid}" ]] || killall icinga2 > /dev/null 2> /dev/null
+        [[ $(echo -e "${pid}" | wc -w) -gt 0 ]] && killall icinga2 > /dev/null 2> /dev/null
         # killall icinga2
         exit 1
+set +x
       fi
     fi
   done
