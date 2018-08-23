@@ -16,6 +16,11 @@ remove_satellite_from_master() {
 
 add_satellite_to_master() {
 
+  if [[ "${ADD_SATELLITE_TO_MASTER}" = false ]]
+  then
+    return
+  fi
+
   # helper function to create json for the curl commando below
   #
   api_satellite_host() {
