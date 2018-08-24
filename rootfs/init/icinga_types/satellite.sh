@@ -26,6 +26,23 @@ add_satellite_to_master() {
   api_satellite_host() {
     fqdn="$(hostname -f)"
     ip="$(hostname -i)"
+
+    if [[ -f "/import/host_object_data_${fqdn}.json" ]]
+    then
+      log_debug "use: /import/host_object_data_${fqdn}.json"
+      cat /import/host_object_data_${fqdn}.json | \
+      sed -e \
+        "s|%FQDN%|${fqdn}|g"
+
+    elif [[ -f "/import/host_object_data.json" ]]
+    then
+      log_debug "use: /import/host_object_data.json"
+      cat /import/host_object_data.json | \
+      sed -e \
+        "s|%FQDN%|${fqdn}|g"
+
+    else
+      log_debug "use: fallback"
 cat << EOF
 {
   "templates": [ "satellite-host" ],
@@ -67,6 +84,7 @@ cat << EOF
   }
 }
 EOF
+    fi
   }
 
   . /init/wait_for/icinga_master.sh
