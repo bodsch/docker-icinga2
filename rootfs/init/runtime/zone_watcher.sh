@@ -71,15 +71,18 @@ inotifywait \
 
         # touch file for later add the satellite to the master over API
         #
+        log_debug "touch /tmp/add_host"
         touch /tmp/add_host
+
         log_info "now, we need an restart for certificate and zone reloading."
 
         # kill myself to finalize
         #
+        ps ax | grep icinga2
 set -x
-        pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
-        [[ $(echo -e "${pid}" | wc -w) -gt 0 ]] && killall icinga2 > /dev/null 2> /dev/null
-        # killall icinga2
+        pid=$(ps ax | grep icinga2 | grep -v grep | grep daemon | awk '{print $1}')
+        [[ $(echo -e "${pid}" | wc -w) -gt 0 ]] && killall --verbose --signal KILL icinga2 > /dev/null 2> /dev/null
+
         exit 1
 set +x
       fi

@@ -1,0 +1,17 @@
+{
+  "templates": [ "satellite-host" ],
+  "attrs": {
+    "command_endpoint": "%FQDN%",
+    "zone": "%FQDN%",
+    "enable_notifications": true,
+    "groups": ["icinga-satellites"],
+    "max_check_attempts": "2",
+    "check_interval": "30",
+    "retry_interval": "10",
+    "vars": {
+      "os": "Docker",
+      "remote_endpoint": "%FQDN%",
+      "satellite": "true"
+    }
+  }
+}

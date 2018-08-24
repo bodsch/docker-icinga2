@@ -16,6 +16,8 @@ remove_satellite_from_master() {
 
 add_satellite_to_master() {
 
+  log_debug "add satellite: ${ADD_SATELLITE_TO_MASTER}"
+
   if [[ "${ADD_SATELLITE_TO_MASTER}" = false ]]
   then
     return
@@ -27,22 +29,20 @@ add_satellite_to_master() {
     fqdn="$(hostname -f)"
     ip="$(hostname -i)"
 
-    if [[ -f "/import/host_object_data_${fqdn}.json" ]]
-    then
-      log_debug "use: /import/host_object_data_${fqdn}.json"
-      cat /import/host_object_data_${fqdn}.json | \
-      sed -e \
-        "s|%FQDN%|${fqdn}|g"
+    templates=("host_object_data_${fqdn}.json" "host_object_data.json")
+    template=
 
-    elif [[ -f "/import/host_object_data.json" ]]
-    then
-      log_debug "use: /import/host_object_data.json"
-      cat /import/host_object_data.json | \
-      sed -e \
-        "s|%FQDN%|${fqdn}|g"
+    for i in "${templates[@]}"
+    do
+      if [[ -f "/import/${i}" ]]
+      then
+        template="/import/${i}"
+        break
+      fi
+    done
 
-    else
-      log_debug "use: fallback"
+    if [[ -z ${template} ]]
+    then
 cat << EOF
 {
   "templates": [ "satellite-host" ],
@@ -84,7 +84,70 @@ cat << EOF
   }
 }
 EOF
+    else
+      cat $(cat ${template} | \
+      sed -e \
+        "s|%FQDN%|${fqdn}|g")
     fi
+
+#    if [[ -f "/import/host_object_data_${fqdn}.json" ]]
+#    then
+#      log_debug "use: /import/host_object_data_${fqdn}.json"
+#      cat /import/host_object_data_${fqdn}.json | \
+#      sed -e \
+#        "s|%FQDN%|${fqdn}|g"
+#
+#    elif [[ -f "/import/host_object_data.json" ]]
+#    then
+#      log_debug "use: /import/host_object_data.json"
+#      cat /import/host_object_data.json | \
+#      sed -e \
+#        "s|%FQDN%|${fqdn}|g"
+#
+#    else
+#      log_debug "use: fallback"
+#cat << EOF
+#{
+#  "templates": [ "satellite-host" ],
+#  "attrs": {
+#    "command_endpoint": "${fqdn}",
+#    "enable_notifications": true,
+#    "groups": ["icinga-satellites"],
+#    "max_check_attempts": "2",
+#    "check_interval": "30",
+#    "retry_interval": "10",
+#    "zone": "${fqdn}",
+#    "vars": {
+#      "os": "Docker",
+#      "remote_endpoint": "${fqdn}",
+#      "satellite": "true",
+#      "disks": {
+#        "disk /": {
+#          "disk_partitions": "/",
+#          "disk_exclude_type": [
+#            "none",
+#            "tmpfs",
+#            "sysfs",
+#            "proc",
+#            "configfs",
+#            "devtmpfs",
+#            "devfs",
+#            "mtmfs",
+#            "tracefs",
+#            "cgroup",
+#            "fuse.gvfsd-fuse",
+#            "fuse.gvfs-fuse-daemon",
+#            "fdescfs",
+#            "nsfs"
+#          ]
+#        }
+#      },
+#      "memory": "true"
+#    }
+#  }
+#}
+#EOF
+#    fi
   }
 
   . /init/wait_for/icinga_master.sh
@@ -115,6 +178,8 @@ EOF
       #
       log_info "add myself to my master '${ICINGA2_MASTER}'"
 
+      log_debug "$(api_satellite_host)"
+
       code=$(curl \
         ${curl_opts} \
         --header "Accept: application/json" \
@@ -122,7 +187,7 @@ EOF
         --data "$(api_satellite_host)" \
         https://${ICINGA2_MASTER}:5665/v1/objects/hosts/$(hostname -f))
 
-#       log_info "${code}"
+      log_info "${code}"
 
       if [[ $? -eq 0 ]]
       then
@@ -131,7 +196,7 @@ EOF
 
         log_info "${message}"
 
-        touch /tmp/final
+#        touch /tmp/final
       else
         status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
         message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
@@ -482,12 +547,19 @@ configure_icinga2_satellite() {
     exit 1
   fi
 
+  ls -lth /tmp/*
+
   if [[ -e /tmp/add_host ]] && [[ ! -e /tmp/final ]]
   then
+    log_debug "add satellite to master"
     add_satellite_to_master
 
+    log_debug "touch /tmp/final"
+    touch /tmp/final
     sleep 10s
   fi
 }
+
+ls -lth /tmp/*
 
 configure_icinga2_satellite
