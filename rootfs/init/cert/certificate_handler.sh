@@ -12,7 +12,10 @@ create_ca() {
 
     [[ -f ${PKI_KEY_FILE} ]] && rm -rf ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}*
 
-    icinga2 api setup
+    /usr/sbin/icinga2 \
+      api \
+      setup \
+      --log-level ${ICINGA2_LOGLEVEL}
 
     # api setup has failed
     # we remove all cert related directies and files and leave the container
@@ -39,19 +42,24 @@ create_ca() {
   then
     log_info "create new certificate"
 
-    ${PKI_CMD} new-cert --cn ${HOSTNAME} --key ${PKI_KEY_FILE} --csr ${PKI_CSR_FILE}
-    ${PKI_CMD} sign-csr --csr ${PKI_CSR_FILE} --cert ${PKI_CRT_FILE}
+    /usr/sbin/icinga2 \
+      pki \
+      new-cert \
+      --cn ${HOSTNAME} \
+      --key ${PKI_KEY_FILE} \
+      --csr ${PKI_CSR_FILE} \
+      --log-level ${ICINGA2_LOGLEVEL}
+
+    /usr/sbin/icinga2 \
+      pki \
+      sign-csr \
+      --csr ${PKI_CSR_FILE} \
+      --cert ${PKI_CRT_FILE} \
+      --log-level ${ICINGA2_LOGLEVEL}
 
     correct_rights
 
-    /usr/sbin/icinga2 \
-      daemon \
-      --validate
-
-    if [[ $? -gt 0 ]]
-    then
-      exit $?
-    fi
+    validate_icinga_config
 
     chown -R ${USER}:${GROUP} ${ICINGA2_CERT_DIRECTORY}
     chmod 600 ${ICINGA2_CERT_DIRECTORY}/*.key
@@ -126,41 +134,3 @@ create_certificate_pem() {
     cat ${HOSTNAME}.crt ${HOSTNAME}.key >> ${HOSTNAME}.pem
   fi
 }
-
-# validate our lokal certificate against our icinga-master
-# with an API Request against https://${ICINGA2_HOST}:${ICINGA2_API_PORT}/v1/status/CIB
-#
-# if this failed, the PKI schould be removed
-#
-# validate_cert() {
-#
-#   if [ -d ${ICINGA2_CERT_DIRECTORY}/ ]
-#   then
-#     cd ${ICINGA2_CERT_DIRECTORY}
-#
-#     if [ ! -f ${HOSTNAME}.pem ]
-#     then
-#       cat ${HOSTNAME}.crt ${HOSTNAME}.key >> ${HOSTNAME}.pem
-#     fi
-#
-#     log_info "validate our certifiacte"
-#
-#     code=$(curl \
-#       --silent \
-#       --insecure \
-#       --user ${CERT_SERVICE_API_USER}:${CERT_SERVICE_API_PASSWORD} \
-#       --capath . \
-#       --cert ./${HOSTNAME}.pem \
-#       --cacert ./ca.crt \
-#       https://${ICINGA2_MASTER}:5665/v1/status/CIB)
-#
-#     echo ${code}
-#
-# #     if [[ $? -gt 0 ]]
-# #     then
-# #       cd /
-# #       rm -rf ${ICINGA2_CERT_DIRECTORY}/*
-# #     fi
-#   fi
-# }
-

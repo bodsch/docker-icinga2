@@ -18,6 +18,11 @@ log_info() {
   log_output "" "${message}"
 }
 
+log_INFO() {
+  message="${1}"
+  log_output "" "${BOLD}${message}${NC}"
+}
+
 log_warn() {
   message="${1}"
   log_output "${BLUE}${BOLD}WARNING${NC}" "${message}"

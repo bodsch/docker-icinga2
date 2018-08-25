@@ -5,7 +5,6 @@
 set +e
 set +u
 
-ICINGA2_PARAMS=
 
 finish() {
   rv=$?
@@ -16,7 +15,18 @@ finish() {
 
 trap finish SIGINT SIGTERM INT TERM EXIT
 
+# -------------------------------------------------------------------------------------------------
+
 . /etc/profile
+
+. /init/output.sh
+. /usr/bin/vercomp
+. /init/environment.sh
+. /init/runtime/service_handler.sh
+
+# -------------------------------------------------------------------------------------------------
+
+ICINGA2_PARAMS=
 
 # if [[ -z ${DEBUG+x} ]]; then echo "DEBUG is unset"; else echo "DEBUG is set to '$DEBUG'"; fi
 
@@ -26,16 +36,11 @@ then
   if ( [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]] )
   then
     set -x
-    ICINGA2_PARAMS="--log-level debug"
+    ICINGA2_LOGLEVEL="debug"
   fi
 fi
 
-# [[ -f /etc/environment ]] && . /etc/environment
-
-. /init/output.sh
-. /usr/bin/vercomp
-. /init/environment.sh
-. /init/runtime/service_handler.sh
+ICINGA2_PARAMS="--log-level ${ICINGA2_LOGLEVEL}"
 
 # -------------------------------------------------------------------------------------------------
 
@@ -92,9 +97,9 @@ run() {
 
   correct_rights
 
-  log_info "---------------------------------------------------"
+  log_info "----------------------------------------------------"
   log_info " Icinga ${ICINGA2_TYPE} Version ${ICINGA2_VERSION} - build: ${BUILD_DATE}"
-  log_info "---------------------------------------------------"
+  log_info "----------------------------------------------------"
 
   custom_scripts
 

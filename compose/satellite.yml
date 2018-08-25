@@ -61,7 +61,7 @@ services:
       - CERT_SERVICE_PORT=443
       - CERT_SERVICE_PATH=/cert-service/
     volumes:
-      - ./import:/import:ro
+      - ../import:/import:ro
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /sys:/sys:ro

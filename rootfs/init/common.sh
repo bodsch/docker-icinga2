@@ -148,6 +148,15 @@ prepare() {
       's|// include_recursive "demo"|include_recursive "demo"|g' \
       /etc/icinga2/icinga2.conf
   fi
+
+  cat << EOF > /etc/icinga2/features-available/mainlog.conf
+#  https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#objecttype-filelogger
+object FileLogger "main-log" {
+  severity = "notice"
+  path = LocalStateDir + "/log/icinga2/icinga2.log"
+}
+EOF
+
 }
 
 # enable Icinga2 Feature
@@ -251,5 +260,13 @@ validate_icinga_config() {
   #
   /usr/sbin/icinga2 \
     daemon \
-    --validate
+    --validate > /dev/null
+
+  # validation are not successful
+  #
+  if [[ $? -gt 0 ]]
+  then
+    log_error "the validation of our configuration was not successful."
+    exit 1
+  fi
 }

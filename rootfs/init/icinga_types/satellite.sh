@@ -16,8 +16,6 @@ remove_satellite_from_master() {
 
 add_satellite_to_master() {
 
-  log_debug "add satellite: ${ADD_SATELLITE_TO_MASTER}"
-
   if [[ "${ADD_SATELLITE_TO_MASTER}" = false ]]
   then
     return
@@ -26,6 +24,7 @@ add_satellite_to_master() {
   # helper function to create json for the curl commando below
   #
   api_satellite_host() {
+
     fqdn="$(hostname -f)"
     ip="$(hostname -i)"
 
@@ -85,69 +84,10 @@ cat << EOF
 }
 EOF
     else
-      cat $(cat ${template} | \
+      cat ${template} | \
       sed -e \
-        "s|%FQDN%|${fqdn}|g")
+        "s|%FQDN%|${fqdn}|g"
     fi
-
-#    if [[ -f "/import/host_object_data_${fqdn}.json" ]]
-#    then
-#      log_debug "use: /import/host_object_data_${fqdn}.json"
-#      cat /import/host_object_data_${fqdn}.json | \
-#      sed -e \
-#        "s|%FQDN%|${fqdn}|g"
-#
-#    elif [[ -f "/import/host_object_data.json" ]]
-#    then
-#      log_debug "use: /import/host_object_data.json"
-#      cat /import/host_object_data.json | \
-#      sed -e \
-#        "s|%FQDN%|${fqdn}|g"
-#
-#    else
-#      log_debug "use: fallback"
-#cat << EOF
-#{
-#  "templates": [ "satellite-host" ],
-#  "attrs": {
-#    "command_endpoint": "${fqdn}",
-#    "enable_notifications": true,
-#    "groups": ["icinga-satellites"],
-#    "max_check_attempts": "2",
-#    "check_interval": "30",
-#    "retry_interval": "10",
-#    "zone": "${fqdn}",
-#    "vars": {
-#      "os": "Docker",
-#      "remote_endpoint": "${fqdn}",
-#      "satellite": "true",
-#      "disks": {
-#        "disk /": {
-#          "disk_partitions": "/",
-#          "disk_exclude_type": [
-#            "none",
-#            "tmpfs",
-#            "sysfs",
-#            "proc",
-#            "configfs",
-#            "devtmpfs",
-#            "devfs",
-#            "mtmfs",
-#            "tracefs",
-#            "cgroup",
-#            "fuse.gvfsd-fuse",
-#            "fuse.gvfs-fuse-daemon",
-#            "fdescfs",
-#            "nsfs"
-#          ]
-#        }
-#      },
-#      "memory": "true"
-#    }
-#  }
-#}
-#EOF
-#    fi
   }
 
   . /init/wait_for/icinga_master.sh
@@ -168,9 +108,6 @@ EOF
     status=$(echo "${code}" | jq --raw-output '.error' 2> /dev/null)
     message=$(echo "${code}" | jq --raw-output '.status' 2> /dev/null)
 
-#    log_info "${status}"
-#    log_info "${message}"
-
     if [[ "${status}" = "404" ]]
     then
 
@@ -178,16 +115,12 @@ EOF
       #
       log_info "add myself to my master '${ICINGA2_MASTER}'"
 
-      log_debug "$(api_satellite_host)"
-
       code=$(curl \
         ${curl_opts} \
         --header "Accept: application/json" \
         --request PUT \
         --data "$(api_satellite_host)" \
         https://${ICINGA2_MASTER}:5665/v1/objects/hosts/$(hostname -f))
-
-      log_info "${code}"
 
       if [[ $? -eq 0 ]]
       then
@@ -206,7 +139,6 @@ EOF
         add_satellite_to_master
       fi
     else
-
       log_info "update host"
       log_info "missing implementation"
     fi
@@ -521,7 +453,7 @@ configure_icinga2_satellite() {
       -e 's|^object Zone ZoneName.*}$|object Zone ZoneName { endpoints = [ NodeName ]; parent = "master" }|g' \
       /etc/icinga2/zones.conf
 
-    log_warn "waiting for reconnecting and certifiacte signing"
+    log_info "waiting for reconnecting and certifiacte signing"
 
     . /init/wait_for/icinga_master.sh
 
@@ -535,31 +467,15 @@ configure_icinga2_satellite() {
 
   # test the configuration
   #
-  /usr/sbin/icinga2 \
-    daemon \
-    --validate
-
-  # validation are not successful
-  #
-  if [[ $? -gt 0 ]]
-  then
-    log_error "the validation of our configuration was not successful."
-    exit 1
-  fi
-
-  ls -lth /tmp/*
+  validate_icinga_config
 
   if [[ -e /tmp/add_host ]] && [[ ! -e /tmp/final ]]
   then
-    log_debug "add satellite to master"
     add_satellite_to_master
 
-    log_debug "touch /tmp/final"
     touch /tmp/final
     sleep 10s
   fi
 }
-
-ls -lth /tmp/*
 
 configure_icinga2_satellite

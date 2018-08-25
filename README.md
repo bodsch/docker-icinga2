@@ -181,6 +181,12 @@ For Examples to create a certificate with commandline tools look into `rootfs/in
 
 **make sure you only use the environment variable you need!**
 
+## icinga2
+
+| Environmental Variable             | Default Value        | Description                                                     |
+| :--------------------------------- | :-------------       | :-----------                                                    |
+| `ICINGA2_LOGLEVEL`                 | `warning`            | The minimum severity for the main-log.<br>For more information, see into the [icinga doku](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#objecttype-filelogger) |
+
 ## database support
 
 | Environmental Variable             | Default Value        | Description                                                     |

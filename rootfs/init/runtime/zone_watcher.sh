@@ -26,8 +26,14 @@ inotifywait \
   while read path action file
   do
     [[ -z "${file}" ]] && continue
+    [[ ${path} =~ backup ]] && continue
 
-    log_info "api zone monitor - The file '$file' appeared in directory '$path' via '$action'"
+    if [[ "${file}" == "current" ]] || [[ "${file}" == "_etc" ]] || [[ "${file}" == ".timestamp" ]]
+    then
+      continue
+    fi
+
+    # log_debug "api zone monitor - The file '$file' appeared in directory '$path' via '$action'"
 
     # monitor CLOSE_WRITE,CLOSE
     #
@@ -71,20 +77,15 @@ inotifywait \
 
         # touch file for later add the satellite to the master over API
         #
-        log_debug "touch /tmp/add_host"
         touch /tmp/add_host
 
-        log_info "now, we need an restart for certificate and zone reloading."
+        log_INFO "now, we need an restart for certificate and zone reloading."
 
         # kill myself to finalize
         #
-        ps ax | grep icinga2
-set -x
         pid=$(ps ax | grep icinga2 | grep -v grep | grep daemon | awk '{print $1}')
-        [[ $(echo -e "${pid}" | wc -w) -gt 0 ]] && killall --verbose --signal KILL icinga2 > /dev/null 2> /dev/null
-
-        exit 1
-set +x
+        [[ $(echo -e "${pid}" | wc -w) -gt 0 ]] && killall --verbose --signal HUP icinga2 > /dev/null 2> /dev/null
+#        exit 1
       fi
     fi
   done

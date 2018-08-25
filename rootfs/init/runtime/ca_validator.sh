@@ -31,11 +31,6 @@ do
     warn=300  #  5 minuten
     crit=600  # 10 minuten
 
-#    log_debug "icinga2 api user: '${CERT_SERVICE_API_USER}'"
-#    log_debug "icinga2 api pass: '${CERT_SERVICE_API_PASSWORD}'"
-#    log_debug "icinga2 master  : '${ICINGA2_MASTER}'"
-#    log_debug "icinga2 api port: '${ICINGA2_API_PORT}'"
-
     message=$(jq --raw-output .message ${sign_file} 2> /dev/null)
     master_name=$(jq --raw-output .master_name ${sign_file} 2> /dev/null)
     master_ip=$(jq --raw-output .master_ip ${sign_file} 2> /dev/null)
@@ -46,16 +41,6 @@ do
     current_timestamp=$(date +%s)
     diff=$(expr ${current_timestamp} - ${timestamp})
     diff_full=$(printf '%dh:%dm:%ds\n' $((${diff}/3600)) $((${diff}%3600/60)) $((${diff}%60)))
-
-#    log_info "${message}"
-#    log_debug "  - ${date}"
-#    log_debug "  - ${master_name}"
-#    log_debug "  - ${master_ip}"
-#    log_debug "  - ${timestamp}"
-#    log_debug "  - ${current_timestamp}"
-#    log_debug "diff: ${diff} seconds  (${diff_full})"
-#    log_debug "old: $(date -d @${timestamp})  (${date})"
-#    log_debug "new: $(date -d @${current_timestamp})"
 
     curl_opts=
     if [[ -f ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.pem ]]
@@ -113,13 +98,11 @@ do
           log_error "Our certificate request is already ${diff_full} old"
           log_error "and we're not connected to the master yet."
           log_error "That's a problem"
-          log_error "This satellite will be reset and restarted"
+          log_INFO "This satellite will now be reset and restarted"
 
-set -x
-          pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
-          [[ $(echo -e "${pid}" | wc -w) -gt 0 ]] && killall icinga2 > /dev/null 2> /dev/null
+          pid=$(ps ax | grep icinga2 | grep -v grep | grep daemon | awk '{print $1}')
+          [[ $(echo -e "${pid}" | wc -w) -gt 0 ]] && killall --verbose --signal HUP icinga2 > /dev/null 2> /dev/null
           exit 1
-set +x
         fi
       else
         # DAS GEHT?
@@ -129,13 +112,11 @@ set +x
   else
     log_error "i can't find the sign file '${sign_file}'"
     log_error "That's a problem"
-    log_error "This satellite will be reset and restarted"
+    log_INFO "This satellite will now be reset and restarted"
 
-set -x
-    pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
-    [[ -z "${pid}" ]] || killall icinga2 > /dev/null 2> /dev/null
+    pid=$(ps ax | grep icinga2 | grep -v grep | grep daemon | awk '{print $1}')
+    [[ $(echo -e "${pid}" | wc -w) -gt 0 ]] && killall --verbose --signal HUP icinga2 > /dev/null 2> /dev/null
     exit 1
-set +x
   fi
 
   . /init/wait_for/cert_service.sh
@@ -145,13 +126,13 @@ set +x
   then
     log_error "The validation of our CA was not successful."
     log_error "That's a problem"
-    log_error "This satellite will be reset and restarted"
+    log_INFO "This satellite will now be reset and restarted"
 
-set -x
-    pid=$(ps ax | grep icinga2 | grep daemon | grep -v grep | awk '{print $1}')
-    [[ -z "${pid}" ]] || killall icinga2 > /dev/null 2> /dev/null
+    rm -rf ${ICINGA2_CERT_DIRECTORY}/*
+
+    pid=$(ps ax | grep icinga2 | grep -v grep | grep daemon | awk '{print $1}')
+    [[ $(echo -e "${pid}" | wc -w) -gt 0 ]] && killall --verbose --signal HUP icinga2 > /dev/null 2> /dev/null
     exit 1
-set +x
   fi
 
   sleep 5m

@@ -7,6 +7,8 @@ HOSTNAME=$(hostname -f)
 ICINGA2_CERT_DIRECTORY="/var/lib/icinga2/certs"
 ICINGA2_LIB_DIRECTORY="/var/lib/icinga2"
 
+ICINGA2_LOGLEVEL=${ICINGA2_LOGLEVEL:-"warning"}
+
 ICINGA2_MAJOR_VERSION=$(icinga2 --version | head -n1 | awk -F 'version: ' '{printf $2}' | awk -F \. {'print $1 "." $2'} | sed 's|r||')
 [[ "${ICINGA2_MAJOR_VERSION}" = "2.7" ]] && ICINGA2_CERT_DIRECTORY="/etc/icinga2/certs"
 
