@@ -252,135 +252,242 @@ For Examples to create a certificate with commandline tools look into `rootfs/in
 
 # Icinga2 Master and Satellite
 
-To connect a satellite to a master, the master must have activated the Cert service and the satellite must know how to reach it.
+To connect a satellite to a master, the master must have activated the Cert service and the satellite must know how
+to reach it.
 
-A docker-compose **example** could look like this:
+A docker-compose file can be created with `make compose-file` and look like this::
 
 ```bash
----
-version: '3.3'
-
 networks:
-  frontend:
-  backend:
-  database:
-  satellite:
-
+  backend: {}
+  database: {}
+  frontend: {}
+  satellite: {}
 services:
-
   database:
-    image: bodsch/docker-mysql:10.1.28-r1
     container_name: database
+    environment:
+      MYSQL_ROOT_PASS: vYUQ14SGVrJRi69PsujC
+      MYSQL_SYSTEM_USER: root
     hostname: database
-    environment:
-      - MYSQL_SYSTEM_USER=root
-      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /tmp/docker-data/database:/srv
+    image: bodsch/docker-mysql:latest
     networks:
-      - database
-
-  # icingaweb2
-  #
-  icingaweb2:
-    image: bodsch/docker-icingaweb2:latest
-    container_name: icingaweb2
-    hostname: icingaweb2.matrix.lan
-    ports:
-      - 80:80
-    environment:
-      - ICINGA2_HOST=icinga2-master.matrix.lan
-      - MYSQL_HOST=database
-      - MYSQL_ROOT_USER=root
-      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
-      - ICINGA2_CMD_API_USER=root
-      - ICINGA2_CMD_API_PASS=icinga
-      - ICINGAWEB2_USERS=icinga:icinga,foo:bar
-      - IDO_DATABASE_NAME=icinga2core
-      - IDO_PASSWORD=qUVuLTk9oEDUV0A
+      backend: null
+      database: null
     volumes:
-      - /tmp/docker-data/icingaweb2:/srv
-    links:
-      - icinga2-master:icinga2-master.matrix.lan
-      - database
-    networks:
-      - database
-      - frontend
-      - backend
-
-  # the Icinga2 Master
-  # includes a certificate service to create and provide a icinga certificate
+    - /etc/localtime:/etc/localtime:ro
   icinga2-master:
-    build: icinga2-master
+    build:
+      args:
+        BUILD_DATE: '2018-08-25'
+        BUILD_VERSION: '1808'
+        CERT_SERVICE_TYPE: stable
+        CERT_SERVICE_VERSION: 0.18.3
+        ICINGA2_VERSION: 2.9.1
+      context: /src/docker/docker-icinga2
+      dockerfile: Dockerfile.master
     container_name: icinga2-master
+    environment:
+      BASIC_AUTH_PASS: admin
+      BASIC_AUTH_USER: admin
+      CARBON_HOST: ''
+      CARBON_PORT: '2003'
+      CERT_SERVICE_API_PASSWORD: icinga
+      CERT_SERVICE_API_USER: root
+      CERT_SERVICE_BA_PASSWORD: admin
+      CERT_SERVICE_BA_USER: admin
+      CERT_SERVICE_PATH: /cert-service/
+      CERT_SERVICE_PORT: '443'
+      CERT_SERVICE_SERVER: nginx
+      DEBUG: '0'
+      DEMO_DATA: "false"
+      ICINGA2_API_USERS: root:icinga,dashing:dashing,cert:foo-bar
+      ICINGA2_MASTER: icinga2-master.matrix.lan
+      IDO_PASSWORD: qUVuLTk9oEDUV0A
+      LOG_LEVEL: INFO
+      MYSQL_HOST: database
+      MYSQL_ROOT_PASS: vYUQ14SGVrJRi69PsujC
+      MYSQL_ROOT_USER: root
     hostname: icinga2-master.matrix.lan
-    restart: always
-    privileged: true
+    links:
+    - database
+    networks:
+      backend: null
+      database: null
     ports:
-      - 5665:5665
-      - 8080:8080
-    environment:
-      - ICINGA2_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
-      - LOG_LEVEL=debug
-      - MYSQL_HOST=database
-      - MYSQL_ROOT_USER=root
-      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
-      - IDO_PASSWORD=qUVuLTk9oEDUV0A
-      # environment variables for the certificates service
-      - ICINGA2_MASTER=icinga2-master.matrix.lan
-      - BASIC_AUTH_USER=admin
-      - BASIC_AUTH_PASS=admin
-      - CERT_SERVICE_BA_USER=admin
-      - CERT_SERVICE_BA_PASSWORD=admin
-      - CERT_SERVICE_API_USER=root
-      - CERT_SERVICE_API_PASSWORD=icinga
-      - CERT_SERVICE_SERVER=icinga2-master
-      - CERT_SERVICE_PORT=8080
-      - CERT_SERVICE_PATH=/
-      - CARBON_HOST=
-      - CARBON_PORT=2003
-      - DEMO_DATA=false
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-#      - /tmp/docker-data/icinga2-master:/var/lib/icinga2
-    links:
-      - database
-    extra_hosts:
-      - dl-cdn.alpinelinux.org:192.168.0.20
-    networks:
-      - database
-      - backend
-
-
-  # the first icinga2 satellite
-  # ask the master above for an certificate
-  #
-  # this satellite should work, the BA is correct
-  icinga2-satellite-1:
-    build: icinga2-satellite
-    container_name: icinga2-satellite-1
-    hostname: icinga2-satellite-1.matrix.lan
+    - published: 5665
+      target: 5665
+    - published: 8080
+      target: 8080
+    privileged: false
     restart: always
-    privileged: true
-    environment:
-      - ICINGA2_MASTER=icinga2-master.matrix.lan
-      - ICINGA2_PARENT=icinga2-master.matrix.lan
-      - CERT_SERVICE_BA_USER=admin
-      - CERT_SERVICE_BA_PASSWORD=admin
-      - CERT_SERVICE_API_USER=root
-      - CERT_SERVICE_API_PASSWORD=icinga
-      - CERT_SERVICE_SERVER=icinga2-master.matrix.lan
-      - CERT_SERVICE_PORT=8080
-      - CERT_SERVICE_PATH=/
     volumes:
-      - /etc/localtime:/etc/localtime:ro
+    - /etc/localtime:/etc/localtime:ro
+  icinga2-satellite-1:
+    build:
+      args:
+        BUILD_DATE: '2018-08-25'
+        BUILD_VERSION: '1808'
+        ICINGA2_VERSION: 2.9.1
+      context: /src/docker/docker-icinga2
+      dockerfile: Dockerfile.satellite
+    container_name: icinga2-satellite-1
+    environment:
+      CERT_SERVICE_API_PASSWORD: icinga
+      CERT_SERVICE_API_USER: root
+      CERT_SERVICE_BA_PASSWORD: admin
+      CERT_SERVICE_BA_USER: admin
+      CERT_SERVICE_PATH: /cert-service/
+      CERT_SERVICE_PORT: '443'
+      CERT_SERVICE_SERVER: nginx
+      DEBUG: '0'
+      ICINGA2_MASTER: icinga2-master.matrix.lan
+      ICINGA2_PARENT: icinga2-master.matrix.lan
+    hostname: icinga2-satellite-1.matrix.lan
     links:
-      - icinga2-master:icinga2-master.matrix.lan
+    - icinga2-master:icinga2-master.matrix.lan
     networks:
-      - backend
-      - satellite
+      backend: null
+      satellite: null
+    privileged: true
+    restart: always
+    volumes:
+    - /dev:/dev:ro
+    - /proc:/host/proc:ro
+    - /sys:/host/sys:ro
+    - /sys:/sys:ro
+  icinga2-satellite-2:
+    build:
+      args:
+        BUILD_DATE: '2018-08-25'
+        BUILD_VERSION: '1808'
+        ICINGA2_VERSION: 2.9.1
+      context: /src/docker/docker-icinga2
+      dockerfile: Dockerfile.satellite
+    container_name: icinga2-satellite-2
+    environment:
+      CERT_SERVICE_API_PASSWORD: icinga
+      CERT_SERVICE_API_USER: root
+      CERT_SERVICE_BA_PASSWORD: admin
+      CERT_SERVICE_BA_USER: admin
+      CERT_SERVICE_PATH: /cert-service/
+      CERT_SERVICE_PORT: '443'
+      CERT_SERVICE_SERVER: nginx
+      DEBUG: '0'
+      ICINGA2_MASTER: icinga2-master.matrix.lan
+      ICINGA2_PARENT: icinga2-master.matrix.lan
+    hostname: icinga2-satellite-2.matrix.lan
+    links:
+    - icinga2-master:icinga2-master.matrix.lan
+    networks:
+      backend: null
+      satellite: null
+    privileged: true
+    restart: always
+    volumes:
+    - /dev:/dev:ro
+    - /proc:/host/proc:ro
+    - /sys:/host/sys:ro
+    - /src/docker/docker-icinga2/import:/import:ro
+    - /sys:/sys:ro
+  icingaweb2:
+    container_name: icingaweb2
+    environment:
+      ICINGA2_CMD_API_PASS: icinga
+      ICINGA2_CMD_API_USER: root
+      ICINGA2_MASTER: icinga2-master.matrix.lan
+      ICINGAWEB2_USERS: icinga:icinga,foo:bar
+      ICINGAWEB_DIRECTOR: "false"
+      IDO_DATABASE_NAME: icinga2core
+      IDO_PASSWORD: qUVuLTk9oEDUV0A
+      MYSQL_HOST: database
+      MYSQL_ROOT_PASS: vYUQ14SGVrJRi69PsujC
+      MYSQL_ROOT_USER: root
+    hostname: icingaweb2.matrix.lan
+    image: bodsch/docker-icingaweb2:2.6.1
+    links:
+    - database
+    - icinga2-master:icinga2-master.matrix.lan
+    networks:
+      backend: null
+      database: null
+      frontend: null
+    ports:
+    - target: 80
+  nginx:
+    container_name: nginx
+    depends_on:
+    - icinga2-master
+    - icingaweb2
+    hostname: nginx
+    image: bodsch/docker-nginx:1.14.0
+    links:
+    - icinga2-master
+    - icingaweb2:icingaweb2.matrix.lan
+    networks:
+      backend: null
+      frontend: null
+    ports:
+    - published: 80
+      target: 80
+    - published: 443
+      target: 443
+    restart: always
+    volumes:
+    - /src/docker/docker-icinga2/compose/config/nginx.conf:/etc/nginx/nginx.conf:ro
+    - /src/docker/docker-icinga2/compose/ssl/cert.pem:/etc/nginx/secure/localhost/cert.pem:ro
+    - /src/docker/docker-icinga2/compose/ssl/dh.pem:/etc/nginx/secure/localhost/dh.pem:ro
+    - /src/docker/docker-icinga2/compose/ssl/key.pem:/etc/nginx/secure/localhost/key.pem:ro
+version: '3.3'
 ```
+
+## ssl certificate
+
+In the above example the nginx is started with SSL support.
+
+You can create the required certificate locally as follows.
+
+At the following prompt, the most important line is the one requesting the **common name**.
+
+Here you have to enter the domain name which is assigned to the respective computer (`hostname -f` or `localhost`).
+
+
+```bash
+$ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ssl/key.pem -out ssl/cert.pem
+
+Generating a 2048 bit RSA private key
+.....+++
+..........................................+++
+writing new private key to 'ssl/key.pem'
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:DE
+State or Province Name (full name) [Some-State]:Hamburg
+Locality Name (eg, city) []:Hamburg
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:
+Organizational Unit Name (eg, section) []:
+Common Name (e.g. server FQDN or YOUR name) []:localhost
+Email Address []:
+```
+
+Then we create a Diffie-Hellman group to activate *Perfect Forward Secrecy*:
+
+```bash
+$ openssl dhparam -out ssl/dh.pem 2048
+Generating DH parameters, 2048 bit long safe prime, generator 2
+This is going to take a long time
+....................................
+```
+
+The 3 files created then belong in the directory `compose/ssl`.
+
+
 
 In this example I use my own docker containers:
 
@@ -390,11 +497,9 @@ In this example I use my own docker containers:
 
 Please check for deviating tags at Docker Hub!
 
-This example can be used as follows:
+This example can be used as follows: `docker-compose up --build`
 
-- `docker-compose up --build`
-
-Afterwards you can see Icinga Web2 in your local browser at http://localhost.
+Afterwards you can see Icinga Web2 in your local browser at [http://localhost](http://localhost).
 
 ![master-satellite](doc/assets/master-satellite.jpg)
 

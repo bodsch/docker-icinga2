@@ -29,6 +29,8 @@ jobs:
         - docker tag ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-master    ${DOCKER_USERNAME}/docker-icinga2:latest-master
         - docker tag ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-satellite ${DOCKER_USERNAME}/docker-icinga2:latest-satellite
         - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-master
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-satellite
         - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-master
         - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-satellite
         - docker logout
