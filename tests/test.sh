@@ -49,7 +49,7 @@ wait_for_icinga_master() {
 wait_for_icinga_cert_service() {
 
   echo "wait for the certificate service"
-
+set -x
   RETRY=35
   # wait for the running certificate service
   #
@@ -70,7 +70,7 @@ wait_for_icinga_cert_service() {
     echo "Could not connect to the certificate service '${CERTIFICATE_SERVER}'"
     exit 1
   fi
-
+set +x
   # okay, the web service is available
   # but, we have a problem, when he runs behind a proxy ...
   # eg.: https://monitoring-proxy.tld/cert-cert-service

@@ -3,8 +3,6 @@
 
 creates several containers with different icinga2 characteristics:
 
-- [icinga2](./build-from-source) created from the sourcecode (alpine based)
-- [icinga2](./icinga2-debian) debain based icinga2 installation
 - icinga2 as [master](./icinga2-master) with a certificats service
 - icinga2 [satellite](./icinga2-satellite)
 
