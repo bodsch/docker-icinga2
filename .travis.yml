@@ -7,7 +7,7 @@ services:
 
 env:
   global:
-    - ICINGA2_VERSION=${ICINGA2_VERSION:-2.9.1}
+    - ICINGA2_VERSION=${ICINGA2_VERSION:-2.9.2}
     - BUILD_DATE=$(date +"%Y-%m-%d")
 
 jobs:

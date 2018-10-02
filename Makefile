@@ -1,6 +1,4 @@
 
-.PHONY: ALL base-container icinga2-master icinga2-satellite clean
-
 NS       := bodsch
 REPO     := docker-icinga2
 
@@ -9,37 +7,11 @@ BUILD_VERSION   := $(shell date +%y%m)
 
 CERT_SERVICE_TYPE    ?= stable
 CERT_SERVICE_VERSION ?= 0.18.3
+ICINGA2_VERSION      ?= 2.9.2
 
-ICINGA2_VERSION ?= 2.9.1
+.PHONY: icinga2-master icinga2-satellite compose-file clean master-shell satellite-shell list release
 
 default:	build
-
-#default:
-#	@echo ""
-#	@echo "Targets:"
-#	@echo ""
-#	@echo "  params                 Print build parameter"
-#	@echo "  build                  Build images"
-#	@echo "  alpine                 meta target for the following 3 sub targets:"
-#	@echo "   base-alpine              build a base container for"
-#	@echo "   icinga2-alpine-master    build an icinga2 master"
-#	@echo "   icinga2-alpine-satellite build an icinga2 satellite"
-#	@echo "  compose-alpine         creates an demo docker-compose.yaml for alpine"
-#	@echo "  debian                 meta target for the followinf 3 sub targets:"
-#	@echo "   base-debian              build a base container for"
-#	@echo "   icinga2-debian-master    build an icinga2 master"
-#	@echo "   icinga2-debian-satellite build an icinga2 satellite"
-#	@echo "  compose-debian         creates an demop docker-compose.yaml for debain"
-#	@echo "  base                   builds all base container"
-#	@echo "  master                 builds all icinga2 masters"
-#	@echo "  satellite              builds all icinga2 satellites"
-#	@echo "  compose-debian         creates an demo docker-compose.yaml for debain"
-##	@echo "  version                Print version of images"
-##	@echo "  publish                Publish images"
-#	@echo ""
-#	@echo "  list                   list all conatiner with a $(REPO) tag"
-#	@echo "  clean                  remove all conatiner with a $(REPO) tag"
-#
 
 params:
 	@echo ""
