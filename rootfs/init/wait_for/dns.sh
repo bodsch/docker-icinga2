@@ -8,13 +8,13 @@ wait_for_dns() {
 
   log_info "check if a DNS record for '${server}' is available"
 
-  until [[ ${max_retry} -lt ${retry} ]]
+  until ( [[ ${retry} -eq ${max_retry} ]] || [[ ${retry} -gt ${max_retry} ]] )
   do
-    host=$(dig +noadditional +noqr +noquestion +nocmd +noauthority +nostats +nocomments ${server})
+    # icinga2-master.matrix.lan has address 172.23.0.3
+    # Host icinga2-master-fail not found: 3(NXDOMAIN)
+    host=$(host ${server} 2> /dev/null)
 
-#     log_debug "${retry} - '${host}'"
-
-    if [[ -z "${host}" ]] || [[ $(echo -e "${host}" | wc -l) -eq 0 ]]
+    if [[ -z "${host}" ]] || [[ $(echo -e "${host}" | grep -c "has address") -eq 0 ]]
     then
       retry=$(expr ${retry} + 1)
       log_info "  wait for a valid dns record (${retry}/${max_retry})"
@@ -23,8 +23,6 @@ wait_for_dns() {
       break
     fi
   done
-
-#   echo "[[ ${retry} -lt ${max_retry} ]]"
 
   if [[ ${retry} -eq ${max_retry} ]] || [[ ${retry} -gt ${max_retry} ]]
   then
