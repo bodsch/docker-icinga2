@@ -22,12 +22,14 @@ services:
       - 5665:5665
       - 8080:8080
     environment:
+      - CONFIG_BACKEND_SERVER=consul
+      - CONFIG_BACKEND=consul
       - ICINGA2_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
       - DEBUG=0
       - LOG_LEVEL=INFO
       - MYSQL_HOST=database
-      - MYSQL_ROOT_USER=root
-      - MYSQL_ROOT_PASS=${MYSQL_ROOT_PASS}
+      - MYSQL_ROOT_USER=${DATABASE_SYSTEM_USER}
+      - MYSQL_ROOT_PASS=${DATABASE_ROOT_PASSWORD}
       - IDO_PASSWORD=${IDO_PASSWORD}
       # environment variables for the certificates service
       - ICINGA2_MASTER=icinga2-master.matrix.lan

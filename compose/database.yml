@@ -3,15 +3,32 @@ version: '3.3'
 
 services:
 
+#  database:
+#    image: bodsch/docker-mysql:latest
+#    container_name: database
+#    hostname: database
+#    environment:
+#      - MYSQL_SYSTEM_USER=root
+#      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
+#      - CONFIG_BACKEND=consul
+#      - CONFIG_BACKEND_SERVER=consul-master
+#    volumes:
+#      - /etc/localtime:/etc/localtime:ro
+#    networks:
+#      - backend
+#      - database
+
+
   database:
-    image: bodsch/docker-mysql:latest
+    image: bodsch/docker-mariadb:latest
+    restart: always
     container_name: database
     hostname: database
+    ports:
+      - 33060:3306
     environment:
-      - MYSQL_SYSTEM_USER=root
-      - MYSQL_ROOT_PASS=${MYSQL_ROOT_PASS}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
+      - MARIADB_SYSTEM_USER=${DATABASE_SYSTEM_USER}
+      - MARIADB_ROOT_PASSWORD=${DATABASE_ROOT_PASSWORD}
     networks:
       - backend
       - database

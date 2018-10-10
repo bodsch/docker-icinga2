@@ -53,10 +53,12 @@ compose-file:	params
 	echo "BUILD_DATE=$(BUILD_DATE)" > .env
 	echo "BUILD_VERSION=$(BUILD_VERSION)" >> .env
 	echo "ICINGA2_VERSION=$(ICINGA2_VERSION)" >> .env
-	echo "MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC" >> .env
-	echo "IDO_PASSWORD=qUVuLTk9oEDUV0A" >> .env
+	echo "DATABASE_SYSTEM_USER=root" >> .env
+	echo "DATABASE_ROOT_PASSWORD=9UTwx3cq3iJWn776uBCqve16cH5jfr" >> .env
+	echo "IDO_PASSWORD=RSHbf9RK0yuVrXK1fx8ogdmx9do5GG" >> .env
 	docker-compose \
 		--file compose/head.yml \
+		--file compose/consul.yml \
 		--file compose/nginx.yml \
 		--file compose/database.yml \
 		--file compose/icingaweb2.yml \

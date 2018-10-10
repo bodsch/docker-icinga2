@@ -22,6 +22,7 @@ trap finish SIGINT SIGTERM INT TERM EXIT
 . /init/output.sh
 . /usr/bin/vercomp
 . /init/environment.sh
+. /init/config_backend.sh
 . /init/runtime/service_handler.sh
 
 # -------------------------------------------------------------------------------------------------

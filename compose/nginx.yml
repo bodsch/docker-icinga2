@@ -13,9 +13,11 @@ services:
     depends_on:
       - icinga2-master
       - icingaweb2
+      - consul
     links:
       - icinga2-master
-      - icingaweb2:icingaweb2.matrix.lan
+      - icingaweb2
+      - consul
     volumes:
       - ./ssl/cert.pem:/etc/nginx/secure/localhost/cert.pem:ro
       - ./ssl/key.pem:/etc/nginx/secure/localhost/key.pem:ro
