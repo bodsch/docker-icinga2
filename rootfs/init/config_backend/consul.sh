@@ -17,24 +17,25 @@ register_node()  {
 
   [[ -z "${CONFIG_BACKEND_SERVER}" ]] || [[ -z "${CONFIG_BACKEND}"  ]] && return
 
-set -x
-  local short=$(hostname -s)
-#  local address=$(hostname -i)
-#      "Address": "'${address}'",
+  _curl_data() {
+
+    local short=$(hostname -s)
+
+    cat << EOF
+{
+  "ID": "${HOSTNAME}",
+  "Name": "${short}",
+  "Port": 5665,
+  "tags": ["icinga","${ICINGA2_TYPE}"]
+}
+EOF
+  }
+
   data=$(curl \
     --silent \
     --request PUT \
     ${CONFIG_BACKEND_SERVER}:8500/v1/agent/service/register \
-    --data '{
-      "ID": "'${HOSTNAME}'",
-      "Name": "'${short}'",
-      "Port": 5665,
-      "tags": ["icinga","${ICINGA2_TYPE}"]
-    }')
-
-  echo "${data}"
-
-set +x
+    --data "$(_curl_data)")
 }
 
 set_var() {

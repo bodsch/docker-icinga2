@@ -22,7 +22,19 @@ fi
 
 save_config() {
 
-  set_var  "root_user" "${MYSQL_SYSTEM_USER}"
-  set_var  "root_password" "${MYSQL_ROOT_PASS}"
-  set_var  "url" ${HOSTNAME}
+#  set_var  "root_user" "${MYSQL_SYSTEM_USER}"
+#  set_var  "root_password" "${MYSQL_ROOT_PASS}"
+#  set_var  "url" ${HOSTNAME}
+
+#  register_node
+  set_var  'icinga_version' ${ICINGA2_VERSION}
+  set_var  'icinga_cert-service_ba_user'      ${CERT_SERVICE_BA_USER}
+  set_var  'icinga_cert-service_ba_password'  ${CERT_SERVICE_BA_PASSWORD}
+  set_var  'icinga_cert-service_api_user'     ${CERT_SERVICE_API_USER}
+  set_var  'icinga_cert-service_api_password' ${CERT_SERVICE_API_PASSWORD}
+  set_var  'icinga_database_ido_user'         'icinga2'
+  set_var  'icinga_database_ido_password'     ${IDO_PASSWORD}
+  set_var  'icinga_database_ido_schema'       ${IDO_DATABASE_NAME}
+  #set_var  'icinga_api_users_'                ''
+
 }

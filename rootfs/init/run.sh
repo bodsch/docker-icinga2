@@ -127,6 +127,11 @@ run() {
     fi
   fi
 
+  if [[ ! -z "${CONFIG_BACKEND_SERVER}" ]] && [[ ! -z "${CONFIG_BACKEND}" ]]
+  then
+    save_config
+  fi
+
   /usr/sbin/icinga2 \
     daemon \
     ${ICINGA2_PARAMS}
