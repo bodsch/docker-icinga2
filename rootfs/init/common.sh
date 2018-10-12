@@ -101,16 +101,9 @@ prepare() {
 
   # no entries, also use the icinga2 way
   #
-  if [[ -z ${ICINGA2_RUN_DIRECTORY} ]] && [[ -z ${ICINGA2_LOG_DIRECTORY} ]]
-  then
-  #  ICINGA2_RUNasUSER=${ICINGA2_USER}
-  #  ICINGA2_RUNasGROUP=${ICINGA2_GROUP}
-  #else
-    ICINGA2_RUN_DIRECTORY=$(/usr/sbin/icinga2 variable get RunDir)
-    ICINGA2_LOG_DIRECTORY="/var/log/icinga2/icinga2.log"
-  #  ICINGA2_RUNasUSER=$(/usr/sbin/icinga2 variable get RunAsUser)
-  #  ICINGA2_RUNasGROUP=$(/usr/sbin/icinga2 variable get RunAsGroup)
-  fi
+  [[ -z ${ICINGA2_RUN_DIRECTORY} ]] && ICINGA2_RUN_DIRECTORY=$(/usr/sbin/icinga2 variable get RunDir)
+  [[ -z ${ICINGA2_RUN_DIRECTORY} ]] && ICINGA2_RUN_DIRECTORY="/var/run"
+  [[ -z ${ICINGA2_LOG_DIRECTORY} ]] && ICINGA2_LOG_DIRECTORY="/var/log/icinga2/icinga2.log"
 
   # change var.os from 'Linux' to 'Docker' to disable ssh-checks
   #

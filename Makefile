@@ -7,7 +7,7 @@ BUILD_VERSION   := $(shell date +%y%m)
 
 CERT_SERVICE_TYPE    ?= stable
 CERT_SERVICE_VERSION ?= 0.18.3
-ICINGA2_VERSION      ?= 2.9.2
+ICINGA2_VERSION      ?= 2.10.0
 
 .PHONY: icinga2-master icinga2-satellite compose-file clean master-shell satellite-shell list release
 
