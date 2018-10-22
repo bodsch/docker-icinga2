@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+#set -x
 
 CERT_SERVICE_TYPE=${CERT_SERVICE_TYPE:-stable}
 CERT_SERVICE_VERSION=${CERT_SERVICE_VERSION:-0.18.2}
@@ -28,14 +29,14 @@ vercomp() {
 
 install_apt_update() {
 
-  apt-get update  > dev/null
+  apt-get update > /dev/null
   apt-get install --assume-yes --no-install-recommends \
-    apt-utils  > dev/null
-  apt-get dist-upgrade  > dev/null
+    apt-utils > /dev/null
+  apt-get dist-upgrade --assume-yes > /dev/null
   apt-get install --assume-yes \
     ca-certificates \
     curl \
-    gnupg > dev/null
+    gnupg > /dev/null
 }
 
 install_icinga2() {
