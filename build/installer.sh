@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-#set -x
+# set -x
 
 CERT_SERVICE_TYPE=${CERT_SERVICE_TYPE:-stable}
 CERT_SERVICE_VERSION=${CERT_SERVICE_VERSION:-0.18.2}
@@ -30,13 +30,17 @@ vercomp() {
 install_apt_update() {
 
   apt-get update > /dev/null
-  apt-get install --assume-yes --no-install-recommends \
-    apt-utils > /dev/null
-  apt-get dist-upgrade --assume-yes > /dev/null
-  apt-get install --assume-yes \
-    ca-certificates \
-    curl \
-    gnupg > /dev/null
+  apt-get install \
+    --assume-yes \
+    --no-install-recommends \
+      apt-utils > /dev/null
+  apt-get dist-upgrade \
+    --assume-yes > /dev/null
+  apt-get install \
+    --assume-yes \
+      ca-certificates \
+      curl \
+      gnupg > /dev/null
 }
 
 install_icinga2() {
@@ -84,10 +88,10 @@ install_icinga2() {
 
 install_tools() {
 
-  apt-get install --assume-yes \
-    python3-pip \
-    git \
-    > dev/null
+  apt-get install \
+    --assume-yes \
+      python3-pip \
+      git > dev/null
 
 #  cd /tmp
 #  git clone https://github.com/taladar/http-observatory-cli
@@ -145,13 +149,15 @@ install_icinga_cert_service() {
 
 cleanup() {
 
-  apt-get remove --assume-yes --purge \
-    apt-utils libffi-dev gcc make git libssl-dev ruby-dev python3-pip git \
-    > /dev/null
+  apt-get remove \
+    --assume-yes \
+    --purge \
+      apt-utils libffi-dev gcc make git libssl-dev ruby-dev python3-pip git > /dev/null
 
   rm -f /etc/apt/sources.list.d/*
   apt-get clean > /dev/null
-  apt autoremove --assume-yes > /dev/null
+  apt autoremove \
+    --assume-yes > /dev/null
 
   rm -rf \
     /tmp/* \
