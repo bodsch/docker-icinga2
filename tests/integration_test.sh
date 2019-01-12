@@ -185,7 +185,7 @@ inspect() {
   done
 }
 
-if [[ $(docker-compose ps | tail +3 | wc -l) -eq 6 ]]
+if [[ $(docker-compose ps | wc -l) -gt 6 ]]
 then
   inspect
   wait_for_icinga_cert_service
