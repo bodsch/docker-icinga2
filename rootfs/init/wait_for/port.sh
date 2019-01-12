@@ -5,6 +5,7 @@ wait_for_port() {
   local port=${2}
   local max_retry=${3:-30}
   local retry=0
+  local sleep=10
 
   log_info "check if the port ${port} for '${server}' is available"
 
@@ -24,13 +25,13 @@ wait_for_port() {
     else
       retry=$(expr ${retry} + 1)
       log_info "  wait for an open port (${retry}/${max_retry})"
-      sleep 5s
+      sleep ${sleep}s
     fi
   done
 
   if [[ ${retry} -eq ${max_retry} ]] || [[ ${retry} -gt ${max_retry} ]]
   then
-    log_error "could not connect to the icinga2 master instance '${server}'"
+    log_error "could not connect to instance '${server}'"
     exit 1
   fi
 }

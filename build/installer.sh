@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -u
 set -e
 # set -x
 
@@ -29,13 +30,13 @@ vercomp() {
 
 install_apt_update() {
 
-  apt-get update > /dev/null
+  apt-get update
   apt-get install \
     --assume-yes \
     --no-install-recommends \
-      apt-utils > /dev/null
+      apt-utils
   apt-get dist-upgrade \
-    --assume-yes > /dev/null
+    --assume-yes
   apt-get install \
     --assume-yes \
       ca-certificates \
@@ -54,27 +55,28 @@ install_icinga2() {
   echo "deb http://packages.icinga.com/debian icinga-${DIST} main" > \
     /etc/apt/sources.list.d/${DIST}-icinga.list
 
-  apt-get update  > dev/null
+  apt-get update
 
-  apt-get install --assume-yes --no-install-recommends \
-    icinga2-bin \
-    icinga2-ido-mysql \
-    monitoring-plugins \
-    dnsutils \
-    expect \
-    file \
-    fping \
-    inotify-tools \
-    jq \
-    netcat-openbsd \
-    psmisc \
-    pwgen \
-    python3.5-minimal \
-    libtext-english-perl \
-    tzdata \
-    unzip \
-    xz-utils \
-     > dev/null
+  apt-get install \
+    --assume-yes \
+    --no-install-recommends \
+      icinga2-bin \
+      icinga2-ido-mysql \
+      monitoring-plugins \
+      dnsutils \
+      expect \
+      file \
+      fping \
+      inotify-tools \
+      jq \
+      netcat-openbsd \
+      psmisc \
+      pwgen \
+      python3.5-minimal \
+      libtext-english-perl \
+      tzdata \
+      unzip \
+      xz-utils
 
   mkdir -p /etc/icinga2/objects.d
   mkdir -p /run/icinga2/cmd
@@ -91,7 +93,7 @@ install_tools() {
   apt-get install \
     --assume-yes \
       python3-pip \
-      git > dev/null
+      git
 
 #  cd /tmp
 #  git clone https://github.com/taladar/http-observatory-cli
@@ -108,11 +110,12 @@ install_tools() {
 
 install_tools_for_master() {
 
-  apt-get --assume-yes --no-install-recommends install \
-    libffi-dev g++ make git libssl-dev ruby-dev \
-    bind9utils bsd-mailx mariadb-client \
-    nagios-nrpe-server openssl ruby ssmtp \
-    > /dev/null
+  apt-get install \
+    --assume-yes \
+    --no-install-recommends  \
+      libffi-dev g++ make git libssl-dev ruby-dev \
+      bind9utils bsd-mailx mariadb-client \
+      nagios-nrpe-server openssl ruby ssmtp
 }
 
 install_icinga_cert_service() {
@@ -152,12 +155,12 @@ cleanup() {
   apt-get remove \
     --assume-yes \
     --purge \
-      apt-utils libffi-dev gcc make git libssl-dev ruby-dev python3-pip git > /dev/null
+      apt-utils libffi-dev gcc make git libssl-dev ruby-dev python3-pip git
 
   rm -f /etc/apt/sources.list.d/*
-  apt-get clean > /dev/null
+  apt-get clean
   apt autoremove \
-    --assume-yes > /dev/null
+    --assume-yes
 
   rm -rf \
     /tmp/* \

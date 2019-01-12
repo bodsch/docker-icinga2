@@ -4,14 +4,11 @@ version: '3.3'
 services:
 
   database:
-    image: bodsch/docker-mysql:latest
+    image: bodsch/docker-mariadb
     container_name: database
     hostname: database
     environment:
-      - MYSQL_SYSTEM_USER=root
-      - MYSQL_ROOT_PASS=${MYSQL_ROOT_PASS}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
+      - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
     networks:
       - backend
       - database

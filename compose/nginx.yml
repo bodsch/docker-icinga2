@@ -4,7 +4,7 @@ version: '3.3'
 services:
   nginx:
     restart: always
-    image: bodsch/docker-nginx:1.14.0
+    image: bodsch/docker-nginx
     container_name: nginx
     hostname: nginx
     ports:

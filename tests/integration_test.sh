@@ -49,7 +49,7 @@ wait_for_icinga_master() {
 wait_for_icinga_cert_service() {
 
   echo "wait for the certificate service"
-set -x
+
   RETRY=35
   # wait for the running certificate service
   #
@@ -70,7 +70,7 @@ set -x
     echo "Could not connect to the certificate service '${CERTIFICATE_SERVER}'"
     exit 1
   fi
-set +x
+
   # okay, the web service is available
   # but, we have a problem, when he runs behind a proxy ...
   # eg.: https://monitoring-proxy.tld/cert-cert-service
@@ -147,7 +147,7 @@ api_request() {
 
 get_versions() {
 
-  for s in icinga2-master icinga2-satellite-1
+  for s in $(docker-compose ps | grep icinga2 | awk  '{print($1)}')
   do
     ip=$(docker network inspect dockericinga2_backend | jq -r ".[].Containers | to_entries[] | select(.value.Name==\"${s}\").value.IPv4Address" | awk -F "/" '{print $1}')
 
@@ -178,21 +178,30 @@ get_versions() {
 inspect() {
 
   echo "inspect needed containers"
-  for d in database icingaweb2 icinga2-master icinga2-satellite-1
+  for d in $(docker-compose ps | tail +3 | awk  '{print($1)}')
   do
     # docker inspect --format "{{lower .Name}}" ${d}
     docker inspect --format '{{with .State}} {{$.Name}} has pid {{.Pid}} {{end}}' ${d}
   done
 }
 
-inspect
-wait_for_icinga_cert_service
-wait_for_icinga_master
+if [[ $(docker-compose ps | tail +3 | wc -l) -eq 6 ]]
+then
+  inspect
+  wait_for_icinga_cert_service
+  wait_for_icinga_master
 
-# sleep 1m
+  get_versions
+  api_request
 
-get_versions
-api_request
+  exit 0
+else
+  echo "please run "
+  echo " make compose-file"
+  echo " docker-compose up -d"
+  echo "before"
 
-exit 0
+  exit 1
+
+fi
 

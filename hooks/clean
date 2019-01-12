@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Custom build for Docker Hub
+# see: https://medium.com/microscaling-systems/labelling-automated-builds-on-docker-hub-f3d073fb8e1
+set -x
+
+[[ -e hooks/environment ]] && . hooks/environment
+
+images=$(docker images -q ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}* | uniq)
+
+[[ -z "${images}" ]] && exit 0
+
+docker rmi \
+  --force ${images}

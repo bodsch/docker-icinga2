@@ -14,7 +14,7 @@ EXPOSE 5665
 
 # ---------------------------------------------------------------------------------------
 
-ADD build /build
+COPY build /build
 
 RUN \
   export ICINGA2_TYPE=Satellite && \
@@ -24,8 +24,10 @@ RUN \
 
 COPY rootfs/ /
 
-WORKDIR "/etc/icinga2"
-VOLUME [ "/etc/icinga2", "/var/lib/icinga2" ]
+WORKDIR /etc/icinga2
+VOLUME ["/etc/icinga2", "/var/lib/icinga2"]
+
+CMD ["/init/run.sh"]
 
 HEALTHCHECK \
   --interval=5s \
@@ -34,8 +36,6 @@ HEALTHCHECK \
   --start-period=10s \
   CMD ps ax | grep -v grep | grep -c $(cat /run/icinga2/icinga2.pid) || exit 1
 
-CMD [ "/init/run.sh" ]
-
 # ---------------------------------------------------------------------------------------
 
 LABEL \
@@ -43,6 +43,7 @@ LABEL \
   maintainer="Bodo Schulz <bodo@boone-schulz.de>" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Icinga2 Docker Image" \
+  org.label-schema.vcs-ref=${VCS_REF} \
   org.label-schema.description="Inofficial Icinga2 Docker Image" \
   org.label-schema.url="https://www.icinga.org/" \
   org.label-schema.vcs-url="https://github.com/bodsch/docker-icinga2" \
