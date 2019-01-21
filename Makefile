@@ -6,6 +6,7 @@ export BUILD_DATE        := $(shell date +%Y-%m-%d)
 export BUILD_VERSION     := $(shell date +%y%m)
 export BUILD_TYPE        ?= stable
 export ICINGA2_VERSION   ?= 2.10.2
+export CERT_SERVICE_VERSION ?= 0.18.3
 
 
 .PHONY: build shell run exec start stop clean
