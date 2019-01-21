@@ -3,40 +3,45 @@
 # Custom build for Docker Hub
 # see: https://medium.com/microscaling-systems/labelling-automated-builds-on-docker-hub-f3d073fb8e1
 
+ICINGA2_TYPE=${1}
+
+
 echo ""
-echo " ICINGA2_VERSION: ${ICINGA2_VERSION}"
-echo " BUILD_DATE     : ${BUILD_DATE}"
-echo " GIT_SHA1       : ${GIT_SHA1}"
+echo " ICINGA2_VERSION     : ${ICINGA2_VERSION}"
+echo " ICINGA2_TYPE        : ${ICINGA2_TYPE}"
+[ "${ICINGA2_TYPE}" = "master" ] && echo " CERT_SERVICE_VERSION: ${CERT_SERVICE_VERSION}"
+echo " BUILD_DATE          : ${BUILD_DATE}"
+echo " GIT_SHA1            : ${GIT_SHA1}"
 echo ""
 
 echo " build debian based"
 
 echo ""
-echo "   icinga2-master"
+echo "   icinga2-${ICINGA2_TYPE}"
 echo ""
 
-docker build \
-  --file Dockerfile.master \
-  --rm \
-  --compress \
-  --build-arg VCS_REF=${GIT_SHA1} \
-  --build-arg BUILD_DATE=${BUILD_DATE} \
-  --build-arg BUILD_VERSION=${BUILD_VERSION} \
-  --build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-  --build-arg CERT_SERVICE_TYPE=${CERT_SERVICE_TYPE} \
-  --build-arg CERT_SERVICE_VERSION=${CERT_SERVICE_VERSION} \
-  --tag ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-master .
+if [ "${ICINGA2_TYPE}" = "master" ]
+then
+  docker build \
+    --file Dockerfile.${ICINGA2_TYPE} \
+    --rm \
+    --compress \
+    --build-arg VCS_REF=${GIT_SHA1} \
+    --build-arg BUILD_DATE=${BUILD_DATE} \
+    --build-arg BUILD_VERSION=${BUILD_VERSION} \
+    --build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
+    --build-arg CERT_SERVICE_TYPE=${CERT_SERVICE_TYPE} \
+    --build-arg CERT_SERVICE_VERSION=${CERT_SERVICE_VERSION} \
+    --tag ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-${ICINGA2_TYPE} .
+else
 
-echo ""
-echo "   icinga2-satellite"
-echo ""
-
-docker build \
-  --file Dockerfile.satellite \
-  --rm \
-  --compress \
-  --build-arg VCS_REF=${GIT_SHA1} \
-  --build-arg BUILD_DATE=${BUILD_DATE} \
-  --build-arg BUILD_VERSION=${BUILD_VERSION} \
-  --build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-  --tag ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-satellite .
+  docker build \
+    --file Dockerfile.${ICINGA2_TYPE} \
+    --rm \
+    --compress \
+    --build-arg VCS_REF=${GIT_SHA1} \
+    --build-arg BUILD_DATE=${BUILD_DATE} \
+    --build-arg BUILD_VERSION=${BUILD_VERSION} \
+    --build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
+    --tag ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-${ICINGA2_TYPE} .
+fi
