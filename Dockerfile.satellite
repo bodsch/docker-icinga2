@@ -1,6 +1,6 @@
 
-ARG BUILD_IMAGE=bodsch/icinga2:latest-base
-
+ARG BUILD_IMAGE
+# hadolint ignore=DL3006
 FROM $BUILD_IMAGE
 
 ARG BUILD_DATE
@@ -16,28 +16,43 @@ EXPOSE 5665
 
 # ---------------------------------------------------------------------------------------
 
-COPY build /build
-
 RUN \
   export ICINGA2_TYPE=Satellite && \
-  /build/installer.sh && \
+  export APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 && \
+  apt-get remove \
+    --assume-yes \
+    --purge \
+      apt-utils \
+      libffi-dev \
+      gcc \
+      make \
+      git \
+      libssl-dev \
+      ruby-dev \
+      python3-pip && \
+  rm -f /etc/apt/sources.list.d/* && \
+  apt-get clean && \
+  apt autoremove \
+    --assume-yes && \
   rm -rf \
-    /build
+    /tmp/* \
+    /var/cache/debconf/* \
+    /usr/share/doc/* \
+    /root/.gem \
+    /root/.cache \
+    /root/.bundle 2> /dev/null && \
+  echo "" && \
+  which icinga2 && \
+  icinga2 --version && \
+  icinga2 daemon --validate && \
+  icinga2 feature list && \
+  echo "" && \
+  export ICINGA2_VERSION=$(icinga2 --version | head -n1 | awk -F 'version: ' '{printf $2}' | awk -F '-' '{print $1}' | sed 's|r||') && \
+  echo "export BUILD_DATE=${BUILD_DATE}"            > /etc/profile.d/icinga2.sh && \
+  echo "export BUILD_VERSION=${BUILD_VERSION}"     >> /etc/profile.d/icinga2.sh && \
+  echo "export ICINGA2_VERSION=${ICINGA2_VERSION}" >> /etc/profile.d/icinga2.sh && \
+  echo "export ICINGA2_TYPE=${ICINGA2_TYPE}"       >> /etc/profile.d/icinga2.sh
 
-#COPY rootfs/ /
-#
-#WORKDIR /etc/icinga2
-#VOLUME ["/etc/icinga2", "/var/lib/icinga2"]
-#
-#CMD ["/init/run.sh"]
-#
-#HEALTHCHECK \
-#  --interval=5s \
-#  --timeout=2s \
-#  --retries=12 \
-#  --start-period=10s \
-#  CMD ps ax | grep -v grep | grep -c $(cat /run/icinga2/icinga2.pid) || exit 1
-#
 # ---------------------------------------------------------------------------------------
 
 LABEL \

@@ -155,7 +155,7 @@ EOF
 
 fix_sys_caps() {
 
-  echo -e "\n - setting cap_net_raw+ep for some check scripts\n"
+  log_info "setting cap_net_raw+ep for some check scripts"
 
   local plugindir=/usr/lib/nagios/plugins
 
@@ -165,15 +165,19 @@ fix_sys_caps() {
   if command -v setcap > /dev/null; then
     if setcap "cap_net_raw+ep" ${plugindir}/check_icmp "cap_net_bind_service=+ep cap_net_raw=+ep" ${plugindir}/check_dhcp
     then
-      echo "setcap for check_icmp and check_dhcp worked!"
+      log_info "setcap for check_icmp and check_dhcp worked!"
     else
-      echo "setcap for check_icmp and check_dhcp failed." >&2
-      echo "Please refer README.Debian.gz for using plugins needing" >&2
-      echo "higher privileges!" >&2
+      log_error "setcap for check_icmp and check_dhcp failed." >&2
+      log_error "Please refer README.Debian.gz for using plugins needing" >&2
+      log_error "higher privileges!" >&2
     fi
   else
-    echo "setcap is not installed, please refer README.Debian.gz for using" >&2
-    echo "plugins needing higher privileges!" >&2
+    log_warn "setcap is not installed, set uid bit"
+
+    chmod +s \
+      /bin/ping \
+      ${plugindir}/check_icmp \
+      ${plugindir}/check_dhcp
   fi
 }
 

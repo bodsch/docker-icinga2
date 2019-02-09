@@ -34,6 +34,9 @@ services:
       - /dev:/dev:ro
     links:
       - icinga2-master:icinga2-master.matrix.lan
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
     networks:
       - backend
       - satellite
@@ -70,6 +73,9 @@ services:
       - /dev:/dev:ro
     links:
       - icinga2-master:icinga2-master.matrix.lan
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
     networks:
       - backend
       - satellite

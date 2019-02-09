@@ -25,6 +25,9 @@ build_master:
 build_satellite:
 	@hooks/build satellite
 
+base-shell:
+	@hooks/shell base
+
 master-shell:
 	@hooks/shell master
 

@@ -9,6 +9,7 @@ if ! [ -x "$(command -v hadolint)" ]; then
   sudo chmod +x "${HADOLINT_PATH}"
 fi
 
+hadolint Dockerfile.base
 hadolint Dockerfile.master
 hadolint Dockerfile.satellite
 # shellcheck rootfs/init/run.sh -x

@@ -16,5 +16,5 @@ docker run \
   ${PORTS} \
   ${VOLUMES} \
   ${ENV} \
-  ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}-${1}:${DOCKER_VERSION} \
-  /bin/sh
+  ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-${1} \
+  /bin/bash

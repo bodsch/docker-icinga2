@@ -18,7 +18,7 @@ services:
     container_name: icinga2-master
     hostname: icinga2-master.matrix.lan
     restart: always
-    privileged: false
+    privileged: true
     ports:
       - 5665:5665
       - 8080
@@ -48,6 +48,12 @@ services:
       - /etc/localtime:/etc/localtime:ro
     links:
       - database
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+#    cap_drop:
+#      - NET_ADMIN
+#      - SYS_ADMIN
     networks:
       - database
       - backend

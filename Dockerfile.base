@@ -12,18 +12,17 @@ ENV \
   DEBIAN_FRONTEND=noninteractive \
   TZ='Europe/Berlin'
 
-EXPOSE 5665 8080
-
 # ---------------------------------------------------------------------------------------
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# hadolint ignore=DL3008,DL3014,DL3015,DL4005
 RUN \
   chsh -s /bin/bash && \
   ln -sf /bin/bash /bin/sh && \
-  ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime && \
+  ln -sf "/usr/share/zoneinfo/${TZ}" /etc/localtime && \
   ln -s  /etc/default /etc/sysconfig && \
-  #
   DIST=$(awk -F"[)(]+" '/VERSION=/ {print $2}' /etc/os-release) && \
-  # apt updates and fixes
   apt-get update && \
   apt-get install \
     --assume-yes \
@@ -40,7 +39,7 @@ RUN \
     --silent \
     https://packages.icinga.com/icinga.key | apt-key add - && \
   echo "deb http://packages.icinga.com/debian icinga-${DIST} main" > \
-    /etc/apt/sources.list.d/${DIST}-icinga.list && \
+    "/etc/apt/sources.list.d/${DIST}-icinga.list" && \
   apt-get update && \
   apt-get install \
     --assume-yes \
@@ -67,7 +66,6 @@ RUN \
   mkdir -p /etc/icinga2/zones.d/global-templates && \
   mkdir -p /etc/icinga2/zones.d/director-global && \
   cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
-  # clean up
   rm -f /etc/apt/sources.list.d/* && \
   apt-get clean && \
   apt autoremove \
@@ -81,8 +79,8 @@ RUN \
     /root/.bundle 2> /dev/null
 
 COPY rootfs/ /
-COPY /build/check_mem      /usr/lib/nagios/plugins/check_mem
-COPY /build/check_ssl_cert /usr/lib/nagios/plugins/check_ssl_cert
+COPY build/check_mem      /usr/lib/nagios/plugins/check_mem
+COPY build/check_ssl_cert /usr/lib/nagios/plugins/check_ssl_cert
 
 WORKDIR /etc/icinga2
 VOLUME ["/etc/icinga2", "/var/lib/icinga2"]
