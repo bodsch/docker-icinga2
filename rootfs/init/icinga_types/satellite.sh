@@ -26,9 +26,18 @@ add_satellite_to_master() {
   api_satellite_host() {
 
     fqdn="$(hostname -f)"
+    short="$(hostname -s)"
     ip="$(hostname -i)"
 
-    templates=("host_object_data_${fqdn}.json" "host_object_data.json")
+    templates=(
+      "host_object_data_${fqdn}.json"
+      "host_object_data_${short}.json"
+      "host_object_data-${fqdn}.json"
+      "host_object_data-${short}.json"
+      "host_object_data.${fqdn}.json"
+      "host_object_data.${short}.json"
+      "host_object_data.json"
+    )
     template=
 
     for i in "${templates[@]}"
