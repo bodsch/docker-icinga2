@@ -7,13 +7,17 @@ export BUILD_VERSION        := $(shell date +%y%m)
 export BUILD_TYPE           ?= stable
 export ICINGA2_VERSION      ?= 2.10.2
 export CERT_SERVICE_VERSION ?= 0.18.3
+export BUILD_IMAGE          := ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-base
 
 
 .PHONY: build shell run exec start stop clean
 
 default: build
 
-build: build_master build_satellite
+build: build_base build_master build_satellite
+
+build_base:
+	@hooks/build
 
 build_master:
 	@hooks/build master

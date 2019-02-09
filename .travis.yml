@@ -30,15 +30,19 @@ jobs:
         - make
         - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
         # rename tags
+        - docker tag  ${USER}/icinga2:latest-base      ${DOCKER_USERNAME}/docker-icinga2:latest-base
         - docker tag  ${USER}/icinga2:latest-master    ${DOCKER_USERNAME}/docker-icinga2:latest-master
         - docker tag  ${USER}/icinga2:latest-satellite ${DOCKER_USERNAME}/docker-icinga2:latest-satellite
         # push latest tags to docker
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-base
         - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-master
         - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-satellite
         # rename latest tag to version tag
+        - docker tag  ${DOCKER_USERNAME}/docker-icinga2:latest-base      ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-base
         - docker tag  ${DOCKER_USERNAME}/docker-icinga2:latest-master    ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-master
         - docker tag  ${DOCKER_USERNAME}/docker-icinga2:latest-satellite ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-satellite
         # push to docker
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-base
         - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-master
         - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-satellite
         - docker logout

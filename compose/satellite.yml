@@ -8,6 +8,7 @@ services:
       context: ..
       dockerfile: Dockerfile.satellite
       args:
+        - BUILD_IMAGE=${BUILD_IMAGE}
         - BUILD_DATE=${BUILD_DATE}
         - BUILD_VERSION=${BUILD_VERSION}
         - ICINGA2_VERSION=${ICINGA2_VERSION}
@@ -42,6 +43,7 @@ services:
       context: ..
       dockerfile: Dockerfile.satellite
       args:
+        - BUILD_IMAGE=${BUILD_IMAGE}
         - BUILD_DATE=${BUILD_DATE}
         - BUILD_VERSION=${BUILD_VERSION}
         - ICINGA2_VERSION=${ICINGA2_VERSION}

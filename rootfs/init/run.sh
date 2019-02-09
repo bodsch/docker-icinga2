@@ -71,7 +71,6 @@ custom_scripts() {
   fi
 }
 
-
 run() {
 
   log_info "prepare system"
@@ -79,6 +78,8 @@ run() {
   . /init/common.sh
 
   prepare
+
+  fix_sys_caps
 
   validate_certservice_environment
 

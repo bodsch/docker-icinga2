@@ -1,0 +1,99 @@
+
+FROM debian:9-slim
+
+ARG BUILD_DATE
+ARG BUILD_VERSION
+ARG ICINGA2_VERSION
+ARG CERT_SERVICE_TYPE
+ARG CERT_SERVICE_VERSION
+
+ENV \
+  TERM=xterm \
+  DEBIAN_FRONTEND=noninteractive \
+  TZ='Europe/Berlin'
+
+EXPOSE 5665 8080
+
+# ---------------------------------------------------------------------------------------
+
+RUN \
+  chsh -s /bin/bash && \
+  ln -sf /bin/bash /bin/sh && \
+  ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime && \
+  ln -s  /etc/default /etc/sysconfig && \
+  #
+  DIST=$(awk -F"[)(]+" '/VERSION=/ {print $2}' /etc/os-release) && \
+  # apt updates and fixes
+  apt-get update && \
+  apt-get install \
+    --assume-yes \
+    --no-install-recommends \
+      apt-utils && \
+  apt-get dist-upgrade \
+    --assume-yes && \
+  apt-get install \
+    --assume-yes \
+      ca-certificates \
+      curl \
+      gnupg > /dev/null && \
+  curl \
+    --silent \
+    https://packages.icinga.com/icinga.key | apt-key add - && \
+  echo "deb http://packages.icinga.com/debian icinga-${DIST} main" > \
+    /etc/apt/sources.list.d/${DIST}-icinga.list && \
+  apt-get update && \
+  apt-get install \
+    --assume-yes \
+    --no-install-recommends \
+      icinga2-bin \
+      icinga2-ido-mysql \
+      monitoring-plugins \
+      dnsutils \
+      expect \
+      file \
+      fping \
+      inotify-tools \
+      jq \
+      netcat-openbsd \
+      psmisc \
+      pwgen \
+      python3.5-minimal \
+      libtext-english-perl \
+      tzdata \
+      unzip \
+      xz-utils && \
+  mkdir -p /etc/icinga2/objects.d && \
+  mkdir -p /run/icinga2/cmd && \
+  mkdir -p /etc/icinga2/zones.d/global-templates && \
+  mkdir -p /etc/icinga2/zones.d/director-global && \
+  cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
+  # clean up
+  rm -f /etc/apt/sources.list.d/* && \
+  apt-get clean && \
+  apt autoremove \
+    --assume-yes && \
+  rm -rf \
+    /tmp/* \
+    /var/cache/debconf/* \
+    /usr/share/doc/* \
+    /root/.gem \
+    /root/.cache \
+    /root/.bundle 2> /dev/null
+
+COPY rootfs/ /
+COPY /build/check_mem      /usr/lib/nagios/plugins/check_mem
+COPY /build/check_ssl_cert /usr/lib/nagios/plugins/check_ssl_cert
+
+WORKDIR /etc/icinga2
+VOLUME ["/etc/icinga2", "/var/lib/icinga2"]
+
+CMD ["/init/run.sh"]
+
+HEALTHCHECK \
+  --interval=5s \
+  --timeout=2s \
+  --retries=12 \
+  --start-period=10s \
+  CMD ps ax | grep -v grep | grep -c $(cat /run/icinga2/icinga2.pid) || exit 1
+
+# ---------------------------------------------------------------------------------------

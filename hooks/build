@@ -8,7 +8,7 @@ ICINGA2_TYPE=${1}
 
 echo ""
 echo " ICINGA2_VERSION     : ${ICINGA2_VERSION}"
-echo " ICINGA2_TYPE        : ${ICINGA2_TYPE}"
+[ ! -z "${ICINGA2_TYPE}" ]        && echo " ICINGA2_TYPE        : ${ICINGA2_TYPE}"
 [ "${ICINGA2_TYPE}" = "master" ] && echo " CERT_SERVICE_VERSION: ${CERT_SERVICE_VERSION}"
 echo " BUILD_DATE          : ${BUILD_DATE}"
 echo " GIT_SHA1            : ${GIT_SHA1}"
@@ -16,32 +16,48 @@ echo ""
 
 echo " build debian based"
 
-echo ""
-echo "   icinga2-${ICINGA2_TYPE}"
-echo ""
-
-if [ "${ICINGA2_TYPE}" = "master" ]
+if [ -z "${ICINGA2_TYPE}" ]
 then
   docker build \
-    --file Dockerfile.${ICINGA2_TYPE} \
-    --rm \
-    --compress \
+    --file Dockerfile.base \
     --build-arg VCS_REF=${GIT_SHA1} \
     --build-arg BUILD_DATE=${BUILD_DATE} \
     --build-arg BUILD_VERSION=${BUILD_VERSION} \
     --build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-    --build-arg CERT_SERVICE_TYPE=${CERT_SERVICE_TYPE} \
-    --build-arg CERT_SERVICE_VERSION=${CERT_SERVICE_VERSION} \
-    --tag ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-${ICINGA2_TYPE} .
+    --build-arg CERT_SERVICE_TYPE= \
+    --build-arg CERT_SERVICE_VERSION= \
+    --tag ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-base .
+
+echo ""
+echo "---------------------------------------------------------------------"
+
 else
 
-  docker build \
-    --file Dockerfile.${ICINGA2_TYPE} \
-    --rm \
-    --compress \
-    --build-arg VCS_REF=${GIT_SHA1} \
-    --build-arg BUILD_DATE=${BUILD_DATE} \
-    --build-arg BUILD_VERSION=${BUILD_VERSION} \
-    --build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-    --tag ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-${ICINGA2_TYPE} .
+  echo ""
+  echo "   icinga2-${ICINGA2_TYPE}"
+  echo ""
+
+  if [ "${ICINGA2_TYPE}" = "master" ]
+  then
+    docker build \
+      --file Dockerfile.${ICINGA2_TYPE} \
+      --build-arg BUILD_IMAGE=${BUILD_IMAGE} \
+      --build-arg VCS_REF=${GIT_SHA1} \
+      --build-arg BUILD_DATE=${BUILD_DATE} \
+      --build-arg BUILD_VERSION=${BUILD_VERSION} \
+      --build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
+      --build-arg CERT_SERVICE_TYPE=${CERT_SERVICE_TYPE} \
+      --build-arg CERT_SERVICE_VERSION=${CERT_SERVICE_VERSION} \
+      --tag ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-${ICINGA2_TYPE} .
+  else
+
+    docker build \
+      --file Dockerfile.${ICINGA2_TYPE} \
+      --build-arg BUILD_IMAGE=${BUILD_IMAGE} \
+      --build-arg VCS_REF=${GIT_SHA1} \
+      --build-arg BUILD_DATE=${BUILD_DATE} \
+      --build-arg BUILD_VERSION=${BUILD_VERSION} \
+      --build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
+      --tag ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-${ICINGA2_TYPE} .
+  fi
 fi
