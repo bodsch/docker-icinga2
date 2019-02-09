@@ -79,7 +79,7 @@ run() {
 
   prepare
 
-  fix_sys_caps
+  fix_perms
 
   validate_certservice_environment
 
