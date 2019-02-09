@@ -160,17 +160,17 @@ fix_sys_caps() {
   # which allows us to make our binaries working without the
   # setuid bit
   if command -v setcap > /dev/null; then
-    if setcap "cap_net_raw+ep" ${plugindir}/check_icmp "cap_net_bind_service=+ep cap_net_raw=+ep" ${plugindir}/check_dhcp
+    if setcap "cap_net_raw+ep" /bin/ping "cap_net_raw+ep" ${plugindir}/check_icmp "cap_net_bind_service=+ep cap_net_raw=+ep" ${plugindir}/check_dhcp
     then
-      echo "setcap for check_icmp and check_dhcp worked!"
+      echo "setcap for ping, check_icmp and check_dhcp worked!"
     else
-      echo "setcap for check_icmp and check_dhcp failed." >&2
-      echo "Please refer README.Debian.gz for using plugins needing" >&2
-      echo "higher privileges!" >&2
+      echo "setcap for ping, check_icmp and check_dhcp failed," >&2
+      echo "using SETUID instead" >&2
+      chmod +s /bin/ping ${plugindir}/check_icmp ${plugindir}/check_dhcp
     fi
   else
-    echo "setcap is not installed, please refer README.Debian.gz for using" >&2
-    echo "plugins needing higher privileges!" >&2
+    echo "setcap is not installed, using SETUID instead" >&2
+    chmod +s /bin/ping ${plugindir}/check_icmp ${plugindir}/check_dhcp
   fi
 }
 
