@@ -15,19 +15,20 @@ jobs:
 
     - stage: build and test
       script:
-        - make
+        - travis_wait 30 make
         - make compose-file
+        # - docker pull ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-base
         - docker-compose pull
-        - docker-compose build
+        - travis_wait 30 docker-compose build
         - docker-compose up -d
         - sleep 6m
-        - tests/integration_test.sh
+        - make test
         - docker-compose kill
         - docker-compose down
 
     - stage: build and push image
       script:
-        - make
+        - travis_wait 30 make
         - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
         # rename tags
         - docker tag  ${USER}/icinga2:latest-base      ${DOCKER_USERNAME}/docker-icinga2:latest-base
