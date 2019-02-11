@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -x
+
+if [ -z "${ICINGA2_TYPE}" ]
+then
+  docker tag  \
+    ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-base \
+    bodsch/docker-icinga2:latest-base
+
+  docker push bodsch/docker-icinga2:latest-base
+
+  if [ ! -z "${ICINGA2_VERSION}" ]
+  then
+    docker tag  \
+      ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-base \
+      bodsch/docker-icinga2:${ICINGA2_VERSION}-base
+
+    docker push bodsch/docker-icinga2:${ICINGA2_VERSION}-base
+  fi
+
+
+#else
+#
+#  if [ "${ICINGA2_TYPE}" = "master" ]
+#  then
+#
+#  else
+#
+#
+#  fi
+
+fi

@@ -80,16 +80,6 @@ RUN \
   mkdir -p /etc/icinga2/zones.d/global-templates && \
   mkdir -p /etc/icinga2/zones.d/director-global && \
   cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
-  echo "" && \
-  command -v icinga2 && \
-  icinga2 --version && \
-  icinga2 daemon --validate && \
-  icinga2 feature list && \
-  echo "" && \
-  export ICINGA2_VERSION=$(icinga2 --version | head -n1 | awk -F 'version: ' '{printf $2}' | awk -F '-' '{print $1}' | sed 's|r||') && \
-  echo "export BUILD_DATE=${BUILD_DATE}"            > /etc/profile.d/icinga2.sh && \
-  echo "export BUILD_VERSION=${BUILD_VERSION}"     >> /etc/profile.d/icinga2.sh && \
-  echo "export ICINGA2_VERSION=${ICINGA2_VERSION}" >> /etc/profile.d/icinga2.sh && \
   apt-get clean && \
   apt autoremove \
     --assume-yes && \
@@ -99,7 +89,17 @@ RUN \
     /usr/share/doc/* \
     /root/.gem \
     /root/.cache \
-    /root/.bundle 2> /dev/null
+    /root/.bundle 2> /dev/null && \
+  echo "" && \
+  command -v icinga2 && \
+  icinga2 --version && \
+  icinga2 daemon --validate && \
+  icinga2 feature list && \
+  echo "" && \
+  export ICINGA2_VERSION=$(icinga2 --version | head -n1 | awk -F 'version: ' '{printf $2}' | awk -F '-' '{print $1}' | sed 's|r||') && \
+  echo "export BUILD_DATE=${BUILD_DATE}"            > /etc/profile.d/icinga2.sh && \
+  echo "export BUILD_VERSION=${BUILD_VERSION}"     >> /etc/profile.d/icinga2.sh && \
+  echo "export ICINGA2_VERSION=${ICINGA2_VERSION}" >> /etc/profile.d/icinga2.sh
 
 COPY rootfs/ /
 COPY build/check_mem      /usr/lib/nagios/plugins/check_mem
