@@ -169,6 +169,7 @@ fix_sys_caps() {
       log_info "setcap for ping, check_icmp and check_dhcp worked!"
     else
       log_error "setcap for ping, check_icmp and check_dhcp failed, set uid bit."
+
       chmod +s \
         /bin/ping \
         ${plugindir}/check_icmp \
