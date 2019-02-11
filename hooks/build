@@ -29,11 +29,14 @@ then
     --tag ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-base .
 
   echo ""
+  docker images ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-base | tail -n1
+
+  echo ""
   echo "---------------------------------------------------------------------"
 else
 
   echo ""
-  echo "   icinga2-${ICINGA2_TYPE}"
+  echo "   icinga2-${ICINGA2_TYPE} (use build base: ${BUILD_IMAGE})"
   echo ""
 
   if [ "${ICINGA2_TYPE}" = "master" ]
@@ -59,4 +62,11 @@ else
       --build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
       --tag ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-${ICINGA2_TYPE} .
   fi
+
+  echo ""
+  docker images ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-${ICINGA2_TYPE} | tail -n1
+  echo ""
+  echo "---------------------------------------------------------------------"
 fi
+
+echo ""

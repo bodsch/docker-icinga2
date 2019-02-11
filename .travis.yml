@@ -15,10 +15,10 @@ jobs:
 
     - stage: build and test
       script:
-        - travis_wait 30 make
+        # - travis_wait 30 make
         - make compose-file
-        - docker-compose pull
-        - travis_wait 30 docker-compose build
+        - travis_wait 10 make build_base
+        - travis_wait 10 docker-compose build
         - docker-compose up -d
         - sleep 6m
         - make test
