@@ -4,6 +4,7 @@ version: '3.3'
 services:
 
   icinga2-satellite-1:
+    image: ${DOCKER_NAME_SPACE}/icinga2:${DOCKER_VERSION}-satellite
     build:
       context: ..
       dockerfile: Dockerfile.satellite

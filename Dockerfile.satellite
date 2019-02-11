@@ -42,15 +42,11 @@ RUN \
     /root/.cache \
     /root/.bundle 2> /dev/null && \
   echo "" && \
-  which icinga2 && \
+  command -v icinga2 && \
   icinga2 --version && \
   icinga2 daemon --validate && \
   icinga2 feature list && \
   echo "" && \
-  export ICINGA2_VERSION=$(icinga2 --version | head -n1 | awk -F 'version: ' '{printf $2}' | awk -F '-' '{print $1}' | sed 's|r||') && \
-  echo "export BUILD_DATE=${BUILD_DATE}"            > /etc/profile.d/icinga2.sh && \
-  echo "export BUILD_VERSION=${BUILD_VERSION}"     >> /etc/profile.d/icinga2.sh && \
-  echo "export ICINGA2_VERSION=${ICINGA2_VERSION}" >> /etc/profile.d/icinga2.sh && \
   echo "export ICINGA2_TYPE=${ICINGA2_TYPE}"       >> /etc/profile.d/icinga2.sh
 
 # ---------------------------------------------------------------------------------------

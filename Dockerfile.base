@@ -1,5 +1,6 @@
 
-FROM debian:9-slim
+FROM ubuntu:18.10
+#FROM debian:9-slim
 
 ARG BUILD_DATE
 ARG BUILD_VERSION
@@ -16,13 +17,12 @@ ENV \
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# hadolint ignore=DL3008,DL3014,DL3015,DL4005
+# hadolint ignore=DL3008,DL3014,DL3015,DL4005,SC1091,SC2155
 RUN \
   chsh -s /bin/bash && \
   ln -sf /bin/bash /bin/sh && \
   ln -sf "/usr/share/zoneinfo/${TZ}" /etc/localtime && \
   ln -s  /etc/default /etc/sysconfig && \
-  DIST=$(awk -F"[)(]+" '/VERSION=/ {print $2}' /etc/os-release) && \
   apt-get update && \
   apt-get install \
     --assume-yes \
@@ -38,8 +38,22 @@ RUN \
   curl \
     --silent \
     https://packages.icinga.com/icinga.key | apt-key add - && \
-  echo "deb http://packages.icinga.com/debian icinga-${DIST} main" > \
-    "/etc/apt/sources.list.d/${DIST}-icinga.list" && \
+  . /etc/os-release && \
+  if [ "${ID}" = "ubuntu" ]; then \
+    if [ ! -z ${UBUNTU_CODENAME+x} ]; then \
+      DIST="${UBUNTU_CODENAME}"; \
+    else \
+      DIST="$(lsb_release -c| awk '{print $2}')"; \
+    fi \
+  elif [ "${ID}" = "debian" ]; then \
+    DIST=$(awk -F"[)(]+" '/VERSION=/ {print $2}' /etc/os-release) ;\
+  fi && \
+  echo " => ${ID} - ${DIST}" && \
+  if [ ! -z ${UBUNTU_CODENAME+x} ]; then  \
+    echo "deb http://packages.icinga.com/ubuntu icinga-${DIST} main" > "/etc/apt/sources.list.d/${DIST}-icinga.list" ; \
+  else \
+    echo "deb http://packages.icinga.com/debian icinga-${DIST} main" > "/etc/apt/sources.list.d/${DIST}-icinga.list" ; \
+  fi && \
   apt-get update && \
   apt-get install \
     --assume-yes \
@@ -66,7 +80,16 @@ RUN \
   mkdir -p /etc/icinga2/zones.d/global-templates && \
   mkdir -p /etc/icinga2/zones.d/director-global && \
   cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
-  rm -f /etc/apt/sources.list.d/* && \
+  echo "" && \
+  command -v icinga2 && \
+  icinga2 --version && \
+  icinga2 daemon --validate && \
+  icinga2 feature list && \
+  echo "" && \
+  export ICINGA2_VERSION=$(icinga2 --version | head -n1 | awk -F 'version: ' '{printf $2}' | awk -F '-' '{print $1}' | sed 's|r||') && \
+  echo "export BUILD_DATE=${BUILD_DATE}"            > /etc/profile.d/icinga2.sh && \
+  echo "export BUILD_VERSION=${BUILD_VERSION}"     >> /etc/profile.d/icinga2.sh && \
+  echo "export ICINGA2_VERSION=${ICINGA2_VERSION}" >> /etc/profile.d/icinga2.sh && \
   apt-get clean && \
   apt autoremove \
     --assume-yes && \

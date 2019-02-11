@@ -17,7 +17,6 @@ jobs:
       script:
         - travis_wait 30 make
         - make compose-file
-        # - docker pull ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-base
         - docker-compose pull
         - travis_wait 30 docker-compose build
         - docker-compose up -d

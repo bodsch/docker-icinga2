@@ -5,6 +5,7 @@ services:
   # the Icinga2 Master
   # includes a certificate service to create and provide a icinga certificate
   icinga2-master:
+    image: ${DOCKER_NAME_SPACE}/docker-icinga2:${DOCKER_VERSION}-master
     build:
       context: ..
       dockerfile: Dockerfile.master
