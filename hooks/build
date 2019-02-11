@@ -28,9 +28,8 @@ then
     --build-arg CERT_SERVICE_VERSION= \
     --tag ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-base .
 
-echo ""
-echo "---------------------------------------------------------------------"
-
+  echo ""
+  echo "---------------------------------------------------------------------"
 else
 
   echo ""
