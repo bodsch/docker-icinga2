@@ -195,7 +195,7 @@ inspect() {
 
   echo ""
   echo "inspect needed containers"
-  for d in $(docker-compose ps | tail +3 | awk  '{print($1)}')
+  for d in $(docker ps | tail -n +2 | awk  '{print($1)}')
   do
     # docker inspect --format "{{lower .Name}}" ${d}
     c=$(docker inspect --format '{{with .State}} {{$.Name}} has pid {{.Pid}} {{end}}' ${d})
@@ -205,21 +205,25 @@ inspect() {
   done
 }
 
-if [[ $(docker-compose ps | wc -l) -gt 6 ]]
+if [[ $(docker ps | tail -n +2  | wc -l) -eq 6 ]]
 then
   inspect
   wait_for_icinga_cert_service
   wait_for_icinga_master
+  inspect
 
   get_versions
   api_request
 
   exit 0
 else
+  echo "the test setup needs 5 containers"
+  echo "only $(docker ps | tail -n +2  | wc -l) running"
   echo "please run "
   echo " make compose-file"
   echo " docker-compose up -d"
   echo "before"
+  echo "or check your system"
 
   exit 1
 

@@ -4,10 +4,11 @@ version: '3.3'
 services:
 
   database:
-    image: bodsch/docker-mariadb
+    image: bodsch/docker-mariadb:10.3.12
     container_name: database
     hostname: database
     environment:
+      - MARIADB_SYSTEM_USER=root
       - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
     networks:
       - database
