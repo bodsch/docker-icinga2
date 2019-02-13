@@ -126,7 +126,7 @@ EOF
       # add myself as host
       #
       log_info "add myself to my master '${ICINGA2_MASTER}'"
-set -x
+
       code=$(curl \
         ${curl_opts} \
         --header "Accept: application/json" \
@@ -134,16 +134,41 @@ set -x
         --data "$(api_satellite_host)" \
         https://${ICINGA2_MASTER}:5665/v1/objects/hosts/$(hostname -f))
 
-      log_debug "${code}"
-
+#       log_debug "result for PUT request:"
+#       log_debug "${code}"
 
       if [[ $? -eq 0 ]]
       then
         status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
         message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
 
-        log_info "${message}"
+#         log_debug "${status}"
 
+        if [[ "${status}" = "200" ]]
+        then
+          log_info "successful .. ${message}"
+
+        elif [[ "${status}" = "500" ]]
+        then
+          log_error "has failed with code ${status}!"
+
+          # damn an error!
+          # possible wrong json?
+          error=$(echo "${code}" | jq --raw-output '.results[].errors' 2> /dev/null)
+
+          # only the first 5 rows of error should displayed
+          #
+          while read -r line
+          do
+            log_error "  $line"
+          done < <(echo "${error}" | jq --raw-output .[] | head -n5)
+
+          return
+        else
+          log_info "result code '${status}' is currently not handled."
+          log_info "please open an issue:"
+          log_info "https://github.com/bodsch/docker-icinga2/issues"
+        fi
 #        touch /tmp/final
       else
         status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
@@ -157,7 +182,7 @@ set -x
       log_info "update host"
       log_info "missing implementation"
     fi
-set +x
+
   else
     :
   fi

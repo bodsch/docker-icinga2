@@ -8,7 +8,7 @@ export BUILD_TYPE           ?= stable
 export ICINGA2_VERSION      ?= 2.10.2
 export CERT_SERVICE_VERSION ?= 0.18.3
 
-export BUILD_IMAGE          ?= bodsch/icinga2:${DOCKER_VERSION}-base
+export BUILD_IMAGE          ?= ${DOCKER_NAME_SPACE}/icinga2:${DOCKER_VERSION}-base
 
 
 .PHONY: build shell run exec start stop clean
