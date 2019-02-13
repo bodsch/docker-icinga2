@@ -92,10 +92,13 @@ cat << EOF
   }
 }
 EOF
+
     else
-      cat ${template} | \
+      cat "${template}" | \
       sed -e \
-        "s|%FQDN%|${fqdn}|g"
+        "s|%FQDN%|${fqdn}|g" > "/tmp/host_object_data.${fqdn}.json"
+
+      cat "/tmp/host_object_data.${fqdn}.json"
     fi
   }
 
@@ -123,13 +126,16 @@ EOF
       # add myself as host
       #
       log_info "add myself to my master '${ICINGA2_MASTER}'"
-
+set -x
       code=$(curl \
         ${curl_opts} \
         --header "Accept: application/json" \
         --request PUT \
         --data "$(api_satellite_host)" \
         https://${ICINGA2_MASTER}:5665/v1/objects/hosts/$(hostname -f))
+
+      log_debug "${code}"
+
 
       if [[ $? -eq 0 ]]
       then
@@ -151,6 +157,7 @@ EOF
       log_info "update host"
       log_info "missing implementation"
     fi
+set +x
   else
     :
   fi
