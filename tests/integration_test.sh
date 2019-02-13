@@ -16,41 +16,58 @@ export CERT_SERVICE_PROTOCOL=${protocol}
 
 CURL=$(which curl 2> /dev/null)
 
-# wait for the Icinga2 Master
+# wait for the Icinga2 Instances Master or Satellite
 #
-wait_for_icinga_master() {
+wait_for_icinga_instances() {
 
-  echo "wait for the icinga2 master"
+  echo "wait for the icinga2 instances"
 
-  RETRY=50
-
-  until [[ ${RETRY} -le 0 ]]
+  for s in $(docker-compose ps | grep icinga2 | awk  '{print($1)}')
   do
-    code=$(curl \
-      --user ${ICINGA2_API_USER}:${ICINGA2_API_PASSWORD} \
-      --silent \
-      --insecure \
-      --header 'Accept: application/json' \
-      https://${ICINGA2_MASTER}:${ICINGA2_API_PORT}/v1/status/CIB)
+    instance_uptime=
 
-    if [[ $? -eq 0 ]]
+    if [ $(echo "${s}" | egrep -ce satellite) -eq 1 ]
     then
-        uptime=$(echo "${code}" | jq --raw-output ".results[].status.uptime")
+      # satellite
+      instance_uptime=150
+    else
+      # satellite
+      instance_uptime=${ICINGA2_UPTIME}
+    fi
+
+    backend_network=$(docker network ls | egrep "*icinga2_backend*" | awk '{print $2}')
+
+    ip=$(docker network inspect ${backend_network} | jq -r ".[].Containers | to_entries[] | select(.value.Name==\"${s}\").value.IPv4Address" | awk -F "/" '{print $1}')
+
+    RETRY=50
+
+    until [[ ${RETRY} -le 0 ]]
+    do
+
+      code=$(curl \
+        --user ${ICINGA2_API_USER}:${ICINGA2_API_PASSWORD} \
+        --silent \
+        --insecure \
+        --header 'Accept: application/json' \
+        https://${ip}:${ICINGA2_API_PORT}/v1/status/CIB)
+
+      if [[ ! -z "${code}" ]]
+      then
+        uptime=$(echo "${code}" | jq --raw-output '.results[].status.uptime' 2> /dev/null)
 
         utime=${uptime%.*}
 
-        if [[ ${utime} -gt ${ICINGA2_UPTIME} ]]
+        if [[ ${utime} -gt ${instance_uptime} ]]
         then
-          echo  " the icinga2 master is ${utime} seconds up and alive"
+          echo  "the icinga2 instance ${s} is ${utime} seconds up and alive"
           break
         else
           sleep 20s
           RETRY=$(expr ${RETRY} - 1)
         fi
-    else
-      sleep 10s
-      RETRY=$(expr ${RETRY} - 1)
-    fi
+      fi
+    done
+
   done
 }
 
@@ -205,12 +222,12 @@ inspect() {
   done
 }
 
+
 if [[ $(docker ps | tail -n +2  | wc -l) -eq 6 ]]
 then
   inspect
   wait_for_icinga_cert_service
-  wait_for_icinga_master
-  inspect
+  wait_for_icinga_instances
 
   get_versions
   api_request
@@ -226,6 +243,4 @@ else
   echo "or check your system"
 
   exit 1
-
 fi
-
