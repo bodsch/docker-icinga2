@@ -5,6 +5,8 @@ ICINGA2_API_PORT=${ICINGA2_API_PORT:-5665}
 ICINGA2_API_USER="root"
 ICINGA2_API_PASSWORD="icinga"
 
+ICINGA2_UPTIME=125
+
 CERTIFICATE_SERVER=${CERTIFICATE_SERVER:-${ICINGA2_MASTER}}
 CERTIFICATE_PORT=${CERTIFICATE_PORT:-443}
 CERTIFICATE_PATH=${CERTIFICATE_PATH:-/cert-service/}
@@ -20,27 +22,36 @@ wait_for_icinga_master() {
 
   echo "wait for the icinga2 master"
 
-  # now wait for ssh port
-  RETRY=40
+  RETRY=50
+
   until [[ ${RETRY} -le 0 ]]
   do
-    timeout 1 bash -c "cat < /dev/null > /dev/tcp/${ICINGA2_MASTER}/5665" 2> /dev/null
-    if [ $? -eq 0 ]
+    code=$(curl \
+      --user ${ICINGA2_API_USER}:${ICINGA2_API_PASSWORD} \
+      --silent \
+      --insecure \
+      --header 'Accept: application/json' \
+      https://${ICINGA2_MASTER}:${ICINGA2_API_PORT}/v1/status/CIB)
+
+    if [[ $? -eq 0 ]]
     then
-      break
+        uptime=$(echo "${code}" | jq --raw-output ".results[].status.uptime")
+
+        utime=${uptime%.*}
+
+        if [[ ${utime} -gt ${ICINGA2_UPTIME} ]]
+        then
+          echo  " the icinga2 master is ${utime} seconds up and alive"
+          break
+        else
+          sleep 20s
+          RETRY=$(expr ${RETRY} - 1)
+        fi
     else
       sleep 10s
       RETRY=$(expr ${RETRY} - 1)
     fi
   done
-
-  if [[ $RETRY -le 0 ]]
-  then
-    echo "could not connect to the icinga2 master instance '${ICINGA2_MASTER}'"
-    exit 1
-  fi
-
-  sleep 5s
 }
 
 
@@ -48,7 +59,7 @@ wait_for_icinga_master() {
 #
 wait_for_icinga_cert_service() {
 
-  echo "wait for the certificate service"
+  echo -e "\nwait for the certificate service"
 
   RETRY=35
   # wait for the running certificate service
@@ -109,8 +120,51 @@ wait_for_icinga_cert_service() {
   sleep 2s
 }
 
+
+wait_for_icinga_master_without_interruption() {
+
+    echo "For a clean test, the Icinga2 Master must run for at least ${ICINGA2_UPTIME} seconds without interruption."
+
+    RETRY=50
+
+    until [[ ${RETRY} -le 0 ]]
+    do
+      code=$(curl \
+        --user ${ICINGA2_API_USER}:${ICINGA2_API_PASSWORD} \
+        --silent \
+        --insecure \
+        --header 'Accept: application/json' \
+        https://${ICINGA2_MASTER}:${ICINGA2_API_PORT}/v1/status/CIB)
+
+      if [[ $? -eq 0 ]]
+      then
+          uptime=$(echo "${code}" | jq --raw-output ".results[].status.uptime")
+
+          utime=${uptime%.*}
+
+          if [[ ${utime} -gt ${ICINGA2_UPTIME} ]]
+          then
+            echo  "the icinga2 master is ${utime} seconds up and life"
+            break
+          else
+            sleep 20s
+            RETRY=$(expr ${RETRY} - 1)
+          fi
+      else
+        sleep 10s
+        RETRY=$(expr ${RETRY} - 1)
+      fi
+    done
+
+    sleep 5s
+
+    echo "The icinga2 master '${ICINGA2_MASTER}' seems to be available stable"
+}
+
+
 api_request() {
 
+  echo ""
   code=$(curl \
     --user ${ICINGA2_API_USER}:${ICINGA2_API_PASSWORD} \
     --silent \
@@ -147,9 +201,12 @@ api_request() {
 
 get_versions() {
 
+  echo ""
   for s in $(docker-compose ps | grep icinga2 | awk  '{print($1)}')
   do
-    ip=$(docker network inspect dockericinga2_backend | jq -r ".[].Containers | to_entries[] | select(.value.Name==\"${s}\").value.IPv4Address" | awk -F "/" '{print $1}')
+    backend_network=$(docker network ls | egrep "*icinga2_backend*" | awk '{print $2}')
+
+    ip=$(docker network inspect ${backend_network} | jq -r ".[].Containers | to_entries[] | select(.value.Name==\"${s}\").value.IPv4Address" | awk -F "/" '{print $1}')
 
     code=$(curl \
       --user ${ICINGA2_API_USER}:${ICINGA2_API_PASSWORD} \
@@ -158,14 +215,14 @@ get_versions() {
       --header 'Accept: application/json' \
       https://${ip}:5665/v1/status/IcingaApplication)
 
-#     echo "'${s}' : '${code}'"
+    #echo "'${s}' : '${code}'"
 
     if [[ ! -z "${code}" ]]
     then
       version=$(echo "${code}" | jq --raw-output '.results[].status.icingaapplication.app.version' 2> /dev/null)
       node_name=$(echo "${code}" | jq --raw-output '.results[].status.icingaapplication.app.node_name' 2> /dev/null)
 
-      echo "service ${s} (${node_name} ${ip}) has version: ${version}"
+      printf "service %-20s (fqdn: %-30s / ip: %s) | version: %s\n" "${s}" "${node_name}" "${ip}" "${version}"
     else
       echo "WARNING: '${s}' returned no application status"
 
@@ -177,11 +234,15 @@ get_versions() {
 
 inspect() {
 
+  echo ""
   echo "inspect needed containers"
   for d in $(docker-compose ps | tail +3 | awk  '{print($1)}')
   do
     # docker inspect --format "{{lower .Name}}" ${d}
-    docker inspect --format '{{with .State}} {{$.Name}} has pid {{.Pid}} {{end}}' ${d}
+    c=$(docker inspect --format '{{with .State}} {{$.Name}} has pid {{.Pid}} {{end}}' ${d})
+    s=$(docker inspect --format '{{json .State.Health }}' ${d} | jq --raw-output .Status)
+
+    printf "%-40s - %s\n"  "${c}" "${s}"
   done
 }
 
