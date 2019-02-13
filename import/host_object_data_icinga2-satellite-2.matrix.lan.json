@@ -11,7 +11,16 @@
     "vars": {
       "os": "Docker",
       "remote_endpoint": "%FQDN%",
-      "satellite": "true"
+      "satellite": "true",
+      "qa": "true",
+      "date": "2019-02-13",
+      "memory": "true",
+      "file_age": {
+        "/tmp/backup": {
+          "warning_time": 76800,
+          "critical_time": 128000
+        }
+      }
     }
   }
 }
