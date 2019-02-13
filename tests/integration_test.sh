@@ -121,47 +121,6 @@ wait_for_icinga_cert_service() {
 }
 
 
-wait_for_icinga_master_without_interruption() {
-
-    echo "For a clean test, the Icinga2 Master must run for at least ${ICINGA2_UPTIME} seconds without interruption."
-
-    RETRY=50
-
-    until [[ ${RETRY} -le 0 ]]
-    do
-      code=$(curl \
-        --user ${ICINGA2_API_USER}:${ICINGA2_API_PASSWORD} \
-        --silent \
-        --insecure \
-        --header 'Accept: application/json' \
-        https://${ICINGA2_MASTER}:${ICINGA2_API_PORT}/v1/status/CIB)
-
-      if [[ $? -eq 0 ]]
-      then
-          uptime=$(echo "${code}" | jq --raw-output ".results[].status.uptime")
-
-          utime=${uptime%.*}
-
-          if [[ ${utime} -gt ${ICINGA2_UPTIME} ]]
-          then
-            echo  "the icinga2 master is ${utime} seconds up and life"
-            break
-          else
-            sleep 20s
-            RETRY=$(expr ${RETRY} - 1)
-          fi
-      else
-        sleep 10s
-        RETRY=$(expr ${RETRY} - 1)
-      fi
-    done
-
-    sleep 5s
-
-    echo "The icinga2 master '${ICINGA2_MASTER}' seems to be available stable"
-}
-
-
 api_request() {
 
   echo ""
