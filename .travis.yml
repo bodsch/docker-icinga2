@@ -13,40 +13,49 @@ env:
 
 jobs:
   include:
-#    - stage: build and publish base image
-#      script:
-#        - make build_base
-#        - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
-#        - make publish-base
-#        - docker logout
-
-    - stage: build and test
+    - stage: build and publish base image
       script:
-        - make compose-file
-        - docker-compose build
-        - docker-compose up -d
-        - sleep 9m
-        - date "+%H:%M:%S"
-        - time make integration_test
-        - date "+%H:%M:%S"
-        - docker-compose kill
-        - docker-compose down
+        - make build_base
+        - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
+        - make publish-base
+        - docker logout
 
-#    - stage: build and push image
+#    - stage: build and test
 #      script:
-#        - make build_master
-#        - make build_satellite
-#        - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
-#        # rename tags
-#        - docker tag  ${USER}/icinga2:latest-master    ${DOCKER_USERNAME}/docker-icinga2:latest-master
-#        - docker tag  ${USER}/icinga2:latest-satellite ${DOCKER_USERNAME}/docker-icinga2:latest-satellite
-#        # push latest tags to docker
-#        - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-master
-#        - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-satellite
-#        # rename latest tag to version tag
-#        - docker tag  ${DOCKER_USERNAME}/docker-icinga2:latest-master    ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-master
-#        - docker tag  ${DOCKER_USERNAME}/docker-icinga2:latest-satellite ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-satellite
-#        # push to docker
-#        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-master
-#        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-satellite
-#        - docker logout
+#        - make compose-file
+#        - docker-compose build
+#        - docker-compose up -d
+#        - sleep 2m
+#        - date "+%H:%M:%S"
+#        - time make integration_test
+#        - date "+%H:%M:%S"
+#        - docker-compose kill
+#        - docker-compose down
+
+    - stage: push latest docker image
+      if: branch = master
+      script:
+        - make build_master
+        - make build_satellite
+        - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
+        # rename tags
+        - docker tag  ${USER}/icinga2:latest-master    ${DOCKER_USERNAME}/docker-icinga2:latest-master
+        - docker tag  ${USER}/icinga2:latest-satellite ${DOCKER_USERNAME}/docker-icinga2:latest-satellite
+        # push latest tags to docker
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-master
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-satellite
+        - docker logout
+
+    - stage: push version docker image
+      if: branch = master
+      script:
+        - make build_master
+        - make build_satellite
+        - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
+        # rename latest tag to version tag
+        - docker tag  ${USER}/icinga2:latest-master    ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION-master
+        - docker tag  ${USER}/icinga2:latest-satellite ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION-satellite
+        # push to docker
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-master
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-satellite
+        - docker logout
