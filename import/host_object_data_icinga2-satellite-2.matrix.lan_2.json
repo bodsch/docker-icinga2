@@ -1,0 +1,27 @@
+{
+  "templates": [ "satellite-host" ],
+  "attrs": {
+    "command_endpoint": "icinga2-satellite-2.matrix.lan",
+    "zone": "icinga2-satellite-2.matrix.lan",
+    "enable_notifications": true,
+    "groups": ["icinga-satellites"],
+    "max_check_attempts": "2",
+    "check_interval": "30",
+    "retry_interval": "10",
+    "vars": {
+      "os": "Docker",
+      "remote_endpoint": "icinga2-satellite-2.matrix.lan",
+      "satellite": "true",
+      "qa": "true",
+      "date": "2019-02-13",
+      "notification": "true",
+      "memory": "true",
+      "file_age": {
+        "/tmp/backup": {
+          "warning_time": 76800,
+          "critical_time": 128000
+        }
+      }
+    }
+  }
+}

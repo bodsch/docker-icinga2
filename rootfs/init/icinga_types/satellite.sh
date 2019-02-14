@@ -49,9 +49,11 @@ add_satellite_to_master() {
       fi
     done
 
-    if [[ -z ${template} ]]
+    log_debug "found template '${template}'"
+
+    if [[ -z "${template}" ]]
     then
-cat << EOF
+cat << EOF > "${ICINGA2_LIB_DIRECTORY}/backup/host_object_data.json"
 {
   "templates": [ "satellite-host" ],
   "attrs": {
@@ -96,10 +98,10 @@ EOF
     else
       cat "${template}" | \
       sed -e \
-        "s|%FQDN%|${fqdn}|g" > "/tmp/host_object_data.${fqdn}.json"
-
-      cat "/tmp/host_object_data.${fqdn}.json"
+        "s|%FQDN%|${fqdn}|g" > "${ICINGA2_LIB_DIRECTORY}/backup/host_object_data.json"
     fi
+
+    # cat "${ICINGA2_LIB_DIRECTORY}/backup/host_object_data.json"
   }
 
   . /init/wait_for/icinga_master.sh
@@ -123,6 +125,8 @@ EOF
     if [[ "${status}" = "404" ]]
     then
 
+      api_satellite_host
+
       # add myself as host
       #
       log_info "add myself to my master '${ICINGA2_MASTER}'"
@@ -131,7 +135,7 @@ EOF
         ${curl_opts} \
         --header "Accept: application/json" \
         --request PUT \
-        --data "$(api_satellite_host)" \
+        --data @"${ICINGA2_LIB_DIRECTORY}/backup/host_object_data.json" \
         https://${ICINGA2_MASTER}:5665/v1/objects/hosts/$(hostname -f))
 
 #       log_debug "result for PUT request:"
