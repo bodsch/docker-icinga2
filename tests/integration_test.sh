@@ -29,20 +29,24 @@ wait_for_icinga_instances() {
     if [ $(echo "${s}" | egrep -ce satellite) -eq 1 ]
     then
       # satellite
-      instance_uptime=150
+      instance_uptime=30
+      echo "an satellite instance should run ${instance_uptime} seconds without interruption"
     else
-      # satellite
-      instance_uptime=${ICINGA2_UPTIME}
+      # master
+      instance_uptime=100
+      echo "the master instance must run ${instance_uptime} seconds without interruption"
     fi
 
     backend_network=$(docker network ls | egrep "*icinga2_backend*" | awk '{print $2}')
 
     ip=$(docker network inspect ${backend_network} | jq -r ".[].Containers | to_entries[] | select(.value.Name==\"${s}\").value.IPv4Address" | awk -F "/" '{print $1}')
 
-    RETRY=50
+    RETRY=35
 
     until [[ ${RETRY} -le 0 ]]
     do
+
+      echo "  ${s} | ${RETRY}"
 
       code=$(curl \
         --user ${ICINGA2_API_USER}:${ICINGA2_API_PASSWORD} \
@@ -57,16 +61,19 @@ wait_for_icinga_instances() {
 
         utime=${uptime%.*}
 
-        echo "${s}  - ${utime} / ${instance_uptime} | ${RETRY}"
+        echo "    - ${utime} / ${instance_uptime}"
 
         if [[ ${utime} -gt ${instance_uptime} ]]
         then
           echo  "the icinga2 instance ${s} is ${utime} seconds up and alive"
           break
         else
-          sleep 20s
+          sleep 10s
           RETRY=$(expr ${RETRY} - 1)
         fi
+      else
+        sleep 10s
+        RETRY=$(expr ${RETRY} - 1)
       fi
     done
 
