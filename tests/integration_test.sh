@@ -57,6 +57,8 @@ wait_for_icinga_instances() {
 
         utime=${uptime%.*}
 
+        echo "${s}  - ${utime} / ${instance_uptime} | ${RETRY}"
+
         if [[ ${utime} -gt ${instance_uptime} ]]
         then
           echo  "the icinga2 instance ${s} is ${utime} seconds up and alive"

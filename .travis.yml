@@ -25,8 +25,11 @@ jobs:
         - make compose-file
         - travis_wait 10 docker-compose build
         - docker-compose up -d
-        - sleep 6m
-        - travis_wait 35 make test
+        - sleep 10m
+        - date "+%H:%m:%S"
+        - time make test || true
+        - date "+%H:%m:%S"
+        # - travis_wait 35 make test
         - docker-compose kill
         - docker-compose down
 
