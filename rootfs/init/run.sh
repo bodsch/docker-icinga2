@@ -35,8 +35,11 @@ then
 #  env | grep DEBUG
   if ( [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]] )
   then
-    set -x
-    ICINGA2_LOGLEVEL="debug"
+    export DEBUG="true"
+    # set -x
+    # ICINGA2_LOGLEVEL="debug"
+  else
+    unset DEBUG
   fi
 fi
 
