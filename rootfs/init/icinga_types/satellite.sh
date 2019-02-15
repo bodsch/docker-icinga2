@@ -146,11 +146,11 @@ EOF
     if [[ "${status}" = "404" ]]
     then
 
-      api_satellite_host
-
       # add myself as host
       #
       log_info "add myself to my master '${ICINGA2_MASTER}'"
+
+      api_satellite_host
 
       code=$(curl \
         ${curl_opts} \
@@ -159,10 +159,12 @@ EOF
         --data @"${ICINGA2_LIB_DIRECTORY}/backup/host_object_data.json" \
         https://${ICINGA2_MASTER}:5665/v1/objects/hosts/$(hostname -f))
 
-      [[ "${DEBUG}" = "true" ]] && log_debug "result for PUT request:"
-      [[ "${DEBUG}" = "true" ]] && log_debug "${code}"
+      result=${?}
 
-      if [[ $? -eq 0 ]]
+      [[ "${DEBUG}" = "true" ]] && log_debug "result for PUT request:"
+      [[ "${DEBUG}" = "true" ]] && log_debug "result: '${result}' | code: '${code}'"
+
+      if [[ ${result} -eq 0 ]]
       then
         status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
         message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
