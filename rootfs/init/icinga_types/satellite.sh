@@ -29,19 +29,36 @@ add_satellite_to_master() {
     short="$(hostname -s)"
     ip="$(hostname -i)"
 
-    templates=(
-      "host_object_data_${fqdn}.json"
-      "host_object_data_${short}.json"
-      "host_object_data-${fqdn}.json"
-      "host_object_data-${short}.json"
-      "host_object_data.${fqdn}.json"
-      "host_object_data.${short}.json"
-      "host_object_data.json"
-    )
+    templates=()
+
+    if [[ "${fqdn}" = "${short}" ]]
+    then
+      templates+=(
+        "host_object_data_${short}.json"
+        "host_object_data-${short}.json"
+        "host_object_data.${short}.json"
+      )
+    else
+      templates+=(
+        "host_object_data_${fqdn}.json"
+        "host_object_data_${short}.json"
+        "host_object_data-${fqdn}.json"
+        "host_object_data-${short}.json"
+        "host_object_data.${fqdn}.json"
+        "host_object_data.${short}.json"
+      )
+    fi
+
+    templates+=("host_object_data.json")
+
+    [[ "${DEBUG}" = "true" ]] && log_debug "templates: '${templates[*]}'"
+
     template=
 
     for i in "${templates[@]}"
     do
+      [[ "${DEBUG}" = "true" ]] && log_debug "look for template: '${i}'"
+
       if [[ -f "/import/${i}" ]]
       then
         template="/import/${i}"
@@ -49,9 +66,12 @@ add_satellite_to_master() {
       fi
     done
 
-    if [[ -z ${template} ]]
+    if [[ -z "${template}" ]]
     then
-cat << EOF
+
+      log_info "no custom template found. use internal standard."
+
+cat << EOF > "${ICINGA2_LIB_DIRECTORY}/backup/host_object_data.json"
 {
   "templates": [ "satellite-host" ],
   "attrs": {
@@ -94,11 +114,12 @@ cat << EOF
 EOF
 
     else
+
+      log_info "use custom template '${template}'"
+
       cat "${template}" | \
       sed -e \
-        "s|%FQDN%|${fqdn}|g" > "/tmp/host_object_data.${fqdn}.json"
-
-      cat "/tmp/host_object_data.${fqdn}.json"
+        "s|%FQDN%|${fqdn}|g" > "${ICINGA2_LIB_DIRECTORY}/backup/host_object_data.json"
     fi
   }
 
@@ -120,6 +141,8 @@ EOF
     status=$(echo "${code}" | jq --raw-output '.error' 2> /dev/null)
     message=$(echo "${code}" | jq --raw-output '.status' 2> /dev/null)
 
+    [[ "${DEBUG}" = "true" ]] && log_debug "${status}"
+
     if [[ "${status}" = "404" ]]
     then
 
@@ -127,22 +150,26 @@ EOF
       #
       log_info "add myself to my master '${ICINGA2_MASTER}'"
 
+      api_satellite_host
+
       code=$(curl \
         ${curl_opts} \
         --header "Accept: application/json" \
         --request PUT \
-        --data "$(api_satellite_host)" \
+        --data @"${ICINGA2_LIB_DIRECTORY}/backup/host_object_data.json" \
         https://${ICINGA2_MASTER}:5665/v1/objects/hosts/$(hostname -f))
 
-#       log_debug "result for PUT request:"
-#       log_debug "${code}"
+      result=${?}
 
-      if [[ $? -eq 0 ]]
+      [[ "${DEBUG}" = "true" ]] && log_debug "result for PUT request:"
+      [[ "${DEBUG}" = "true" ]] && log_debug "result: '${result}' | code: '${code}'"
+
+      if [[ ${result} -eq 0 ]]
       then
         status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
         message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
 
-#         log_debug "${status}"
+        [[ "${DEBUG}" = "true" ]] && log_debug "${status}"
 
         if [[ "${status}" = "200" ]]
         then
