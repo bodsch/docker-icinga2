@@ -8,12 +8,21 @@ set +u
 
 finish() {
   rv=$?
+  log_INFO "exit with signal '${rv}'"
+
   if [[ ${rv} -gt 0 ]]
   then
-    echo -e "\033[38;5;202m\033[1mexit with signal '${rv}'\033[0m"
     sleep 4s
   fi
-  exit $rv
+
+  if [[ "${DEBUG}" = "true" ]]
+  then
+    caller
+  fi
+
+  log_info ""
+
+  exit ${rv}
 }
 
 trap finish SIGINT SIGTERM INT TERM EXIT
@@ -79,6 +88,7 @@ custom_scripts() {
 
 run() {
 
+  log_info ""
   log_info "prepare system"
 
   . /init/common.sh

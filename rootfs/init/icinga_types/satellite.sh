@@ -139,7 +139,7 @@ EOF
   then
 
     status=$(echo "${code}" | jq --raw-output '.error' 2> /dev/null)
-    message=$(echo "${code}" | jq --raw-output '.status' 2> /dev/null)
+    msg=$(echo "${code}" | jq --raw-output '.status' 2> /dev/null)
 
     # 404 stands for 'no data for ... found'
     [[ "${DEBUG}" = "true" ]] && log_debug "${status}"
@@ -189,6 +189,8 @@ EOF
         --header "Accept: application/json" \
         --request PUT \
         --data @"${ICINGA2_LIB_DIRECTORY}/backup/host_object_data.json" \
+        --write-out "%{http_code}\n" \
+        --output "/tmp/import_host_object_data.json" \
         https://${ICINGA2_MASTER}:5665/v1/objects/hosts/$(hostname -f))
 
       result=${?}
@@ -197,36 +199,35 @@ EOF
       then
         log_debug "result for PUT request:"
         log_debug "result: '${result}' | code: '${code}'"
+        log_debug "$(ls -lth /tmp/import_host_object_data.json)"
+
+        cat /tmp/import_host_object_data.json
       fi
 
-      if [[ ${result} -eq 0 ]]
+      if [[ ${result} -eq 0 ]]  && [[ ${code} == 200 ]]
       then
-        error=$(echo "${code}"   | jq --raw-output '.error' 2> /dev/null)
-        message=$(echo "${code}" | jq --raw-output '.status' 2> /dev/null)
+        error=$(jq   --raw-output '.error'  /tmp/import_host_object_data.json 2> /dev/null)
 
-        if [[ ${error} != null ]]
+        if [ "${error}" != "null" ]
         then
           status=${error}
-          [[ "${DEBUG}" = "true" ]] && log_debug "'${code}'"
-
-          message=$(echo "${code}" | jq --raw-output '.status' 2> /dev/null)
+          msg=$(jq --raw-output '.status' /tmp/import_host_object_data.json 2> /dev/null)
         else
-          status=$(echo "${code}"  | jq --raw-output '.results[].code' 2> /dev/null)
-          message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
+          error=$(jq   --raw-output '.results[].errors' /tmp/import_host_object_data.json 2> /dev/null)
+          status=$(jq  --raw-output '.results[].code'   /tmp/import_host_object_data.json 2> /dev/null)
+          msg=$(jq     --raw-output '.results[].status' /tmp/import_host_object_data.json 2> /dev/null)
         fi
 
         if [[ "${DEBUG}" = "true" ]]
         then
-          log_debug "status : ${status}"
-          log_debug "error  : ${error}"
-          log_debug "message: ${message}"
+          log_debug "status : '${status}'"
+          log_debug "error  : '${error}'"
+          log_debug "msg    : '${msg}'"
         fi
-
 
         if [[ "${status}" = "200" ]]
         then
-          log_info "successful .. ${message}"
-
+          log_info "successful .. ${msg}"
 
         elif [[ "${status}" = "400" ]]
         then
@@ -240,7 +241,7 @@ EOF
 
           # damn an error!
           # possible wrong json?
-          error=$(echo "${code}" | jq --raw-output '.results[].errors' 2> /dev/null)
+          # error=$(echo "${code}" | jq --raw-output '.results[].errors' 2> /dev/null)
 
           # only the first 5 rows of error should displayed
           #
@@ -265,9 +266,9 @@ EOF
 #        touch /tmp/final
       else
         status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
-        message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
+        msg=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
 
-        log_error "${message}"
+        log_error "${msg}"
 
         add_satellite_to_master
       fi
@@ -303,7 +304,7 @@ restart_master() {
   if [[ $? -eq 0 ]]
   then
     status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
-    message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
+    msg=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
 
     if [[ ${status} -eq 200 ]]
     then
@@ -313,10 +314,10 @@ restart_master() {
       . /init/wait_for/icinga_master.sh
     else
       log_debug "status: ${status}"
-      if [[ ! -z "${code}" ]] && [[ ! -z "${message}" ]]
+      if [[ ! -z "${code}" ]] && [[ ! -z "${msg}" ]]
       then
         log_error "${code}"
-        log_error "${message}"
+        log_error "${msg}"
       fi
     fi
   fi
@@ -348,7 +349,7 @@ endpoint_configuration() {
 
     if [[ -f ${master_json} ]]
     then
-      message=$(jq --raw-output .message ${master_json} 2> /dev/null)
+      msg=$(jq --raw-output .message ${master_json} 2> /dev/null)
       master_name=$(jq --raw-output .master_name ${master_json} 2> /dev/null)
       master_ip=$(jq --raw-output .master_ip ${master_json} 2> /dev/null)
 
@@ -421,7 +422,6 @@ EOF
   fi
 
 
-  # TODO
   # wait for the CA file
   if [[ ${first_run} = "false" ]]
   then
@@ -511,13 +511,13 @@ request_certificate_from_master() {
 
     if [[ ${result} -eq 0 ]]  && [[ ${code} == 200 ]]
     then
-      message=$(jq --raw-output .message /tmp/sign_${HOSTNAME}.json 2> /dev/null)
+      msg=$(jq --raw-output .message /tmp/sign_${HOSTNAME}.json 2> /dev/null)
       master_name=$(jq --raw-output .master_name /tmp/sign_${HOSTNAME}.json 2> /dev/null)
       master_ip=$(jq --raw-output .master_ip /tmp/sign_${HOSTNAME}.json 2> /dev/null)
 
       mv /tmp/sign_${HOSTNAME}.json ${ICINGA2_LIB_DIRECTORY}/backup/
 
-      log_info "${message}"
+      log_info "${msg}"
       if [[ "${DEBUG}" = "true" ]]
       then
         log_debug "  - ${master_name}"
@@ -529,12 +529,12 @@ request_certificate_from_master() {
       RESTART_NEEDED="true"
     else
       status=$(echo "${code}" | jq --raw-output .status 2> /dev/null)
-      message=$(echo "${code}" | jq --raw-output .message 2> /dev/null)
+      msg=$(echo "${code}" | jq --raw-output .message 2> /dev/null)
 
       [[ "${DEBUG}" = "true" ]] && log_debug "${status}"
 
       log_error "curl result: '${result}'"
-      log_error "${message}"
+      log_error "${msg}"
 
       # TODO
       # wat nu?
@@ -619,6 +619,7 @@ configure_icinga2_satellite() {
   #
   if [[ "${RESTART_NEEDED}" = "true" ]]
   then
+    log_info "We need a restart of our master."
     restart_master
 
     sed -i \

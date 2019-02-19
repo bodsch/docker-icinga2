@@ -86,7 +86,7 @@ do
 #        log_debug "${not_conn_endpoints}"
 #        log_debug ""
 
-        [[ "${DEBUG}" = "true" ]] && log_debug "warn: '${warn}' / crit: '${crit}' | diff: '${diff}'"
+        [[ "${DEBUG}" = "true" ]] && log_debug "diff: '${diff}' | warn: '${warn}' / crit: '${crit}'"
 
         if [[ ${diff} -gt ${warn} ]] && [[ ${diff} -lt ${crit} ]]
         then
@@ -104,6 +104,7 @@ do
 
           pid=$(ps ax | grep icinga2 | grep -v grep | grep daemon | awk '{print $1}')
           [[ $(echo -e "${pid}" | wc -w) -gt 0 ]] && killall --verbose --signal HUP icinga2 > /dev/null 2> /dev/null
+
           exit 1
         fi
       else
@@ -118,6 +119,7 @@ do
 
     pid=$(ps ax | grep icinga2 | grep -v grep | grep daemon | awk '{print $1}')
     [[ $(echo -e "${pid}" | wc -w) -gt 0 ]] && killall --verbose --signal HUP icinga2 > /dev/null 2> /dev/null
+
     exit 1
   fi
 
@@ -135,6 +137,7 @@ do
 
     pid=$(ps ax | grep icinga2 | grep -v grep | grep daemon | awk '{print $1}')
     [[ $(echo -e "${pid}" | wc -w) -gt 0 ]] && killall --verbose --signal HUP icinga2 > /dev/null 2> /dev/null
+
     exit 1
   fi
 
