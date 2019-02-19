@@ -327,6 +327,8 @@ endpoint_configuration() {
 
   log_info "configure our endpoint"
 
+  local first_run="false"
+
   zones_file="/etc/icinga2/zones.conf"
   backup_zones_file="${ICINGA2_LIB_DIRECTORY}/backup/zones.conf"
 
@@ -363,6 +365,7 @@ endpoint_configuration() {
 
   if [[ $(grep -c "initial zones.conf" ${zones_file} ) -eq 1 ]]
   then
+    first_run="true"
     log_info "first run"
 
     # first run
@@ -417,23 +420,43 @@ EOF
       ${zones_file}
   fi
 
-  if [[ -e ${ca_file} ]]
+
+  # TODO
+  # wait for the CA file
+  if [[ ${first_run} = "false" ]]
   then
-    log_info "CA from our master replicated"
+    max_retry=9
+    retry=0
 
-    # TODO
-    # detect the Endpoint for this zone
-    if [[ -f ${api_endpoint} ]]
-    then
-      log_info "  endpoint also replicated"
+    log_info "wait until the CA file has been replicated by the master"
+    until ( [[ ${retry} -eq ${max_retry} ]] || [[ ${retry} -gt ${max_retry} ]] )
+    do
+      if [[ -e ${ca_file} ]]
+      then
+        log_info "CA from our master replicated"
 
-      # we must also replace the zone configuration
-      # with our icinga-master as parent to report checks
-      log_info "  replace the static zone config"
-      sed -i \
-        -e 's|^object Zone ZoneName.*}$|object Zone ZoneName { endpoints = [ NodeName ]; parent = "master" }|g' \
-        ${zones_file}
-    fi
+        # TODO
+        # detect the Endpoint for this zone
+        if [[ -f ${api_endpoint} ]]
+        then
+          log_info "  endpoint also replicated"
+
+          # we must also replace the zone configuration
+          # with our icinga-master as parent to report checks
+          log_info "  replace the static zone config"
+          sed -i \
+            -e 's|^object Zone ZoneName.*}$|object Zone ZoneName { endpoints = [ NodeName ]; parent = "master" }|g' \
+            ${zones_file}
+        fi
+
+        break
+      else
+        retry=$((${retry} + 1))
+
+        sleep 10s
+      fi
+
+    done
   fi
 
   # finaly, we create the backup
@@ -483,7 +506,7 @@ request_certificate_from_master() {
     then
       log_debug "result for sign certificate:"
       log_debug "result: '${result}' | code: '${code}'"
-      log_debug $(ls -lth /tmp/sign_${HOSTNAME}.json)
+      log_debug "$(ls -lth /tmp/sign_${HOSTNAME}.json)"
     fi
 
     if [[ ${result} -eq 0 ]]  && [[ ${code} == 200 ]]
