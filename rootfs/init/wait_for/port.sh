@@ -4,10 +4,20 @@ wait_for_port() {
   local server=${1}
   local port=${2}
   local max_retry=${3:-30}
+  local silent=${4:-}
+
   local retry=0
   local sleep=10
 
-  log_info "check if the port ${port} for '${server}' is available"
+  if [[ -z ${silent} ]] || [[ "${silent}" = "" ]]
+  then
+    silent=""
+  elif [[ ! -z ${silent} ]] || [[ "${silent}" = "silent" ]]
+  then
+    silent="silent"
+  fi
+
+  [[ -z "${silent}" ]] && log_info "check if the port ${port} for '${server}' is available"
 
   until [[ ${max_retry} -lt ${retry} ]]
   do
@@ -24,7 +34,7 @@ wait_for_port() {
       break
     else
       retry=$(expr ${retry} + 1)
-      log_info "  wait for an open port (${retry}/${max_retry})"
+      [[ -z "${silent}" ]] && log_info "  wait for an open port (${retry}/${max_retry})"
       sleep ${sleep}s
     fi
   done

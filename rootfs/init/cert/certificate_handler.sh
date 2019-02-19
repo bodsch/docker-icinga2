@@ -120,6 +120,7 @@ validate_local_ca() {
     fi
   else
     # we have no local cert file ..
+    log_warn "no CA file found"
     :
   fi
 }

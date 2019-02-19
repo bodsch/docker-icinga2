@@ -54,6 +54,15 @@ version_of_icinga_master() {
 }
 
 
+stdbool() {
+
+  if [ -z "${1}" ]
+  then
+    echo "n"
+  else
+    echo ${1:0:1} | tr '[:upper:]' '[:lower:]'
+  fi
+}
 
 
 # prepare the system and icinga to run in the docker environment
@@ -294,6 +303,8 @@ validate_icinga_config() {
   if [[ $? -gt 0 ]]
   then
     log_error "the validation of our configuration was not successful."
+    rm -rf /var/lib/icinga2/*
+
     exit 1
   fi
 }

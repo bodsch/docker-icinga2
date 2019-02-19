@@ -86,6 +86,8 @@ do
 #        log_debug "${not_conn_endpoints}"
 #        log_debug ""
 
+        [[ "${DEBUG}" = "true" ]] && log_debug "warn: '${warn}' / crit: '${crit}' | diff: '${diff}'"
+
         if [[ ${diff} -gt ${warn} ]] && [[ ${diff} -lt ${crit} ]]
         then
           log_warn "Our certificate request is already ${diff_full} old"
@@ -120,6 +122,7 @@ do
   fi
 
   . /init/wait_for/cert_service.sh
+
   validate_local_ca
 
   if [[ ! -f ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.key ]]

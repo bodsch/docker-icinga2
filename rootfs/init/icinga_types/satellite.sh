@@ -141,7 +141,9 @@ EOF
     status=$(echo "${code}" | jq --raw-output '.error' 2> /dev/null)
     message=$(echo "${code}" | jq --raw-output '.status' 2> /dev/null)
 
+    # 404 stands for 'no data for ... found'
     [[ "${DEBUG}" = "true" ]] && log_debug "${status}"
+
 
     if [[ "${status}" = "404" ]]
     then
@@ -152,6 +154,36 @@ EOF
 
       api_satellite_host
 
+      # - validate json
+      #
+      check=$(cat \
+        "${ICINGA2_LIB_DIRECTORY}/backup/host_object_data.json" | \
+        jq . 2>&1)
+
+      result=${?}
+
+      if [[ ${result} -gt 0 ]]
+      then
+        log_error "The template file is not a valid json!"
+        log_error "${check}"
+
+        # parse output
+        #
+        # show an excerpt of the possible error
+        line=$(echo "${check}" | awk -F 'line ' '{ print $2}' | awk -F ',' '{print $1}')
+        start=$((${line} - 3))
+        error=$(tail -n+${start} "${ICINGA2_LIB_DIRECTORY}/backup/host_object_data.json" | head -n5)
+
+        while read -r line
+        do
+          log_error "  $line"
+        done < <(echo "${error}")
+
+        return
+      fi
+      #
+      # - validate json
+
       code=$(curl \
         ${curl_opts} \
         --header "Accept: application/json" \
@@ -161,19 +193,46 @@ EOF
 
       result=${?}
 
-      [[ "${DEBUG}" = "true" ]] && log_debug "result for PUT request:"
-      [[ "${DEBUG}" = "true" ]] && log_debug "result: '${result}' | code: '${code}'"
+      if [[ "${DEBUG}" = "true" ]]
+      then
+        log_debug "result for PUT request:"
+        log_debug "result: '${result}' | code: '${code}'"
+      fi
 
       if [[ ${result} -eq 0 ]]
       then
-        status=$(echo "${code}" | jq --raw-output '.results[].code' 2> /dev/null)
-        message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
+        error=$(echo "${code}"   | jq --raw-output '.error' 2> /dev/null)
+        message=$(echo "${code}" | jq --raw-output '.status' 2> /dev/null)
 
-        [[ "${DEBUG}" = "true" ]] && log_debug "${status}"
+        if [[ ${error} != null ]]
+        then
+          status=${error}
+          [[ "${DEBUG}" = "true" ]] && log_debug "'${code}'"
+
+          message=$(echo "${code}" | jq --raw-output '.status' 2> /dev/null)
+        else
+          status=$(echo "${code}"  | jq --raw-output '.results[].code' 2> /dev/null)
+          message=$(echo "${code}" | jq --raw-output '.results[].status' 2> /dev/null)
+        fi
+
+        if [[ "${DEBUG}" = "true" ]]
+        then
+          log_debug "status : ${status}"
+          log_debug "error  : ${error}"
+          log_debug "message: ${message}"
+        fi
+
 
         if [[ "${status}" = "200" ]]
         then
           log_info "successful .. ${message}"
+
+
+        elif [[ "${status}" = "400" ]]
+        then
+          log_error "has failed with code ${status}!"
+
+          return
 
         elif [[ "${status}" = "500" ]]
         then
@@ -191,7 +250,14 @@ EOF
           done < <(echo "${error}" | jq --raw-output .[] | head -n5)
 
           return
+
+
+        elif [[ "${status}" = "" ]]
+        then
+          log_warn "empty status"
+
         else
+          log_debug "curl result code: '${result}'"
           log_info "result code '${status}' is currently not handled."
           log_info "please open an issue:"
           log_info "https://github.com/bodsch/docker-icinga2/issues"
@@ -392,7 +458,7 @@ request_certificate_from_master() {
     #
     expect /init/node-wizard.expect 1> /dev/null
 
-    sleep 4s
+    sleep 8s
 
     # and now we have to ask our master to confirm this certificate
     #
@@ -411,7 +477,16 @@ request_certificate_from_master() {
       --output /tmp/sign_${HOSTNAME}.json \
       ${CERT_SERVICE_PROTOCOL}://${CERT_SERVICE_SERVER}:${CERT_SERVICE_PORT}${CERT_SERVICE_PATH}v2/sign/${HOSTNAME})
 
-    if ( [[ $? -eq 0 ]] && [[ ${code} == 200 ]] )
+    result=${?}
+
+    if [[ "${DEBUG}" = "true" ]]
+    then
+      log_debug "result for sign certificate:"
+      log_debug "result: '${result}' | code: '${code}'"
+      log_debug $(ls -lth /tmp/sign_${HOSTNAME}.json)
+    fi
+
+    if [[ ${result} -eq 0 ]]  && [[ ${code} == 200 ]]
     then
       message=$(jq --raw-output .message /tmp/sign_${HOSTNAME}.json 2> /dev/null)
       master_name=$(jq --raw-output .master_name /tmp/sign_${HOSTNAME}.json 2> /dev/null)
@@ -420,8 +495,11 @@ request_certificate_from_master() {
       mv /tmp/sign_${HOSTNAME}.json ${ICINGA2_LIB_DIRECTORY}/backup/
 
       log_info "${message}"
-      log_info "  - ${master_name}"
-      log_info "  - ${master_ip}"
+      if [[ "${DEBUG}" = "true" ]]
+      then
+        log_debug "  - ${master_name}"
+        log_debug "  - ${master_ip}"
+      fi
 
       sleep 5s
 
@@ -430,6 +508,9 @@ request_certificate_from_master() {
       status=$(echo "${code}" | jq --raw-output .status 2> /dev/null)
       message=$(echo "${code}" | jq --raw-output .message 2> /dev/null)
 
+      [[ "${DEBUG}" = "true" ]] && log_debug "${status}"
+
+      log_error "curl result: '${result}'"
       log_error "${message}"
 
       # TODO

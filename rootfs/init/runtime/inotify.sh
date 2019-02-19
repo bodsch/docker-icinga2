@@ -31,7 +31,7 @@ inotifywait \
       continue
     fi
 
-    log_info "service zone monitor - The file '$file' appeared in directory '$path' via '$action'"
+    [[ "${DEBUG}" = "true" ]] && log_debug "service zone monitor - The file '$file' appeared in directory '$path' via '$action'"
 
     # monitor DELETE
     #

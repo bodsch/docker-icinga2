@@ -33,7 +33,7 @@ inotifywait \
       continue
     fi
 
-    # log_debug "api zone monitor - The file '$file' appeared in directory '$path' via '$action'"
+    [[ "${DEBUG}" = "true" ]] && log_debug "api zone monitor - The file '$file' appeared in directory '$path' via '$action'"
 
     # monitor CLOSE_WRITE,CLOSE
     #
