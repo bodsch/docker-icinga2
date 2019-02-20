@@ -34,6 +34,7 @@ create_ca() {
   sed -i \
     -e "s|^.*\ NodeName\ \=\ .*|const\ NodeName\ \=\ \"${HOSTNAME}\"|g" \
     -e "s|^.*\ ZoneName\ \=\ .*|const\ ZoneName\ \=\ \"${HOSTNAME}\"|g" \
+    -e "s|^.*\ TicketSalt\ \=\ .*|const\ TicketSalt\ \=\ \"${TICKET_SALT}\"|g" \
     /etc/icinga2/constants.conf
 
   # icinga2 API cert - regenerate new private key and certificate when running in a new container
