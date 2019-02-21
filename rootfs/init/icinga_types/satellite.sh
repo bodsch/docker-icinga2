@@ -433,7 +433,7 @@ EOF
     do
       if [[ -e ${ca_file} ]]
       then
-        log_info "CA from our master replicated"
+        log_info "The CA was replicated by our master"
 
         # TODO
         # detect the Endpoint for this zone
@@ -457,6 +457,13 @@ EOF
       fi
 
     done
+
+    if [[ ! -e ${ca_file} ]]
+    then
+      log_error "The CA was not replicated by our master."
+
+      exit 1
+    fi
   fi
 
   # finaly, we create the backup
@@ -514,6 +521,14 @@ request_certificate_from_master() {
       msg=$(jq --raw-output .message /tmp/sign_${HOSTNAME}.json 2> /dev/null)
       master_name=$(jq --raw-output .master_name /tmp/sign_${HOSTNAME}.json 2> /dev/null)
       master_ip=$(jq --raw-output .master_ip /tmp/sign_${HOSTNAME}.json 2> /dev/null)
+
+      if [[ "${master_name}" = null ]] || [[ "${master_ip}" = null ]]
+      then
+        log_error "${msg}"
+        log_error "no valid data were transmitted by our icinga2 master."
+
+        exit 1
+      fi
 
       mv /tmp/sign_${HOSTNAME}.json ${ICINGA2_LIB_DIRECTORY}/backup/
 
