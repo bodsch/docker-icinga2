@@ -18,6 +18,8 @@ EXPOSE 5665 8080
 
 # ---------------------------------------------------------------------------------------
 
+# COPY build/ruby-icinga-cert-service      /tmp/ruby-icinga-cert-service
+
 # hadolint ignore=DL3003,DL3008,DL3014
 RUN \
   export ICINGA2_TYPE=Master && \
@@ -42,7 +44,7 @@ RUN \
     io-console bundler && \
   cd /tmp && \
   if [[ "${CERT_SERVICE_TYPE}" = "local" ]] ; then \
-    echo "use local sources" && \
+    echo "use local sources" ; \
     mv /build/ruby-icinga-cert-service /tmp/ ; \
   else \
     git clone https://github.com/bodsch/ruby-icinga-cert-service.git && \

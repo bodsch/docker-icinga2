@@ -388,6 +388,7 @@ object Zone "master" { endpoints = [ "${ICINGA2_MASTER}" ] }
 /* endpoint for this satellite */
 object Endpoint NodeName { host = NodeName }
 object Zone ZoneName { endpoints = [ NodeName ] }
+
 EOF
     # remove the initial keyword
     #
@@ -461,7 +462,22 @@ EOF
     then
       log_error "The CA was not replicated by our master."
 
-      exit 1
+      log_debug "try fallback ..."
+
+      code=$(curl \
+        --user ${CERT_SERVICE_BA_USER}:${CERT_SERVICE_BA_PASSWORD} \
+        --silent \
+        --location \
+        --insecure \
+        --header "X-API-USER: ${CERT_SERVICE_API_USER}" \
+        --header "X-API-PASSWORD: ${CERT_SERVICE_API_PASSWORD}" \
+        --write-out "%{http_code}\n" \
+        --output ${ca_file} \
+        ${CERT_SERVICE_PROTOCOL}://${CERT_SERVICE_SERVER}:${CERT_SERVICE_PORT}${CERT_SERVICE_PATH}v2/sign/master-ca)
+
+      result=${?}
+
+      # exit 1
     fi
   fi
 

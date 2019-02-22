@@ -128,6 +128,7 @@ prepare() {
   sed -i \
     -e "s|^.*\ NodeName\ \=\ .*|const\ NodeName\ \=\ \"${HOSTNAME}\"|g" \
     -e "s|^.*\ ZoneName\ \=\ .*|const\ ZoneName\ \=\ \"${HOSTNAME}\"|g" \
+    -e "s|^.*\ TicketSalt\ \=\ .*|const\ TicketSalt\ \=\ \"${TICKET_SALT}\"|g" \
     /etc/icinga2/constants.conf
 
   # create directory for the logfile and change rights
