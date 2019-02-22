@@ -17,7 +17,7 @@ wait_for_port() {
     silent="silent"
   fi
 
-  [[ -z "${silent}" ]] && log_info "check if the port ${port} for '${server}' is available"
+  #[[ -z "${silent}" ]] && log_info "check if the port ${port} for '${server}' is available"
 
   until [[ ${max_retry} -lt ${retry} ]]
   do
@@ -34,7 +34,7 @@ wait_for_port() {
       break
     else
       retry=$(expr ${retry} + 1)
-      [[ -z "${silent}" ]] && log_info "  wait for an open port (${retry}/${max_retry})"
+      #[[ -z "${silent}" ]] && log_info "  wait for an open port (${retry}/${max_retry})"
       sleep ${sleep}s
     fi
   done

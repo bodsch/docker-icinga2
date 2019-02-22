@@ -16,7 +16,7 @@ wait_for_dns() {
     silent="silent"
   fi
 
-  [[ -z "${silent}" ]] && log_info "check if a DNS record for '${server}' is available"
+  #[[ -z "${silent}" ]] && log_info "check if a DNS record for '${server}' is available"
 
   until ( [[ ${retry} -eq ${max_retry} ]] || [[ ${retry} -gt ${max_retry} ]] )
   do
@@ -27,7 +27,7 @@ wait_for_dns() {
     if [[ -z "${host}" ]] || [[ $(echo -e "${host}" | grep -c "has address") -eq 0 ]]
     then
       retry=$(expr ${retry} + 1)
-      [[ -z "${silent}" ]] && log_info "  wait for a valid dns record (${retry}/${max_retry})"
+      #[[ -z "${silent}" ]] && log_info "  wait for a valid dns record (${retry}/${max_retry})"
       sleep 10s
     else
       break

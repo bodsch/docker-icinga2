@@ -14,6 +14,8 @@
 monitored_directory="/var/lib/icinga2"
 hostname_f=$(hostname -f)
 
+attrib="false"
+
 log_info "start the api zone monitor"
 
 inotifywait \
@@ -35,9 +37,20 @@ inotifywait \
 
     [[ "${DEBUG}" = "true" ]] && log_debug "api zone monitor - The file '$file' appeared in directory '$path' via '$action'"
 
+    if [[ "${action}" = "ATTRIB" ]]
+    then
+      attrib="true"
+    fi
+
+#    if [[ "${DEBUG}" = "true" ]]
+#    then
+#      log_debug "api zone monitor - attrib: '${attrib}'"
+#      log_debug "api zone monitor - action: '${action}'"
+#    fi
+
     # monitor CLOSE_WRITE,CLOSE
     #
-    if [[ "${action}" = "CLOSE_WRITE,CLOSE" ]]
+    if [[ "${attrib}" = "true" ]] && [[ "${action}" = "CLOSE_WRITE,CLOSE" ]]
     then
       # only for the ${HOSTNAME}.crt
       #
@@ -52,6 +65,9 @@ inotifywait \
 
         cp /etc/icinga2/zones.conf ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf
       fi
+
+      attrib="false"
+
     # monitor CREATE,ISDIR
     #
     elif [[ "${action}" = "CREATE,ISDIR" ]]
@@ -79,13 +95,19 @@ inotifywait \
         #
         touch /tmp/add_host
 
-        log_INFO "now, we need an restart for certificate and zone reloading."
+        log_INFO "now, we restart ourself for certificate and zone reloading."
 
         # kill myself to finalize
         #
-        pid=$(ps ax | grep icinga2 | grep -v grep | grep daemon | awk '{print $1}')
-        [[ $(echo -e "${pid}" | wc -w) -gt 0 ]] && killall --verbose --signal HUP icinga2 > /dev/null 2> /dev/null
+        pid=$(ps ax -o pid,args  | grep -v grep | grep icinga2 | grep daemon | awk '{print $1}')
+        if [[ $(echo -e "${pid}" | wc -w) -gt 0 ]]
+        then
+          [[ "${DEBUG}" = "true" ]] && log_debug " killall --verbose --signal HUP icinga2"
+          killall --verbose --signal HUP icinga2 > /dev/null 2> /dev/null
+        fi
 #        exit 1
       fi
+
+      attrib="false"
     fi
   done

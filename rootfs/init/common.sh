@@ -10,11 +10,13 @@ version_of_icinga_master() {
 
   [[ "${ICINGA2_TYPE}" = "Master" ]] && return
 
+  log_info "wait for our master '${ICINGA2_MASTER}' to come up"
+
   . /init/wait_for/icinga_master.sh
 
   # get the icinga2 version of our master
   #
-  log_info "compare our version with the master '${ICINGA2_MASTER}'"
+  # log_info "compare our version with the master '${ICINGA2_MASTER}'"
   code=$(curl \
     --user ${CERT_SERVICE_API_USER}:${CERT_SERVICE_API_PASSWORD} \
     --silent \

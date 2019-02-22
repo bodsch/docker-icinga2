@@ -14,6 +14,7 @@ remove_satellite_from_master() {
     https://${ICINGA2_MASTER}:5665/v1/objects/hosts/$(hostname -f)?cascade=1 )
 }
 
+
 add_satellite_to_master() {
 
   if [[ "${ADD_SATELLITE_TO_MASTER}" = false ]]
@@ -51,7 +52,7 @@ add_satellite_to_master() {
 
     templates+=("host_object_data.json")
 
-    [[ "${DEBUG}" = "true" ]] && log_debug "templates: '${templates[*]}'"
+    [[ "${DEBUG}" = "true" ]] && log_debug "possible templates are: '${templates[*]}'"
 
     template=
 
@@ -142,9 +143,7 @@ EOF
     msg=$(echo "${code}" | jq --raw-output '.status' 2> /dev/null)
 
     # 404 stands for 'no data for ... found'
-    [[ "${DEBUG}" = "true" ]] && log_debug "${status}"
-
-
+    #
     if [[ "${status}" = "404" ]]
     then
 
@@ -486,7 +485,24 @@ request_certificate_from_master() {
     # no certificate found
     # use the node wizard to create a valid certificate request
     #
+
+    log_info "use the node wizard to create a valid certificate request"
     expect /init/node-wizard.expect 1> /dev/null
+
+    result=${?}
+
+    if [[ "${DEBUG}" = "true" ]]
+    then
+      log_debug "the result for the node-wizard was '${result}'"
+    fi
+
+    # after this, in /var/lib/icinga2/certs/ should be found this files:
+    #  - ca.crt
+    #  - $(hostname -f).key
+    #  - $(hostname -f).crt
+    #
+    # these files are absolutly importand for the nexts steps
+    # we can abort immediately, if it should come to mistakes.
 
     sleep 8s
 
@@ -596,6 +612,11 @@ configure_icinga2_satellite() {
     create_certificate_pem
   fi
 
+  if [[ "${DEBUG}" = "true" ]]
+  then
+    nohup /init/runtime/zone_debugger.sh > /dev/stdout 2>&1 &
+  fi
+
   # endpoint configuration are tricky
   #  - stage #1
   #    - we need our icinga-master as endpoint for connects
@@ -634,7 +655,7 @@ configure_icinga2_satellite() {
   #
   if [[ "${RESTART_NEEDED}" = "true" ]]
   then
-    log_info "We need a restart of our master."
+    log_INFO "We need a restart of our master."
     restart_master
 
     sed -i \
@@ -644,6 +665,13 @@ configure_icinga2_satellite() {
     log_info "waiting for reconnecting and certifiacte signing"
 
     . /init/wait_for/icinga_master.sh
+
+    if [[ "${DEBUG}" = "true" ]]
+    then
+      # kill the zone zone_debugger
+      # not longer needed
+      killall --verbose --signal KILL zone_debugger.sh
+    fi
 
     # start icinga to retrieve the data from our master
     # the zone watcher will kill this instance, when all datas ready!
