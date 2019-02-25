@@ -23,7 +23,9 @@
       },
       "http_vhosts": {
         "/": {
-          "http_uri": "/"
+          "http_uri": "/",
+          "http_vhost": "%FQDN%",
+          "http_address": "%FQDN%"
         }
       }
     }

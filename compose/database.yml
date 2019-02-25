@@ -12,3 +12,5 @@ services:
       - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
     networks:
       - database
+    volumes:
+      - database:/srv

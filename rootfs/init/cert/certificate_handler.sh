@@ -99,20 +99,24 @@ validate_local_ca() {
       --output /tmp/validate_ca_${HOSTNAME}.json \
       ${CERT_SERVICE_PROTOCOL}://${CERT_SERVICE_SERVER}:${CERT_SERVICE_PORT}${CERT_SERVICE_PATH}/v2/validate/${checksum})
 
-    if ( [[ $? -eq 0 ]] && [[ "${code}" = "200" ]] )
+    result=${?}
+
+    # [[ "${DEBUG}" = "true" ]] && log_debug "validate : '${code}'"
+
+    if [[ ${result} -eq 0 ]] && [[ ${code} = 200 ]]
     then
       rm -f /tmp/validate_ca_${HOSTNAME}.json
     else
 
-      status=$(echo "${code}" | jq --raw-output .status 2> /dev/null)
-      message=$(echo "${code}" | jq --raw-output .message 2> /dev/null)
+      cat /tmp/validate_ca_${HOSTNAME}.json
+
+      status=$(echo "${code}" | jq --raw-output .status  2> /dev/null)
+      msg=$(echo "${code}"    | jq --raw-output .message 2> /dev/null)
 
       log_warn "our master has a new CA"
-      cat /tmp/validate_ca_${HOSTNAME}.json
-      log_warn "${message}"
+      log_warn "${msg}"
 
       rm -f /tmp/validate_ca_${HOSTNAME}.json
-
       rm -rf ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}*
       rm -rf ${ICINGA2_LIB_DIRECTORY}/ca/*
 
@@ -128,10 +132,15 @@ validate_local_ca() {
 
 create_certificate_pem() {
 
-  if ( [[ -d ${ICINGA2_CERT_DIRECTORY} ]] && [[ ! -f ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.pem ]] )
+  if [[ -d ${ICINGA2_CERT_DIRECTORY} ]] && [[ ! -f ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.pem ]]
   then
     cd ${ICINGA2_CERT_DIRECTORY}
 
-    cat ${HOSTNAME}.crt ${HOSTNAME}.key >> ${HOSTNAME}.pem
+    if [[ -f ${HOSTNAME}.crt ]] && [[ -f ${HOSTNAME}.key ]]
+    then
+      cat ${HOSTNAME}.crt ${HOSTNAME}.key >> ${HOSTNAME}.pem
+    else
+      log_warn "can't create certificate pem"
+    fi
   fi
 }

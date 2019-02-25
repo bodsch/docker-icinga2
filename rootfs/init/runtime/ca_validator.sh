@@ -59,7 +59,11 @@ do
       --header 'Accept: application/json' \
       https://${ICINGA2_MASTER}:${ICINGA2_API_PORT}/v1/status/ApiListener)
 
-    if [[ $? -eq 0 ]]
+    result=${?}
+
+    # [[ "${DEBUG}" = "true" ]] && log_debug "ApiListener : '${code}'"
+
+    if [[ ${result} -eq 0 ]]
     then
       connected=$(echo "${code}" | jq --raw-output '.results[].status.api.conn_endpoints | join(",")' | grep -c ${HOSTNAME})
 

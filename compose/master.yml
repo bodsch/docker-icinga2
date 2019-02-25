@@ -26,25 +26,25 @@ services:
     environment:
       - ICINGA2_API_USERS=root:icinga,dashing:dashing,cert:foo-bar
       - DEBUG=0
-      - LOG_LEVEL=DEBUG
+      - LOG_LEVEL
       - MYSQL_HOST=database
-      - MYSQL_ROOT_USER=root
+      - MYSQL_ROOT_USER=${MARIADB_SYSTEM_USER}
       - MYSQL_ROOT_PASS=${MARIADB_ROOT_PASSWORD}
-      - IDO_PASSWORD=${IDO_PASSWORD}
+      - IDO_PASSWORD
       # environment variables for the certificates service
-      - ICINGA2_MASTER=icinga2-master.matrix.lan
-      - BASIC_AUTH_USER=admin
-      - BASIC_AUTH_PASS=admin
-      - CERT_SERVICE_BA_USER=admin
-      - CERT_SERVICE_BA_PASSWORD=admin
-      - CERT_SERVICE_API_USER=root
-      - CERT_SERVICE_API_PASSWORD=icinga
-      - CERT_SERVICE_SERVER=nginx
-      - CERT_SERVICE_PORT=443
-      - CERT_SERVICE_PATH=/cert-service/
-      - CARBON_HOST=
-      - CARBON_PORT=2003
-      - DEMO_DATA=false
+      - ICINGA2_MASTER
+      - BASIC_AUTH_USER
+      - BASIC_AUTH_PASS
+      - CERT_SERVICE_BA_USER
+      - CERT_SERVICE_BA_PASSWORD
+      - CERT_SERVICE_API_USER
+      - CERT_SERVICE_API_PASSWORD
+      - CERT_SERVICE_SERVER
+      - CERT_SERVICE_PORT
+      - CERT_SERVICE_PATH
+      - CARBON_HOST
+      - CARBON_PORT
+      - DEMO_DATA
       - TICKET_SALT
     volumes:
       - /etc/localtime:/etc/localtime:ro
@@ -59,4 +59,5 @@ services:
     networks:
       - database
       - backend
-
+    volumes:
+      - icinga:/var/lib/icinga2

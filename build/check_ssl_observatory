@@ -1,0 +1,48 @@
+#!/bin/bash
+
+. /usr/lib/nagios/plugins/utils.sh
+
+# httpobs --zero github.com
+
+unknown() {
+  printf '%s UNKNOWN%s: %s\n' "$1"
+  exit ${STATE_UNKNOWN}
+}
+
+
+while true; do
+
+  case "$1" in
+    ########################################
+    # Options with arguments
+    -H|--host)
+      if [ $# -gt 1 ]; then
+          HOST="$2"
+          shift 2
+      else
+        unknown "-H,--host requires an argument"
+      fi
+      ;;
+    ########################################
+    # Special
+    --)
+      shift
+      break
+      ;;
+    -*)
+      unknown "invalid option: ${1}"
+      ;;
+    *)
+      if [ -n "$1" ] ; then
+        unknown "invalid option: ${1}"
+      fi
+      break
+      ;;
+
+  esac
+done
+
+
+# httpobs --hidden ${HOST}
+
+exit 1

@@ -5,3 +5,11 @@ networks:
   frontend:
   backend:
   database:
+
+volumes:
+  database:
+    driver: local
+  icinga:
+    driver: local
+  satellite-2:
+    driver: local

@@ -203,7 +203,7 @@ EOF
         cat /tmp/import_host_object_data.json
       fi
 
-      if [[ ${result} -eq 0 ]]  && [[ ${code} == 200 ]]
+      if [[ ${result} -eq 0 ]] && [[ ${code} = 200 ]]
       then
         error=$(jq   --raw-output '.error'  /tmp/import_host_object_data.json 2> /dev/null)
 
@@ -458,33 +458,57 @@ EOF
 
     done
 
-    if [[ ! -e ${ca_file} ]]
-    then
-      log_error "The CA was not replicated by our master."
-
-      log_debug "try fallback ..."
-
-      code=$(curl \
-        --user ${CERT_SERVICE_BA_USER}:${CERT_SERVICE_BA_PASSWORD} \
-        --silent \
-        --location \
-        --insecure \
-        --header "X-API-USER: ${CERT_SERVICE_API_USER}" \
-        --header "X-API-PASSWORD: ${CERT_SERVICE_API_PASSWORD}" \
-        --write-out "%{http_code}\n" \
-        --output ${ca_file} \
-        ${CERT_SERVICE_PROTOCOL}://${CERT_SERVICE_SERVER}:${CERT_SERVICE_PORT}${CERT_SERVICE_PATH}v2/sign/master-ca)
-
-      result=${?}
-
-      # exit 1
-    fi
+    #if [[ ! -e ${ca_file} ]]
+    #then
+    #  log_error "The CA was not replicated by our master."
+    #
+    #  log_debug "try fallback ..."
+    #
+    #  code=$(curl \
+    #    --user ${CERT_SERVICE_BA_USER}:${CERT_SERVICE_BA_PASSWORD} \
+    #    --silent \
+    #    --location \
+    #    --insecure \
+    #    --header "X-API-USER: ${CERT_SERVICE_API_USER}" \
+    #    --header "X-API-PASSWORD: ${CERT_SERVICE_API_PASSWORD}" \
+    #    --write-out "%{http_code}\n" \
+    #    --output ${ca_file} \
+    #    ${CERT_SERVICE_PROTOCOL}://${CERT_SERVICE_SERVER}:${CERT_SERVICE_PORT}${CERT_SERVICE_PATH}v2/sign/master-ca)
+    #
+    #  result=${?}
+    #
+    #  # exit 1
+    #fi
   fi
 
   # finaly, we create the backup
   #
   log_info "create backup of our zones.conf"
   cp ${zones_file} ${backup_zones_file}
+}
+
+
+get_ca_file() {
+
+  log_info "download master CA"
+
+  ca_file="${ICINGA2_LIB_DIRECTORY}/certs/ca.crt"
+
+  code=$(curl \
+    --user ${CERT_SERVICE_BA_USER}:${CERT_SERVICE_BA_PASSWORD} \
+    --silent \
+    --location \
+    --insecure \
+    --header "X-API-USER: ${CERT_SERVICE_API_USER}" \
+    --header "X-API-PASSWORD: ${CERT_SERVICE_API_PASSWORD}" \
+    --write-out "%{http_code}\n" \
+    --output ${ca_file} \
+    ${CERT_SERVICE_PROTOCOL}://${CERT_SERVICE_SERVER}:${CERT_SERVICE_PORT}${CERT_SERVICE_PATH}v2/master-ca)
+
+  result=${?}
+
+#  log_debug
+  # exit 1
 }
 
 
@@ -529,7 +553,8 @@ request_certificate_from_master() {
     do
       if [[ -f ${f} ]]
       then
-        log_info "file '${f}' exists!"
+        :
+        [[ "${DEBUG}" = "true" ]] && log_debug "file '${f}' exists!"
       else
         log_error "file '${f}' is missing!"
         BREAK="true"
@@ -538,13 +563,16 @@ request_certificate_from_master() {
 
     if [[ ${BREAK} = "true" ]]
     then
+
+      if [[ ! -f ${ICINGA2_CERT_DIRECTORY}/ca.crt ]]
+      then
+        get_ca_file
+      fi
+
       # hard exist
-      rm -rfv ${ICINGA2_CERT_DIRECTORY}/*
-      exit 1
+      #rm -rfv ${ICINGA2_CERT_DIRECTORY}/*
+      #exit 1
     fi
-
-    #if [[ -f ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.key ]] && [[ -f ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.crt ]] && [[ -f ${ICINGA2_CERT_DIRECTORY}/ca.crt ]]
-
 
     # and now we have to ask our master to confirm this certificate
     #
@@ -691,6 +719,13 @@ configure_icinga2_satellite() {
 
   correct_rights
 
+  if [[ "${DEBUG}" = "true" ]]
+  then
+    # kill the zone zone_debugger
+    # not longer needed
+    killall --verbose --signal KILL zone_debugger.sh
+  fi
+
   # wee need an restart?
   #
   if [[ "${RESTART_NEEDED}" = "true" ]]
@@ -705,13 +740,6 @@ configure_icinga2_satellite() {
     log_info "waiting for reconnecting and certifiacte signing"
 
     . /init/wait_for/icinga_master.sh
-
-    if [[ "${DEBUG}" = "true" ]]
-    then
-      # kill the zone zone_debugger
-      # not longer needed
-      killall --verbose --signal KILL zone_debugger.sh
-    fi
 
     # start icinga to retrieve the data from our master
     # the zone watcher will kill this instance, when all datas ready!
