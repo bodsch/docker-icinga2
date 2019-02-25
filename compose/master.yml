@@ -45,6 +45,7 @@ services:
       - CARBON_HOST=
       - CARBON_PORT=2003
       - DEMO_DATA=false
+      - TICKET_SALT
     volumes:
       - /etc/localtime:/etc/localtime:ro
     links:

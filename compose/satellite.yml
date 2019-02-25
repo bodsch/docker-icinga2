@@ -21,6 +21,7 @@ services:
       - ICINGA2_LOGLEVEL=critical
       - ICINGA2_MASTER=icinga2-master.matrix.lan
       - ICINGA2_PARENT=icinga2-master.matrix.lan
+      - TICKET_SALT
       - CERT_SERVICE_BA_USER=admin
       - CERT_SERVICE_BA_PASSWORD=admin
       - CERT_SERVICE_API_USER=root
@@ -59,6 +60,7 @@ services:
       - ICINGA2_LOGLEVEL=critical
       - ICINGA2_MASTER=icinga2-master.matrix.lan
       - ICINGA2_PARENT=icinga2-master.matrix.lan
+      - TICKET_SALT
       - CERT_SERVICE_BA_USER=admin
       - CERT_SERVICE_BA_PASSWORD=admin
       - CERT_SERVICE_API_USER=root

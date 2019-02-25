@@ -522,6 +522,30 @@ request_certificate_from_master() {
 
     sleep 8s
 
+    # check transfered certificate files
+    #
+    BREAK="false"
+    for f in ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.key ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.crt ${ICINGA2_CERT_DIRECTORY}/ca.crt
+    do
+      if [[ -f ${f} ]]
+      then
+        log_info "file '${f}' exists!"
+      else
+        log_error "file '${f}' is missing!"
+        BREAK="true"
+      fi
+    done
+
+    if [[ ${BREAK} = "true" ]]
+    then
+      # hard exist
+      rm -rfv ${ICINGA2_CERT_DIRECTORY}/*
+      exit 1
+    fi
+
+    #if [[ -f ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.key ]] && [[ -f ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.crt ]] && [[ -f ${ICINGA2_CERT_DIRECTORY}/ca.crt ]]
+
+
     # and now we have to ask our master to confirm this certificate
     #
     log_info "ask our cert-service to sign our certifiacte"

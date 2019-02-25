@@ -1,5 +1,7 @@
 #!/usr/bin/expect
 
+# works for 2.10.x
+
 # exp_internal 1
 
 log_user 1
@@ -57,6 +59,22 @@ expect -re "config from parent node" {
 
 expect -re "commands from parent node" {
   send -- "y\r"
+}
+
+expect -re "Local zone name " {
+  send -- "\r"
+}
+
+expect -re "Parent zone name " {
+  send -- "\r"
+}
+
+expect -re "you want to specify additional global zones" {
+  send -- "n\r"
+}
+
+expect -re "disable the inclusion of the conf.d directory " {
+  send -- "n\r"
 }
 
 interact
