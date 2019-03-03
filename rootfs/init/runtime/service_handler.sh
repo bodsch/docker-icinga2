@@ -3,7 +3,7 @@ start_icinga() {
 
   exec /usr/sbin/icinga2 \
     daemon \
-    --log-level warning
+    --log-level debug
 }
 
 

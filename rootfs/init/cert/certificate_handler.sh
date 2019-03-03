@@ -101,11 +101,22 @@ validate_local_ca() {
 
     result=${?}
 
-    # [[ "${DEBUG}" = "true" ]] && log_debug "validate : '${code}'"
+    if [[ "${DEBUG}" = "true" ]]
+    then
+      log_debug "result: '${result}' - status: '${code}'"
+
+      cat /tmp/validate_ca_${HOSTNAME}.json
+    fi
 
     if [[ ${result} -eq 0 ]] && [[ ${code} = 200 ]]
     then
       rm -f /tmp/validate_ca_${HOSTNAME}.json
+
+    elif [[ ${result} -eq 0 ]] && [[ ${code} = 502 ]]
+    then
+      log_warn "our webservice has an problem"
+      sleep 10s
+      validate_local_ca
     else
 
       cat /tmp/validate_ca_${HOSTNAME}.json

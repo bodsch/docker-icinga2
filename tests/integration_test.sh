@@ -41,6 +41,8 @@ wait_for_icinga_instances() {
 
     ip=$(docker network inspect ${backend_network} | jq -r ".[].Containers | to_entries[] | select(.value.Name==\"${s}\").value.IPv4Address" | awk -F "/" '{print $1}')
 
+    echo " ${s} - ${ip}"
+
     RETRY=35
 
     until [[ ${RETRY} -le 0 ]]
@@ -232,7 +234,9 @@ inspect() {
 }
 
 
-if [[ $(docker ps | tail -n +2  | wc -l) -eq 6 ]]
+running_containers=$(docker ps | tail -n +2  | wc -l)
+
+if [[ ${running_containers} -eq 5 ]] || [[ ${running_containers} -gt 5 ]]
 then
   inspect
   wait_for_icinga_cert_service
@@ -244,7 +248,7 @@ then
   exit 0
 else
   echo "the test setup needs 5 containers"
-  echo "only $(docker ps | tail -n +2  | wc -l) running"
+  echo "only ${running_containers} running"
   echo "please run "
   echo " make compose-file"
   echo " docker-compose up -d"

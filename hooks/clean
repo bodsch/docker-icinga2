@@ -2,7 +2,6 @@
 
 # Custom build for Docker Hub
 # see: https://medium.com/microscaling-systems/labelling-automated-builds-on-docker-hub-f3d073fb8e1
-set -x
 
 [[ -e hooks/environment ]] && . hooks/environment
 

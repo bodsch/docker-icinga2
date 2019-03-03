@@ -52,19 +52,19 @@ inotifywait \
     #
     if [[ "${attrib}" = "true" ]] && [[ "${action}" = "CLOSE_WRITE,CLOSE" ]]
     then
-      # only for the ${HOSTNAME}.crt
+      ## only for the ${HOSTNAME}.crt
+      ##
+      #if [[ ${file} =~ ${hostname_f}.crt ]]
+      #then
+      #  log_info "our certificate are replicated."
+      #  log_info "replace the static zone config (if needed)"
       #
-      if [[ ${file} =~ ${hostname_f}.crt ]]
-      then
-        log_info "our certificate are replicated."
-        log_info "replace the static zone config (if needed)"
-
-        sed -i \
-          -e 's|^object Zone ZoneName.*}$|object Zone ZoneName { endpoints = [ NodeName ]; parent = "master" }|g' \
-          /etc/icinga2/zones.conf
-
-        cp /etc/icinga2/zones.conf ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf
-      fi
+      #  sed -i \
+      #    -e 's|^object Zone ZoneName.*}$|object Zone ZoneName { endpoints = [ NodeName ]; parent = "master" }|g' \
+      #    /etc/icinga2/zones.conf
+      #
+      #  cp /etc/icinga2/zones.conf ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf
+      #fi
 
       attrib="false"
 
@@ -79,11 +79,11 @@ inotifywait \
         log_info "the zone configuration for myself has changed."
         log_info "we must remove the old endpoint configuration from the static zones.conf"
 
-        sed -i \
-          -e '/^object Endpoint NodeName.*/d' \
-          /etc/icinga2/zones.conf
-
-        cp /etc/icinga2/zones.conf ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf
+        #sed -i \
+        #  -e '/^object Endpoint NodeName.*/d' \
+        #  /etc/icinga2/zones.conf
+        #
+        #cp /etc/icinga2/zones.conf ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf
 
         log_info "we remove also the static global-templates directory"
         [[ -d /etc/icinga2/zones.d/global-templates ]] && rm -rf /etc/icinga2/zones.d/global-templates

@@ -62,7 +62,6 @@ RUN \
       icinga2-ido-mysql \
       monitoring-plugins \
       dnsutils \
-      expect \
       file \
       fping \
       inotify-tools \
@@ -111,10 +110,10 @@ VOLUME ["/etc/icinga2", "/var/lib/icinga2"]
 CMD ["/init/run.sh"]
 
 HEALTHCHECK \
-  --interval=5s \
+  --interval=30s \
   --timeout=2s \
-  --retries=12 \
-  --start-period=10s \
-  CMD ps ax | grep -v grep | grep -c $(cat /run/icinga2/icinga2.pid) || exit 1
+  --retries=10 \
+  --start-period=15s \
+  CMD /init/healthcheck.sh
 
 # ---------------------------------------------------------------------------------------

@@ -31,22 +31,23 @@ do
     warn=300  #  5 minuten
     crit=600  # 10 minuten
 
-    message=$(jq --raw-output .message ${sign_file} 2> /dev/null)
+    message=$(jq     --raw-output .message     ${sign_file} 2> /dev/null)
     master_name=$(jq --raw-output .master_name ${sign_file} 2> /dev/null)
-    master_ip=$(jq --raw-output .master_ip ${sign_file} 2> /dev/null)
-    date=$(jq --raw-output .date ${sign_file} 2> /dev/null)
-    timestamp=$(jq --raw-output .timestamp ${sign_file} 2> /dev/null)
+    master_ip=$(jq   --raw-output .master_ip   ${sign_file} 2> /dev/null)
+    date=$(jq        --raw-output .date        ${sign_file} 2> /dev/null)
+    timestamp=$(jq   --raw-output .timestamp   ${sign_file} 2> /dev/null)
+    checksum=$(jq    --raw-output .checksum    ${sign_file} 2> /dev/null)
 
     # timestamp must be in UTC!
     current_timestamp=$(date +%s)
-    diff=$(expr ${current_timestamp} - ${timestamp})
+    diff=$(( ${current_timestamp} - ${timestamp} ))
     diff_full=$(printf '%dh:%dm:%ds\n' $((${diff}/3600)) $((${diff}%3600/60)) $((${diff}%60)))
 
     curl_opts=
     if [[ -f ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.pem ]]
     then
       curl_opts="${curl_opts} --capath ${ICINGA2_CERT_DIRECTORY}"
-      curl_opts="${curl_opts} --cert ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.pem"
+      curl_opts="${curl_opts} --cert   ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}.pem"
       curl_opts="${curl_opts} --cacert ${ICINGA2_CERT_DIRECTORY}/ca.crt"
     else
       curl_opts="--insecure"
@@ -61,8 +62,6 @@ do
 
     result=${?}
 
-    # [[ "${DEBUG}" = "true" ]] && log_debug "ApiListener : '${code}'"
-
     if [[ ${result} -eq 0 ]]
     then
       connected=$(echo "${code}" | jq --raw-output '.results[].status.api.conn_endpoints | join(",")' | grep -c ${HOSTNAME})
@@ -73,24 +72,31 @@ do
       elif [[ ${connected} -eq 0 ]]
       then
 
-        num_endpoints=$(echo "${code}" | jq --raw-output ".results[].status.api.num_endpoints")
-        num_conn_endpoints=$(echo "${code}" | jq --raw-output ".results[].status.api.num_conn_endpoints")
+        num_endpoints=$(echo "${code}"          | jq --raw-output ".results[].status.api.num_endpoints")
+        num_conn_endpoints=$(echo "${code}"     | jq --raw-output ".results[].status.api.num_conn_endpoints")
         num_not_conn_endpoints=$(echo "${code}" | jq --raw-output ".results[].status.api.num_not_conn_endpoints")
-        conn_endpoints=$(echo "${code}" | jq --raw-output '.results[].status.api.conn_endpoints | join(",")')
-        not_conn_endpoints=$(echo "${code}" | jq --raw-output '.results[].status.api.not_conn_endpoints | join(",")')
+        conn_endpoints=$(echo "${code}"         | jq --raw-output '.results[].status.api.conn_endpoints | join(",")')
+        not_conn_endpoints=$(echo "${code}"     | jq --raw-output '.results[].status.api.not_conn_endpoints | join(",")')
 
-#        log_debug "endpoints summary:"
-#        log_debug "totaly: '${num_endpoints}' / connected: '${num_conn_endpoints}' / not connected: '${num_not_conn_endpoints}'"
-#        log_debug "i'm connected: ${connected}"
-#        log_debug ""
-#        log_debug "connected endpoints: "
-#        log_debug "${conn_endpoints}"
-#        log_debug ""
-#        log_debug "not connected endpoints: "
-#        log_debug "${not_conn_endpoints}"
-#        log_debug ""
+        if [[ "${DEBUG}" = "true" ]]
+        then
+          log_debug "endpoints summary:"
+          log_debug "totaly: '${num_endpoints}' / connected: '${num_conn_endpoints}' / not connected: '${num_not_conn_endpoints}'"
+          log_debug "i'm connected: ${connected}"
+          log_debug ""
+          log_debug "connected endpoints: "
+          log_debug "${conn_endpoints}"
+          log_debug ""
+          log_debug "not connected endpoints: "
+          log_debug "${not_conn_endpoints}"
+          log_debug ""
+          log_debug "diff: '${diff}' | warn: '${warn}' / crit: '${crit}'"
+          log_debug ""
+        fi
 
-        [[ "${DEBUG}" = "true" ]] && log_debug "diff: '${diff}' | warn: '${warn}' / crit: '${crit}'"
+
+        if [[ ${checksum} != null ]]
+        then
 
         if [[ ${diff} -gt ${warn} ]] && [[ ${diff} -lt ${crit} ]]
         then
@@ -111,6 +117,7 @@ do
 
           exit 1
         fi
+        fi
       else
         # DAS GEHT?
         :
@@ -126,8 +133,6 @@ do
 
     exit 1
   fi
-
-  . /init/wait_for/cert_service.sh
 
   validate_local_ca
 

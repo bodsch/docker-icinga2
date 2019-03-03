@@ -45,7 +45,7 @@ RUN \
   cd /tmp && \
   if [[ "${CERT_SERVICE_TYPE}" = "local" ]] ; then \
     echo "use local sources" ; \
-    mv /build/ruby-icinga-cert-service /tmp/ ; \
+    # mv /build/ruby-icinga-cert-service /tmp/ ; \
   else \
     git clone https://github.com/bodsch/ruby-icinga-cert-service.git && \
     cd ruby-icinga-cert-service && \

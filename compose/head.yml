@@ -11,5 +11,7 @@ volumes:
     driver: local
   icinga:
     driver: local
+  satellite-1:
+    driver: local
   satellite-2:
     driver: local

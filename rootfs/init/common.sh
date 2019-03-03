@@ -295,19 +295,32 @@ validate_certservice_environment() {
 
 validate_icinga_config() {
 
+  log_info "validate our configuration"
   # test the configuration
   #
   /usr/sbin/icinga2 \
     daemon \
-    --validate > /dev/null
+    ${ICINGA2_PARAMS} \
+    --validate
 
   # validation are not successful
   #
   if [[ $? -gt 0 ]]
   then
     log_error "the validation of our configuration was not successful."
-    rm -rf /var/lib/icinga2/*
 
-    exit 1
+    # validate again for debugging
+    #
+    /usr/sbin/icinga2 \
+      daemon \
+      --log-level debug \
+      --validate
+
+#    log_error "remove all files under /var/lib/icinga add restart"
+#    cat /var/log/icinga2/crash/*
+#    cat /var/log/icinga2/*
+#
+#    rm -rf /var/lib/icinga2/*
+#    exit 1
   fi
 }

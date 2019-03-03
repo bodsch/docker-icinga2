@@ -4,6 +4,9 @@
 
 HOSTNAME=$(hostname -f)
 
+DEBUG=${DEBUG:-0}
+DEVELOPMENT_MODUS=${DEVELOPMENT_MODUS:-0}
+
 ICINGA2_CERT_DIRECTORY="/var/lib/icinga2/certs"
 ICINGA2_LIB_DIRECTORY="/var/lib/icinga2"
 

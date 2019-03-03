@@ -45,11 +45,9 @@ ICINGA2_PARAMS=
 if [[ ! -z ${DEBUG+x} ]]
 then
 #  env | grep DEBUG
-  if ( [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]] )
+  if ( [[ "${DEBUG}" = true ]] ||  [[ "${DEBUG}" = "true" ]] || [[ ${DEBUG} -eq 1 ]] )
   then
     export DEBUG="true"
-    # set -x
-    # ICINGA2_LOGLEVEL="debug"
   else
     unset DEBUG
   fi
@@ -96,6 +94,13 @@ run() {
   prepare
 
   fix_sys_caps
+
+  if [[ ! -z ${DEVELOPMENT_MODUS+x} ]] && [[ ${DEVELOPMENT_MODUS} = true ]] || [[ ${DEVELOPMENT_MODUS} -eq 1 ]]
+  then
+    log_debug "DEVELOPMENT_MODUS is activ"
+
+    tail -f /dev/null
+  fi
 
   validate_certservice_environment
 
