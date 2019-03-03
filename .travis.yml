@@ -7,7 +7,7 @@ services:
 
 env:
   global:
-    - ICINGA2_VERSION=${ICINGA2_VERSION:-2.10.2}
+    - ICINGA2_VERSION=${ICINGA2_VERSION:-2.10.3}
     - BUILD_DATE=$(date +"%Y-%m-%d")
     - BUILD_IMAGE=bodsch/docker-icinga2:${ICINGA2_VERSION}-base
 
@@ -20,17 +20,18 @@ jobs:
         - make publish-base
         - docker logout
 
-#    - stage: build and test
-#      script:
-#        - make compose-file
-#        - docker-compose build
-#        - docker-compose up -d
-#        - sleep 2m
-#        - date "+%H:%M:%S"
-#        - time make integration_test
-#        - date "+%H:%M:%S"
-#        - docker-compose kill
-#        - docker-compose down
+    - stage: build and test
+      script:
+        - make compose-file
+        - make build_base
+        - docker-compose build
+        - docker-compose up -d
+        - sleep 4m
+        - date "+%H:%M:%S"
+        - time make integration_test
+        - date "+%H:%M:%S"
+        - docker-compose kill
+        - docker-compose down
 
     - stage: push latest docker image
       if: branch = master
