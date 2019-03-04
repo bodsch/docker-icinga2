@@ -23,7 +23,7 @@ jobs:
     - stage: build and test
       script:
         - make compose-file
-        - make build_base
+        - make
         - docker-compose build
         - docker-compose up -d
         - sleep 4m
