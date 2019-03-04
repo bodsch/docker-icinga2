@@ -1,4 +1,5 @@
 # sudo: required
+dist: xenial
 
 group: edge
 
@@ -20,24 +21,23 @@ jobs:
         - make publish-base
         - docker logout
 
-    - stage: build and test
-      script:
-        - make compose-file
-        - make
-        - docker-compose build
-        - docker-compose up -d
-        - sleep 4m
-        - date "+%H:%M:%S"
-        - time make integration_test
-        - date "+%H:%M:%S"
-        - docker-compose kill
-        - docker-compose down
+    #- stage: build and test
+    #  script:
+    #    - make compose-file
+    #    - make
+    #    - docker-compose build
+    #    - docker-compose up -d
+    #    - sleep 4m
+    #    - date "+%H:%M:%S"
+    #    - time make integration_test
+    #    - date "+%H:%M:%S"
+    #    - docker-compose kill
+    #    - docker-compose down
 
     - stage: push latest docker image
       if: branch = master
       script:
-        - make build_master
-        - make build_satellite
+        - make
         - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
         # rename tags
         - docker tag  ${USER}/icinga2:latest-master    ${DOCKER_USERNAME}/docker-icinga2:latest-master
@@ -50,8 +50,7 @@ jobs:
     - stage: push version docker image
       if: branch = master
       script:
-        - make build_master
-        - make build_satellite
+        - make
         - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
         # rename latest tag to version tag
         - docker tag  ${USER}/icinga2:latest-master    ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-master

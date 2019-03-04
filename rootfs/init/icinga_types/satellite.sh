@@ -457,12 +457,12 @@ restart_master() {
 
   # restart the master to activate the zone
   #
-  log_info "send a restart-process to out the master '${ICINGA2_MASTER}' to activate our zone"
+  log_info "send a restart-process to our the master '${ICINGA2_MASTER}' to activate our zone"
   code=$(curl \
     ${curl_opts} \
     --header 'Accept: application/json' \
     --request POST \
-    https://${ICINGA2_MASTER}:5665/v1/actions/restart-process ) # <- since 2.9.1 not functional?
+    https://${ICINGA2_MASTER}:5665/v1/actions/restart-process)
 #    https://${ICINGA2_MASTER}:5665/v1/actions/shutdown-process)
 
   if [[ $? -eq 0 ]]
@@ -806,7 +806,7 @@ configure_icinga2_satellite() {
     #  daemon \
     #  ${ICINGA2_PARAMS}
 
-    # signal for self-adding
+    # signal for self-adding AFTER our restart
     touch /tmp/add_host
 
     # kill myself to finalize
