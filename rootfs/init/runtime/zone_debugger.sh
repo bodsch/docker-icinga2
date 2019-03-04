@@ -9,7 +9,6 @@
 #
 
 . /init/output.sh
-. /init/runtime/service_handler.sh
 
 monitored_directory="/var/lib/icinga2"
 hostname_f=$(hostname -f)

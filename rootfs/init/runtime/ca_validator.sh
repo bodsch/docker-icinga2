@@ -94,29 +94,27 @@ do
           log_debug ""
         fi
 
-
         if [[ ${checksum} != null ]]
         then
+          if [[ ${diff} -gt ${warn} ]] && [[ ${diff} -lt ${crit} ]]
+          then
+            log_warn "Our certificate request is already ${diff_full} old"
+            log_warn "and we're not connected to the master yet."
+            log_warn "This may be a major problem"
+            log_warn "If this problem persists, the satellite will be reset and restarted."
 
-        if [[ ${diff} -gt ${warn} ]] && [[ ${diff} -lt ${crit} ]]
-        then
-          log_warn "Our certificate request is already ${diff_full} old"
-          log_warn "and we're not connected to the master yet."
-          log_warn "This may be a major problem"
-          log_warn "If this problem persists, the satellite will be reset and restarted."
+          elif [[ ${diff} -gt ${crit} ]]
+          then
+            log_error "Our certificate request is already ${diff_full} old"
+            log_error "and we're not connected to the master yet."
+            log_error "That's a problem"
+            log_INFO "This satellite will now be reset and restarted"
 
-        elif [[ ${diff} -gt ${crit} ]]
-        then
-          log_error "Our certificate request is already ${diff_full} old"
-          log_error "and we're not connected to the master yet."
-          log_error "That's a problem"
-          log_INFO "This satellite will now be reset and restarted"
+            pid=$(ps ax | grep icinga2 | grep -v grep | grep daemon | awk '{print $1}')
+            [[ $(echo -e "${pid}" | wc -w) -gt 0 ]] && killall --verbose --signal HUP icinga2 > /dev/null 2> /dev/null
 
-          pid=$(ps ax | grep icinga2 | grep -v grep | grep daemon | awk '{print $1}')
-          [[ $(echo -e "${pid}" | wc -w) -gt 0 ]] && killall --verbose --signal HUP icinga2 > /dev/null 2> /dev/null
-
-          exit 1
-        fi
+            exit 1
+          fi
         fi
       else
         # DAS GEHT?

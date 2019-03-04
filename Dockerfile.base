@@ -23,6 +23,11 @@ RUN \
   ln -sf /bin/bash /bin/sh && \
   ln -sf "/usr/share/zoneinfo/${TZ}" /etc/localtime && \
   ln -s  /etc/default /etc/sysconfig && \
+  apt-get remove \
+    --allow-remove-essential \
+    --assume-yes \
+    --purge \
+      e2fsprogs libext2fs2 && \
   apt-get update && \
   apt-get install \
     --assume-yes \
@@ -79,6 +84,10 @@ RUN \
   mkdir -p /etc/icinga2/zones.d/global-templates && \
   mkdir -p /etc/icinga2/zones.d/director-global && \
   cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
+  apt-get remove \
+    --assume-yes \
+    --purge \
+      gnupg && \
   apt-get clean && \
   apt autoremove \
     --assume-yes && \
@@ -89,6 +98,7 @@ RUN \
     /root/.gem \
     /root/.cache \
     /root/.bundle 2> /dev/null && \
+  find /var/log -type f -print0 | while IFS= read -r -d '' i; do echo "" > "${i}"; done && \
   echo "" && \
   command -v icinga2 && \
   icinga2 --version && \
@@ -105,7 +115,7 @@ COPY build/check_mem      /usr/lib/nagios/plugins/check_mem
 COPY build/check_ssl_cert /usr/lib/nagios/plugins/check_ssl_cert
 
 WORKDIR /etc/icinga2
-VOLUME ["/etc/icinga2", "/var/lib/icinga2"]
+VOLUME ["/etc/icinga2", "/var/lib/icinga2", "/var/spool/icinga2", "/var/cache/icinga2"]
 
 CMD ["/init/run.sh"]
 

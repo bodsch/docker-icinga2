@@ -1,4 +1,3 @@
-
 ARG BUILD_IMAGE
 # hadolint ignore=DL3006
 FROM $BUILD_IMAGE
@@ -18,7 +17,9 @@ EXPOSE 5665 8080
 
 # ---------------------------------------------------------------------------------------
 
-# COPY build/ruby-icinga-cert-service      /tmp/ruby-icinga-cert-service
+COPY build/ruby-icinga-cert-service      /tmp/ruby-icinga-cert-service
+
+WORKDIR /tmp
 
 # hadolint ignore=DL3003,DL3008,DL3014
 RUN \
@@ -42,23 +43,7 @@ RUN \
   echo 'gem: --no-document' >> /etc/gemrc && \
   gem install --quiet --no-rdoc --no-ri \
     io-console bundler && \
-  cd /tmp && \
-  if [[ "${CERT_SERVICE_TYPE}" = "local" ]] ; then \
-    echo "use local sources" ; \
-    # mv /build/ruby-icinga-cert-service /tmp/ ; \
-  else \
-    git clone https://github.com/bodsch/ruby-icinga-cert-service.git && \
-    cd ruby-icinga-cert-service && \
-    if [[ "${CERT_SERVICE_TYPE}" = "stable" ]] ; then \
-      echo "switch to stable Tag v${CERT_SERVICE_VERSION}" && \
-      git checkout "tags/${CERT_SERVICE_VERSION}" 2> /dev/null ; \
-    elif [[ "${CERT_SERVICE_TYPE}" = "development" ]] ; then \
-      echo "switch to development Branch" && \
-      git checkout development 2> /dev/null ; \
-    fi; \
-  fi && \
   bash /tmp/ruby-icinga-cert-service/bin/installer.sh && \
-  cd / && \
   apt-get remove \
     --assume-yes \
     --purge \
@@ -67,6 +52,7 @@ RUN \
       gcc \
       make \
       git \
+      gnupg \
       libssl-dev \
       ruby-dev \
       python3-pip && \
@@ -81,13 +67,9 @@ RUN \
     /root/.gem \
     /root/.cache \
     /root/.bundle 2> /dev/null && \
-  echo "" && \
-  command -v icinga2 && \
-  icinga2 --version && \
-  icinga2 daemon --validate && \
-  icinga2 feature list && \
-  echo "" && \
   echo "export ICINGA2_TYPE=${ICINGA2_TYPE}"       >> /etc/profile.d/icinga2.sh
+
+WORKDIR /etc/icinga2
 
 # ---------------------------------------------------------------------------------------
 

@@ -1,4 +1,3 @@
-
 ARG BUILD_IMAGE
 # hadolint ignore=DL3006
 FROM $BUILD_IMAGE
@@ -41,12 +40,6 @@ RUN \
     /root/.gem \
     /root/.cache \
     /root/.bundle 2> /dev/null && \
-  echo "" && \
-  command -v icinga2 && \
-  icinga2 --version && \
-  icinga2 daemon --validate && \
-  icinga2 feature list && \
-  echo "" && \
   echo "export ICINGA2_TYPE=${ICINGA2_TYPE}"       >> /etc/profile.d/icinga2.sh
 
 # ---------------------------------------------------------------------------------------

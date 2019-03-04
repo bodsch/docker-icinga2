@@ -34,7 +34,6 @@ trap finish SIGINT SIGTERM INT TERM EXIT
 . /init/output.sh
 . /usr/bin/vercomp
 . /init/environment.sh
-. /init/runtime/service_handler.sh
 
 # -------------------------------------------------------------------------------------------------
 
@@ -138,6 +137,8 @@ run() {
     then
       nohup /usr/local/icinga2-cert-service/bin/icinga2-cert-service.rb > /dev/stdout 2>&1 &
     fi
+
+    nohup /init/runtime/watch_satellites.sh > /dev/stdout 2>&1 &
   else
     :
     nohup /init/runtime/ca_validator.sh > /dev/stdout 2>&1 &

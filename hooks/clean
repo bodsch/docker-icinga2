@@ -5,9 +5,19 @@
 
 [[ -e hooks/environment ]] && . hooks/environment
 
-images=$(docker images -q ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}* | uniq)
+images=$(docker images -q -f dangling=true)
+
+[[ -n "${images}" ]] && docker rmi --force ${images}
+
+images=$(docker images -q *${DOCKER_IMAGE_NAME}* | uniq)
 
 [[ -z "${images}" ]] && exit 0
 
 docker rmi \
   --force ${images}
+
+pushd build > /dev/null
+
+[[ -d ruby-icinga-cert-service ]] && rm -rf ruby-icinga-cert-service
+
+popd

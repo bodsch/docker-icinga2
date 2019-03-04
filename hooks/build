@@ -10,7 +10,7 @@ ICINGA2_TYPE=${1}
 
 echo ""
 echo " ICINGA2_VERSION     : ${ICINGA2_VERSION}"
-[ ! -z "${ICINGA2_TYPE}" ]        && echo " ICINGA2_TYPE        : ${ICINGA2_TYPE}"
+[ -n "${ICINGA2_TYPE}" ]         && echo " ICINGA2_TYPE        : ${ICINGA2_TYPE}"
 [ "${ICINGA2_TYPE}" = "master" ] && echo " CERT_SERVICE_VERSION: ${CERT_SERVICE_VERSION}"
 echo " BUILD_DATE          : ${BUILD_DATE}"
 echo " GIT_SHA1            : ${GIT_SHA1}"
@@ -22,16 +22,16 @@ if [ -z "${ICINGA2_TYPE}" ]
 then
   docker build \
     --file Dockerfile.base \
-    --build-arg VCS_REF=${GIT_SHA1} \
-    --build-arg BUILD_DATE=${BUILD_DATE} \
-    --build-arg BUILD_VERSION=${BUILD_VERSION} \
-    --build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
+    --build-arg VCS_REF="${GIT_SHA1}" \
+    --build-arg BUILD_DATE="${BUILD_DATE}" \
+    --build-arg BUILD_VERSION="${BUILD_VERSION}" \
+    --build-arg ICINGA2_VERSION="${ICINGA2_VERSION}" \
     --build-arg CERT_SERVICE_TYPE= \
     --build-arg CERT_SERVICE_VERSION= \
-    --tag ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-base .
+    --tag "${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-base" .
 
   echo ""
-  docker images ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-base | tail -n1
+  docker images "${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-base" | tail -n1
 
   echo ""
   echo "---------------------------------------------------------------------"
@@ -43,30 +43,63 @@ else
 
   if [ "${ICINGA2_TYPE}" = "master" ]
   then
+    pushd build > /dev/null
+
+    if [[ "${CERT_SERVICE_TYPE}" = "local" ]]
+    then
+      echo "use local sources"
+
+    else
+      if [[ ! -d ruby-icinga-cert-service ]]
+      then
+        git clone https://github.com/bodsch/ruby-icinga-cert-service.git
+      else
+        pushd ruby-icinga-cert-service > /dev/null
+        git fetch --all --prune -a
+        popd > /dev/null
+      fi
+
+      cd ruby-icinga-cert-service
+
+      if [[ "${CERT_SERVICE_TYPE}" = "stable" ]]
+      then
+        echo "switch to stable Tag v${CERT_SERVICE_VERSION}"
+        git checkout "tags/${CERT_SERVICE_VERSION}" 2> /dev/null
+      elif [[ "${CERT_SERVICE_TYPE}" = "development" ]]
+      then
+        echo "switch to development Branch"
+        git checkout development 2> /dev/null
+      fi
+    fi
+
+    popd > /dev/null
+
     docker build \
-      --file Dockerfile.${ICINGA2_TYPE} \
-      --build-arg BUILD_IMAGE=${BUILD_IMAGE} \
-      --build-arg VCS_REF=${GIT_SHA1} \
-      --build-arg BUILD_DATE=${BUILD_DATE} \
-      --build-arg BUILD_VERSION=${BUILD_VERSION} \
-      --build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-      --build-arg CERT_SERVICE_TYPE=${CERT_SERVICE_TYPE} \
-      --build-arg CERT_SERVICE_VERSION=${CERT_SERVICE_VERSION} \
-      --tag ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-${ICINGA2_TYPE} .
+      --file "Dockerfile.${ICINGA2_TYPE}" \
+      --compress \
+      --cache-from "${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-base" \
+      --build-arg BUILD_IMAGE="${BUILD_IMAGE}" \
+      --build-arg VCS_REF="${GIT_SHA1}" \
+      --build-arg BUILD_DATE="${BUILD_DATE}" \
+      --build-arg BUILD_VERSION="${BUILD_VERSION}" \
+      --build-arg ICINGA2_VERSION="${ICINGA2_VERSION}" \
+      --build-arg CERT_SERVICE_TYPE="${CERT_SERVICE_TYPE}" \
+      --build-arg CERT_SERVICE_VERSION="${CERT_SERVICE_VERSION}" \
+      --tag "${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-${ICINGA2_TYPE}" .
   else
 
     docker build \
-      --file Dockerfile.${ICINGA2_TYPE} \
-      --build-arg BUILD_IMAGE=${BUILD_IMAGE} \
-      --build-arg VCS_REF=${GIT_SHA1} \
-      --build-arg BUILD_DATE=${BUILD_DATE} \
-      --build-arg BUILD_VERSION=${BUILD_VERSION} \
-      --build-arg ICINGA2_VERSION=${ICINGA2_VERSION} \
-      --tag ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-${ICINGA2_TYPE} .
+      --file "Dockerfile.${ICINGA2_TYPE}" \
+      --build-arg BUILD_IMAGE="${BUILD_IMAGE}" \
+      --build-arg VCS_REF="${GIT_SHA1}" \
+      --build-arg BUILD_DATE="${BUILD_DATE}" \
+      --build-arg BUILD_VERSION="${BUILD_VERSION}" \
+      --build-arg ICINGA2_VERSION="${ICINGA2_VERSION}" \
+      --tag "${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-${ICINGA2_TYPE}" .
   fi
 
   echo ""
-  docker images ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-${ICINGA2_TYPE} | tail -n1
+  docker images "${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-${ICINGA2_TYPE}" | tail -n1
   echo ""
   echo "---------------------------------------------------------------------"
 fi
