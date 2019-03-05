@@ -3,8 +3,8 @@
 
 creates several containers with different icinga2 characteristics:
 
-- icinga2 as [master](./icinga2-master) with a certificats service
-- icinga2 [satellite](./icinga2-satellite)
+- icinga2 as master with a certificats service
+- icinga2 as satellite
 
 ---
 
@@ -18,22 +18,112 @@ creates several containers with different icinga2 characteristics:
 [microbadger]: https://microbadger.com/images/bodsch/docker-icinga2
 [travis]: https://travis-ci.org/bodsch/docker-icinga2
 
+# Base Distribution
+After a long time with _alpine_ as the base I had to go back to a _debian based_ distribution. I couldn't run Icinga stable with the musl lib. :(
+
+The current Dockerfiles are structured so that you can use both `debian` (`9-slim`) and/or `ubuntu` (`18.10`).
 
 # Build
 You can use the included Makefile.
 
-- To build the Container: `make`
-- To remove the builded Docker Image: `make clean`
-- Starts the Container: `make run`
-- Starts the Container with Login Shell: `make shell`
-- Entering the Container: `make exec`
-- Stop (but **not kill**): `make stop`
-- History `make history`
+- To build the Containers: `make`<br>
+  bundle following calls:
+    * `make build_base` (builds an base container with all needed components)
+    * `make build_master`(builds an master container with the icinga certificate service)
+    * `make build_satellite` (build also an satellite)
+- To build an valid `docker-compose.yml` file: `make dompose-file`
+- To remove the builded Docker Images: `make clean`
+- use a container with login shell:<br>
+    * `make base-shell`
+    * `make master-shell`
+    * `make satellite-shell`
+- run tests `make test`
+  bundle following calls:
+    * `make linter`
+    *  `make integration_test`
 
 _You can specify an image version by using the `ICINGA2_VERSION` environment variable (This defaults to the "latest" tag)._
 
 _To change this export an other value for `ICINGA2_VERSION` (e.g. `export ICINGA_VERSION=2.8.4`)_
 
+
+## Tests
+The test checks whether all container instances were started successfully.
+It also checks the accessibility of the individual containers and whether the certificate exchange was successful.
+
+```bash
+inspect needed containers
+ /nginx has pid 25414                    - healthy
+ /icingaweb2 has pid 25089               - healthy
+ /icinga2-satellite-1 has pid 24228      - healthy
+ /icinga2-satellite-2 has pid 23941      - healthy
+ /icinga2-satellite-3 has pid 24095      - starting
+ /icinga2-master has pid 30569           - healthy
+ /database has pid 23390                 - healthy
+
+wait for the certificate service
+wait for the icinga2 instances
+the master instance must run 100 seconds without interruption
+the icinga2 instance icinga2-master is 197 seconds up and alive
+the icinga2 instance icinga2-satellite-1 is 223 seconds up and alive
+the icinga2 instance icinga2-satellite-2 is 225 seconds up and alive
+the icinga2 instance icinga2-satellite-3 is 157 seconds up and alive
+
+service icinga2-master       (fqdn: icinga2-master.matrix.lan      / ip: 172.27.0.2) | version: r2.10.3-1
+service icinga2-satellite-1  (fqdn: icinga2-satellite-1.matrix.lan / ip: 172.27.0.5) | version: r2.10.3-1
+service icinga2-satellite-2  (fqdn: icinga2-satellite-2.matrix.lan / ip: 172.27.0.3) | version: r2.10.3-1
+service icinga2-satellite-3  (fqdn: icinga2-satellite-3.matrix.lan / ip: 172.27.0.4) | version: r2.10.3-1
+
+api request are successfull
+endpoints summary:
+totaly: '3' / connected: '3' / not connected: '0'
+
+connected endpoints: 
+[
+  "icinga2-satellite-2.matrix.lan",
+  "icinga2-satellite-3.matrix.lan",
+  "icinga2-satellite-1.matrix.lan"
+]
+
+not connected endpoints: 
+[]
+
+API zones:
+{
+  "icinga2-master.matrix.lan": {
+    "client_log_lag": 0,
+    "connected": true,
+    "endpoints": [
+      "icinga2-master.matrix.lan"
+    ],
+    "parent_zone": ""
+  },
+  "icinga2-satellite-1.matrix.lan": {
+    "client_log_lag": 0,
+    "connected": true,
+    "endpoints": [
+      "icinga2-satellite-1.matrix.lan"
+    ],
+    "parent_zone": "icinga2-master.matrix.lan"
+  },
+  "icinga2-satellite-2.matrix.lan": {
+    "client_log_lag": 0,
+    "connected": true,
+    "endpoints": [
+      "icinga2-satellite-2.matrix.lan"
+    ],
+    "parent_zone": "icinga2-master.matrix.lan"
+  },
+  "icinga2-satellite-3.matrix.lan": {
+    "client_log_lag": 0,
+    "connected": true,
+    "endpoints": [
+      "icinga2-satellite-3.matrix.lan"
+    ],
+    "parent_zone": "icinga2-master.matrix.lan"
+  }
+}
+```
 
 # Contribution
 Please read [Contribution](CONTRIBUTIONG.md)
@@ -41,7 +131,7 @@ Please read [Contribution](CONTRIBUTIONG.md)
 # Development,  Branches (Github Tags)
 The `master` Branch is my *Working Horse* includes the "latest, hot shit" and can be complete broken!
 
-If you want to use something stable, please use a [Tagged Version](https://github.com/bodsch/docker-icinga2/tags) or an [Branch](https://github.com/bodsch/docker-icinga2/branches) like `1712` or `1801`
+If you want to use something stable, please use a [Tagged Version](https://github.com/bodsch/docker-icinga2/tags) or an [Branch](https://github.com/bodsch/docker-icinga2/branches) like `2.9.1`
 
 # side-channel / custom scripts
 if use need some enhancements, you can add some (bash) scripts and add them via volume to the container:
@@ -58,10 +148,7 @@ if use need some enhancements, you can add some (bash) scripts and add them via 
 
 
 # Availability
-
-I use the official [Icinga2 packages](https://pkgs.alpinelinux.org/packages?name=icinga2&branch=&repo=&arch=&maintainer=) from Apline.
-
-If one of them is removed, please contact Alpine and don't complain here!
+I use the official [Icinga2 packages](http://packages.icinga.com) from Icinga.
 
 I remove branches as soon as they are disfunctional (e. g. if a package is no longer available at Alpine). Not immediately, but certainly after 2 months.
 
@@ -71,13 +158,10 @@ You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/
 
 
 # Notices
-The actuall Container Supports a stable MySQL Backand to store all needed Datas into it.
-
-the graphite feature is **experimentally** and not conclusively tested.
-
+The actuall Container Supports a stable MySQL Backend to store all needed Datas into it.
 
 ## activated Icinga2 Features
-
+- api
 - command
 - checker
 - mainlog
@@ -85,25 +169,30 @@ the graphite feature is **experimentally** and not conclusively tested.
 - graphite (only available if the environment variables are set)
 
 
-# certificate service (**EXPERIMENTAL**)
+# certificate exchange
+To connect a satellite to a master, you need a certificate issued by the master and signed by its CA.
 
-[Sourcecode](https://github.com/bodsch/ruby-icinga-cert-service)
-
-To connect a satellite to a master you need a certificate, which is issued by the master and signed by its CA.
+I have tried to automate the exchange of certificates so that you can launch the satellites unattended, and they then take care of a certificate themselves.
 
 The Icinga2 documentation provides more information about [Distributed Monitoring and Certificates](https://github.com/Icinga/icinga2/blob/master/doc/06-distributed-monitoring.md#signing-certificates-on-the-master-).
 
 **I strongly recommend a study of the documentation!**
+
+My solution was to create my own ReST service which runs on the Master Container.
+
+This allows me to e.g. create a ticket for issuing a certificate.
+But also the direct creation of a certificate is possible.
+
+
+## certificate service
+[Sourcecode](https://github.com/bodsch/ruby-icinga-cert-service)
 
 Within a docker environment this is a bit more difficult, so an external service is used to simplify this.
 This service is constantly being developed further, but is integrated into the docker container in a stable version.
 
 **The certificate service is only available at an Icinga2 Master!**
 
-## usage
-
-Certificate exchange is automated within the docker containers.
-If you want to issue your own certificate, you can use the following API calls.
+### usage
 
 **You need a valid and configured API User in Icinga2.**
 
@@ -116,32 +205,16 @@ The certificate service requires the following environment variables:
 - `ICINGA2_API_USER` (default: `root`)
 - `ICINGA2_API_PASSWORD` (default: `icinga`)
 
+Certificate exchange is automated within the containers.
+If you want to issue your own certificate, you can use the following API calls.
 
-### new way (since Icinga2 2.8)
-
-You can use `expect` on a *satellite* or *agent* to create an certificate request with the *icinga2 node wizard*:
-
-    expect /init/node-wizard.expect
-
-After this, you can use the *cert-service* to sign this request:
-
-    curl \
-      --user ${ICINGA2_CERT_SERVICE_BA_USER}:${ICINGA2_CERT_SERVICE_BA_PASSWORD} \
-      --silent \
-      --request GET \
-      --header "X-API-USER: ${ICINGA2_CERT_SERVICE_API_USER}" \
-      --header "X-API-PASSWORD: ${ICINGA2_CERT_SERVICE_API_PASSWORD}" \
-      --write-out "%{http_code}\n" \
-      --output /tmp/sign_${HOSTNAME}.json \
-      http://${ICINGA2_CERT_SERVICE_SERVER}:${ICINGA2_CERT_SERVICE_PORT}/v2/sign/${HOSTNAME}
-
-After a restart of the Icinga2 Master the certificate is active and a secure connection can be established.
+Since Version 2.8 you can use `icinga2 node wizard`  on a *satellite* or *agent* to create an certificate request.
 
 
-### old way (pre Icinga2 2.8)
+#### old way (pre Icinga2 2.8)
 
 To create a certificate:
-
+```bash
     curl \
       --request GET \
       --user ${ICINGA2_CERT_SERVICE_BA_USER}:${ICINGA2_CERT_SERVICE_BA_PASSWORD} \
@@ -150,13 +223,13 @@ To create a certificate:
       --header "X-API-PASSWORD: ${ICINGA2_CERT_SERVICE_API_PASSWORD}" \
       --output /tmp/request_${HOSTNAME}.json \
       http://${ICINGA2_CERT_SERVICE_SERVER}:${ICINGA2_CERT_SERVICE_PORT}/v2/request/${HOSTNAME}
-
+```
 Extract the session checksum from the request above.
-
+```bash
     checksum=$(jq --raw-output .checksum /tmp/request_${HOSTNAME}.json)
-
+```
 Download the created certificate:
-
+```bash
     curl \
       --request GET \
       --user ${ICINGA2_CERT_SERVICE_BA_USER}:${ICINGA2_CERT_SERVICE_BA_PASSWORD} \
@@ -166,13 +239,43 @@ Download the created certificate:
       --header "X-CHECKSUM: ${checksum}" \
       --output /tmp/${HOSTNAME}/${HOSTNAME}.tgz \
        http://${ICINGA2_CERT_SERVICE_SERVER}:${ICINGA2_CERT_SERVICE_PORT}/v2/cert/${HOSTNAME}
-
+```
 
 **The generated certificate has an timeout from 10 minutes between beginning of creation and download.**
 
 You can also look into `rootfs/init/examples/use_cert-service.sh`
 
 For Examples to create a certificate with commandline tools look into `rootfs/init/examples/cert-manager.sh`
+
+#### new way (since Icinga2 2.8)
+
+You can use `expect` on a *satellite* or *agent* to create an certificate request with the *icinga2 node wizard*:
+```bash
+    expect /init/examples/node-wizard.expect
+```
+After this, you can use the *cert-service* to sign this request:
+```bash
+    curl \
+      --user ${ICINGA2_CERT_SERVICE_BA_USER}:${ICINGA2_CERT_SERVICE_BA_PASSWORD} \
+      --silent \
+      --request GET \
+      --header "X-API-USER: ${ICINGA2_CERT_SERVICE_API_USER}" \
+      --header "X-API-PASSWORD: ${ICINGA2_CERT_SERVICE_API_PASSWORD}" \
+      --write-out "%{http_code}\n" \
+      --output /tmp/sign_${HOSTNAME}.json \
+      http://${ICINGA2_CERT_SERVICE_SERVER}:${ICINGA2_CERT_SERVICE_PORT}/v2/sign/${HOSTNAME}
+```
+After a restart of the Icinga2 Master the certificate is active and a secure connection can be established.
+
+
+> But... (unfortunately there is always one but)
+
+If there is a CNAME on a satellite which is resolved to an external system this does not work.
+Therefore I had to modify the certificate exchange.
+
+From now on I generate the certificate again with board resources. For this I need a ticket from the master, which I request via the certificate service.
+
+All around to create the certificate you can see [here](https://github.com/bodsch/docker-icinga2/blob/master/rootfs/init/icinga_types/satellite.sh#L298-L424)
 
 
 # supported Environment Vars
@@ -215,10 +318,10 @@ For Examples to create a certificate with commandline tools look into `rootfs/in
 | Environmental Variable             | Default Value        | Description                                                     |
 | :--------------------------------- | :-------------       | :-----------                                                    |
 | `ICINGA2_MASTER`                   | -                    | The Icinga2-Master FQDN for a Satellite Node                    |
-| `ICINGA2_PARENT`                   | -                    | The Parent Node for an Cluster Setup                            |
+| `ICINGA2_PARENT`                   | -                    | The Parent Node for an Cluster Setup (not yet implemented)      |
 |                                    |                      |                                                                 |
-| `BASIC_AUTH_USER`                  | `admin`              | both `BASIC_AUTH_*` and the `ICINGA2_MASTER` are importand, if you |
-| `BASIC_AUTH_PASS`                  | `admin`              | use and modify the authentication of the *icinga-cert-service*  |
+| `BASIC_AUTH_USER`                  | `admin`              | both `BASIC_AUTH_*` and the `ICINGA2_MASTER` are importand, if you <br>use and modify the authentication of the *icinga-cert-service*
+| `BASIC_AUTH_PASS`                  | `admin`              |                                                                 |
 |                                    |                      |                                                                 |
 | `CERT_SERVICE_BA_USER`             | `admin`              | The Basic Auth User for the certicate Service                   |
 | `CERT_SERVICE_BA_PASSWORD`         | `admin`              | The Basic Auth Password for the certicate Service               |
@@ -439,11 +542,13 @@ services:
 version: '3.3'
 ```
 
-## ssl certificate
+## SSL certificate for nginx
 
-In the above example the nginx is started with SSL support.
+In the above example the nginx will start with SSL support.
 
-You can create the required certificate locally as follows.
+You musst create the required certificate locally as follows or you use your own.
+
+### self-signed SSL Certificate
 
 At the following prompt, the most important line is the one requesting the **common name**.
 
@@ -489,7 +594,7 @@ The 3 files created then belong in the directory `compose/ssl`.
 
 In this example I use my own docker containers:
 
-- [database](https://hub.docker.com/r/bodsch/docker-mysql/builds/)
+- [database](https://hub.docker.com/r/bodsch/docker-mariadb/builds/)
 - [Icinga2](https://hub.docker.com/r/bodsch/docker-icinga2/builds/)
 - [Icinga Web2](https://hub.docker.com/r/bodsch/docker-icingaweb2/builds/)
 
