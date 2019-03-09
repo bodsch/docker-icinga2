@@ -1,0 +1,12 @@
+---
+version: '3.3'
+
+services:
+
+  graphite:
+    restart: always
+    image: bodsch/docker-graphite:1.1.5
+    container_name: graphite
+    hostname: graphite
+    networks:
+      - backend

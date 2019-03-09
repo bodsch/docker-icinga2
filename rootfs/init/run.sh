@@ -83,6 +83,29 @@ custom_scripts() {
   fi
 }
 
+
+
+configure_modules() {
+
+  log_info "configure modules"
+
+  if [[ -d /init/modules.d ]]
+  then
+    for f in /init/modules.d/*
+    do
+      case "$f" in
+        *.sh)
+          log_info "  $(basename ${f} .sh)"
+          . ${f}
+          ;;
+        *)
+          # log_warn "ignoring file ${f}"
+          ;;
+      esac
+    done
+  fi
+}
+
 run() {
 
   log_info ""
@@ -105,16 +128,16 @@ run() {
 
   version_of_icinga_master
 
+  # create and configure database
+  #
   [[ "${ICINGA2_TYPE}" = "Master" ]] && . /init/database/mysql.sh
 
   . /init/configure_icinga.sh
   . /init/api_user.sh
 
-  if [[ "${ICINGA2_TYPE}" = "Master" ]]
-  then
-    . /init/graphite_setup.sh
-    . /init/configure_ssmtp.sh
-  fi
+  # modules
+  #
+  [[ "${ICINGA2_TYPE}" = "Master" ]] && configure_modules
 
   correct_rights
 

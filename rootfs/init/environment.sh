@@ -55,6 +55,13 @@ then
   CARBON_HOST=${CARBON_HOST:-""}
   CARBON_PORT=${CARBON_PORT:-2003}
 
+  #influxdb service
+  INFLUXDB_HOST=${INFLUXDB_HOST:-""}
+  INFLUXDB_PORT=${INFLUXDB_PORT:-8086}
+  INFLUXDB_DB=${INFLUXDB_DB:-icinga2}
+  INFLUXDB_USER=${INFLUXDB_USER:-}
+  INFLUXDB_PASS=${INFLUXDB_PASS:-}
+
   # ssmtp
   ICINGA2_SSMTP_RELAY_SERVER=${ICINGA2_SSMTP_RELAY_SERVER:-}
   ICINGA2_SSMTP_REWRITE_DOMAIN=${ICINGA2_SSMTP_REWRITE_DOMAIN:-}
@@ -114,3 +121,37 @@ export ICINGA2_LIB_DIRECTORY
 export HOSTNAME
 
 # -----------------------------------------------------------------------------------
+
+test () {
+  # Convert all environment variables with names ending in __FILE into the content of
+  # the file that they point at and use the name without the trailing __FILE.
+  # This can be used to carry in Docker secrets.
+
+  for VAR_NAME in $(env | grep '^GRAYLOG_[^=]\+__FILE=.\+' | sed -r 's/^(GRAYLOG_[^=]*)__FILE=.*/\1/g'); do
+
+    VAR_NAME_FILE="${VAR_NAME}__FILE"
+
+    if [ "${!VAR_NAME}" ]; then
+
+      echo >&2 "ERROR: Both ${VAR_NAME} and ${VAR_NAME_FILE} are set but are exclusive"
+
+      exit 1
+
+    fi
+
+    VAR_FILENAME="${!VAR_NAME_FILE}"
+
+    echo "Getting secret ${VAR_NAME} from ${VAR_FILENAME}"
+
+    if [ ! -r "${VAR_FILENAME}" ]; then
+      echo >&2 "ERROR: ${VAR_FILENAME} does not exist or is not readable"
+
+      exit 1
+    fi
+
+    export "${VAR_NAME}"="$(< "${VAR_FILENAME}")"
+
+    unset "${VAR_NAME_FILE}"
+  done
+}
+
