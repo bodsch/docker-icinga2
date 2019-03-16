@@ -14,12 +14,20 @@ configure_graphite() {
 
   enable_icinga_feature graphite
 
-  if [[ -e /etc/icinga2/features-enabled/graphite.conf ]]
+  config_file="/etc/icinga2/features-enabled/graphite.conf"
+
+  # create (overwrite existing) configuration
+  #
+  if [[ -e "${config_file}" ]]
   then
-    sed -i \
-      -e "s|^.*\ //host\ =\ .*|  host\ =\ \"${CARBON_HOST}\"|g" \
-      -e "s|^.*\ //port\ =\ .*|  port\ =\ \"${CARBON_PORT}\"|g" \
-      /etc/icinga2/features-enabled/graphite.conf
+    cat > "${config_file}" <<-EOF
+
+object GraphiteWriter "graphite" {
+  host = "${CARBON_HOST}"
+  port = ${CARBON_PORT}
+}
+
+EOF
   fi
 }
 

@@ -21,7 +21,7 @@ DEVELOPMENT_MODUS=0
 
 # for the icinga-cert-service
 # info, notice, warning, debug
-LOG_LEVEL=INFO
+LOG_LEVEL=DEBUG
 
 # notice, debug, warning, critical
 ICINGA2_LOGLEVEL=critical
@@ -31,9 +31,23 @@ ICINGA2_PARENT=icinga2-master.matrix.lan
 
 DEMO_DATA=false
 
-CARBON_HOST=
+# graphite support
+CARBON_HOST=graphite
 CARBON_PORT=2003
 
+# influx
+INFLUXDB_DB=icinga2
+INFLUXDB_HTTP_AUTH_ENABLED=true
+INFLUXDB_ADMIN_USER=admin
+INFLUXDB_ADMIN_PASSWORD=hqkBGSQW34iDRpbU
+INFLUXDB_USER=icinga2
+INFLUXDB_USER_PASSWORD=w7uK6nfcxR6ZBtZC
+
+# influx integration
+INFLUXDB_HOST=influx
+INFLUXDB_PASS=w7uK6nfcxR6ZBtZC
+
+# mariadb
 MARIADB_SYSTEM_USER=root
 MARIADB_ROOT_PASSWORD=vYUQ14SGVrJRi69PsujC
 MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
@@ -42,8 +56,8 @@ IDO_PASSWORD=qUVuLTk9oEDUV0A
 BASIC_AUTH_PASS=admin
 BASIC_AUTH_USER=admin
 
-CERT_SERVICE_BA_USER=${BASIC_AUTH_USER}
-CERT_SERVICE_BA_PASSWORD=${BASIC_AUTH_PASS}
+CERT_SERVICE_BA_USER=admin
+CERT_SERVICE_BA_PASSWORD=admin
 CERT_SERVICE_API_USER=root
 CERT_SERVICE_API_PASSWORD=icinga
 CERT_SERVICE_SERVER=nginx
@@ -61,4 +75,6 @@ docker-compose \
   --file compose/icingaweb2.yml \
   --file compose/master.yml \
   --file compose/satellite.yml \
+  --file compose/graphite.yml \
+  --file compose/influxdb.yml \
   config > docker-compose.yml

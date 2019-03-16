@@ -90,6 +90,8 @@ else
 
     docker build \
       --file "Dockerfile.${ICINGA2_TYPE}" \
+      --compress \
+      --cache-from "${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}-base" \
       --build-arg BUILD_IMAGE="${BUILD_IMAGE}" \
       --build-arg VCS_REF="${GIT_SHA1}" \
       --build-arg BUILD_DATE="${BUILD_DATE}" \

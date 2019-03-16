@@ -41,8 +41,8 @@ services:
       - SYS_ADMIN
     networks:
       - backend
-    volumes:
-      - satellite-1:/var/lib/icinga2
+#    volumes:
+#      - satellite-1:/var/lib/icinga2
 
   icinga2-satellite-2:
     build:
@@ -84,8 +84,8 @@ services:
       - SYS_ADMIN
     networks:
       - backend
-    volumes:
-      - satellite-2:/var/lib/icinga2
+#    volumes:
+#      - satellite-2:/var/lib/icinga2
 
   icinga2-satellite-3:
     build:
