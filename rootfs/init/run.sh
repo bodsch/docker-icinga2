@@ -147,13 +147,12 @@ run() {
 
   custom_scripts
 
-  log_info "start init process ..."
-
   if [[ "${ICINGA2_TYPE}" = "Master" ]]
   then
     # backup the generated zones
     #
     nohup /init/runtime/inotify.sh > /dev/stdout 2>&1 &
+    nohup /init/runtime/watch_satellites.sh > /dev/stdout 2>&1 &
 
     # env | grep ICINGA | sort
     if [[ -f /usr/local/icinga2-cert-service/bin/icinga2-cert-service.rb ]]
@@ -161,9 +160,8 @@ run() {
       nohup /usr/local/icinga2-cert-service/bin/icinga2-cert-service.rb > /dev/stdout 2>&1 &
     fi
 
-    nohup /init/runtime/watch_satellites.sh > /dev/stdout 2>&1 &
   else
-    :
+    #
     nohup /init/runtime/ca_validator.sh > /dev/stdout 2>&1 &
 
     if [[ ! -e /tmp/final ]]
@@ -172,9 +170,15 @@ run() {
     fi
   fi
 
+
+  log_info "start init process ..."
+
   /usr/sbin/icinga2 \
     daemon \
     ${ICINGA2_PARAMS}
+
+
+
 }
 
 run
