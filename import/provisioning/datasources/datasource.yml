@@ -1,0 +1,31 @@
+# config file version
+apiVersion: 1
+
+# list of datasources that should be deleted from the database
+deleteDatasources:
+  - name: Icinga2
+    orgId: 1
+
+# list of datasources to insert/update depending
+# whats available in the database
+## This is for swarm, url is: stackname_servicename
+datasources:
+  - name: Icinga2
+    type: influxdb
+    access: proxy
+    database: icinga2
+    user: icinga2
+    password: w7uK6nfcxR6ZBtZC
+    url: http://influxdb:8086
+    editable: true
+    jsonData:
+      timeInterval: "15s"
+
+  - name: graphite
+    type: graphite
+    isDefault: true
+    access: proxy
+    url: http://graphite:8080
+    editable: true
+    jsonData:
+      graphiteVersion: "1.1"

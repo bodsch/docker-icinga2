@@ -1,0 +1,35 @@
+---
+version: '3.3'
+
+services:
+
+  grafana:
+    restart: always
+    image: grafana/grafana
+    container_name: grafana
+    hostname: grafana.matrix.lan
+    environment:
+      - URL_PATH
+      - LOG_LEVEL
+      - ROUTER_LOGGING
+    volumes:
+      - ${PWD}/import/provisioning:/etc/grafana/provisioning:ro
+      - ${PWD}/import/dashboards:/var/lib/grafana/dashboards:ro
+#    volume:
+#      - import/
+#    command: /init/run.sh
+#    entrypoint: ''
+    ports:
+      - 3000:3000
+    links:
+#      - graphite.matrix.lan
+      - influx:influx.matrix.lan
+#      - renderer
+    depends_on:
+#      - graphite
+      - influx
+#      - renderer
+    networks:
+      - frontend
+      - backend
+      - database

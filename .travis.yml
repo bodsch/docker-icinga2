@@ -8,7 +8,7 @@ services:
 
 env:
   global:
-    - ICINGA2_VERSION=${ICINGA2_VERSION:-2.10.3}
+    - ICINGA2_VERSION=$(./hooks/latest-version.sh)
     - BUILD_DATE=$(date +"%Y-%m-%d")
     - BUILD_IMAGE=bodsch/docker-icinga2:${ICINGA2_VERSION}-base
 

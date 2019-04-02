@@ -9,7 +9,7 @@ cat << EOF > .env
 BUILD_IMAGE=${BUILD_IMAGE}
 BUILD_DATE=${BUILD_DATE}
 BUILD_VERSION=${BUILD_VERSION}
-ICINGA2_VERSION=${ICINGA2_VERSION}
+ICINGA2_VERSION=$(./hooks/latest-version.sh)
 
 CERT_SERVICE_TYPE=${CERT_SERVICE_TYPE}
 CERT_SERVICE_VERSION=${CERT_SERVICE_VERSION}
@@ -35,8 +35,8 @@ ICINGA2_PARENT=icinga2-master.matrix.lan
 DEMO_DATA=false
 
 # graphite support
-CARBON_HOST=graphite
-CARBON_PORT=2003
+# CARBON_HOST=graphite.matrix.lan
+# CARBON_PORT=2003
 
 # influx
 INFLUXDB_DB=icinga2
@@ -47,7 +47,7 @@ INFLUXDB_USER=icinga2
 INFLUXDB_USER_PASSWORD=w7uK6nfcxR6ZBtZC
 
 # influx integration
-INFLUXDB_HOST=influx
+INFLUXDB_HOST=influx.matrix.lan
 INFLUXDB_PASS=w7uK6nfcxR6ZBtZC
 
 # mariadb
@@ -63,7 +63,7 @@ CERT_SERVICE_BA_USER=admin
 CERT_SERVICE_BA_PASSWORD=admin
 CERT_SERVICE_API_USER=root
 CERT_SERVICE_API_PASSWORD=icinga
-CERT_SERVICE_SERVER=nginx
+CERT_SERVICE_SERVER=nginx.matrix.lan
 CERT_SERVICE_PORT=443
 CERT_SERVICE_PATH=/cert-service/
 
@@ -77,6 +77,7 @@ docker-compose \
   --file compose/database.yml \
   --file compose/icingaweb2.yml \
   --file compose/influxdb.yml \
+  --file compose/grafana.yml \
   --file compose/master.yml \
   --file compose/satellite.yml \
   config > docker-compose.yml

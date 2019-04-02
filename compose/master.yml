@@ -57,7 +57,8 @@ services:
 #    volumes:
 #      - /etc/localtime:/etc/localtime:ro
     links:
-      - database
+      - database:database.matrix.lan
+      - influx:influx.matrix.lan
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
