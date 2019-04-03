@@ -16,7 +16,7 @@ datasources:
     database: icinga2
     user: icinga2
     password: w7uK6nfcxR6ZBtZC
-    url: http://influxdb:8086
+    url: http://influx:8086
     editable: true
     jsonData:
       timeInterval: "15s"

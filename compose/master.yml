@@ -54,8 +54,8 @@ services:
       #
       - DEMO_DATA
       - TICKET_SALT
-#    volumes:
-#      - /etc/localtime:/etc/localtime:ro
+#    env_file:
+#      - ${PWD}/.env
     links:
       - database:database.matrix.lan
       - influx:influx.matrix.lan
