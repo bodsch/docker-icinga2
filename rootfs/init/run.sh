@@ -174,29 +174,22 @@ run() {
 
   custom_scripts
 
-  log_info "start init process ..."
-
   if [[ "${ICINGA2_TYPE}" = "Master" ]]
   then
     # backup the generated zones
     #
     start_runtime_script inotify.sh
-    # nohup /init/runtime/inotify.sh > /dev/stdout 2>&1 &
-
     start_icinga2_cert_service
     start_runtime_script watch_satellites.sh
-    # nohup /init/runtime/watch_satellites.sh > /dev/stdout 2>&1 &
   else
-    :
     start_runtime_script ca_validator.sh
-    # nohup /init/runtime/ca_validator.sh > /dev/stdout 2>&1 &
-
     if [[ ! -e /tmp/final ]]
     then
       start_runtime_script zone_watcher.sh
-      # nohup /init/runtime/zone_watcher.sh > /dev/stdout 2>&1 &
     fi
   fi
+
+  log_info "start init process ..."
 
   /usr/sbin/icinga2 \
     daemon \
