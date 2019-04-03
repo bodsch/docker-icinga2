@@ -6,7 +6,7 @@ services:
     restart: always
     image: bodsch/docker-nginx
     container_name: nginx
-    hostname: nginx
+    hostname: nginx.matrix.lan
     ports:
       - 80:80
       - 443:443

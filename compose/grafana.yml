@@ -1,0 +1,29 @@
+---
+version: '3.3'
+
+services:
+
+  grafana:
+    image: bodsch/docker-grafana
+    restart: always
+    container_name: grafana
+    hostname: grafana.matrix.lan
+    ports:
+      - 3000:3000
+    environment:
+      - URL_PATH
+      - LOG_LEVEL
+      - ROUTER_LOGGING
+    volumes:
+      - ./import/provisioning:/etc/grafana/provisioning:ro
+      - ./import/dashboards:/var/lib/grafana/dashboards:ro
+    links:
+#      - graphite.matrix.lan
+      - influx:influx.matrix.lan
+    depends_on:
+#      - graphite
+      - influx
+    networks:
+      - frontend
+      - backend
+      - database

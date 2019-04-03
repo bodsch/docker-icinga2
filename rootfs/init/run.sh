@@ -35,6 +35,9 @@ trap finish SIGINT SIGTERM INT TERM EXIT
 . /usr/bin/vercomp
 . /init/environment.sh
 
+#env | sort
+#sleep 5s
+
 # -------------------------------------------------------------------------------------------------
 
 ICINGA2_PARAMS=
@@ -84,7 +87,6 @@ custom_scripts() {
 }
 
 
-
 configure_modules() {
 
   log_info "configure modules"
@@ -105,6 +107,31 @@ configure_modules() {
     done
   fi
 }
+
+
+start_icinga2_cert_service() {
+
+  if [[ ! -f /usr/local/icinga2-cert-service/bin/icinga2-cert-service.rb ]]
+  then
+    return
+  fi
+
+  nohup /usr/local/icinga2-cert-service/bin/icinga2-cert-service.rb > /dev/stdout 2>&1 &
+}
+
+
+start_runtime_script() {
+
+  local script="/init/runtime/${1}"
+
+  if [ -f "${script}" ]
+  then
+    nohup "${script}" > /dev/stdout 2>&1 &
+  else
+    log_WARN "unknown runtime script: '${1}'"
+  fi
+}
+
 
 run() {
 
@@ -151,34 +178,22 @@ run() {
   then
     # backup the generated zones
     #
-    nohup /init/runtime/inotify.sh > /dev/stdout 2>&1 &
-    nohup /init/runtime/watch_satellites.sh > /dev/stdout 2>&1 &
-
-    # env | grep ICINGA | sort
-    if [[ -f /usr/local/icinga2-cert-service/bin/icinga2-cert-service.rb ]]
-    then
-      nohup /usr/local/icinga2-cert-service/bin/icinga2-cert-service.rb > /dev/stdout 2>&1 &
-    fi
-
+    start_runtime_script inotify.sh
+    start_icinga2_cert_service
+    start_runtime_script watch_satellites.sh
   else
-    #
-    nohup /init/runtime/ca_validator.sh > /dev/stdout 2>&1 &
-
+    start_runtime_script ca_validator.sh
     if [[ ! -e /tmp/final ]]
     then
-      nohup /init/runtime/zone_watcher.sh > /dev/stdout 2>&1 &
+      start_runtime_script zone_watcher.sh
     fi
   fi
-
 
   log_info "start init process ..."
 
   /usr/sbin/icinga2 \
     daemon \
     ${ICINGA2_PARAMS}
-
-
-
 }
 
 run

@@ -1,0 +1,8 @@
+# config file version
+apiVersion: 1
+
+# http://docs.grafana.org/administration/provisioning/#provisioning-grafana
+
+#delete_notifiers:
+#  - name: notification-channel-1
+#  - name: notification-channel-2

@@ -5,7 +5,7 @@ export DOCKER_VERSION       ?= latest
 export BUILD_DATE           := $(shell date +%Y-%m-%d)
 export BUILD_VERSION        := $(shell date +%y%m)
 export BUILD_TYPE           ?= stable
-export ICINGA2_VERSION      ?= 2.10.4
+export ICINGA2_VERSION      ?= $(shell hooks/latest-version.sh)
 export CERT_SERVICE_TYPE    ?= stable
 export CERT_SERVICE_VERSION ?= 0.19.2
 

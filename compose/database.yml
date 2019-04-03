@@ -6,7 +6,7 @@ services:
   database:
     image: bodsch/docker-mariadb:10.3.12
     container_name: database
-    hostname: database
+    hostname: database.matrix.lan
     environment:
       - MARIADB_SYSTEM_USER=root
       - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
