@@ -1,61 +1,38 @@
-# sudo: required
 dist: xenial
-
 group: edge
-
 services:
-  - docker
-
+- docker
 env:
   global:
-    - ICINGA2_VERSION=$(./hooks/latest-version.sh)
-    - BUILD_DATE=$(date +"%Y-%m-%d")
-    - BUILD_IMAGE=bodsch/docker-icinga2:${ICINGA2_VERSION}-base
-
+  - ICINGA2_VERSION=$(./hooks/latest-version.sh)
+  - BUILD_DATE=$(date +"%Y-%m-%d")
+  - BUILD_IMAGE=bodsch/docker-icinga2:${ICINGA2_VERSION}-base
+  - secure: c5TftmG08cB3zQM5/Ktv6vS1JqrKQAvhW0Ampxo3Yphmm1SEzVglcaeyHdK0LRNSu0YiTreDSpIvbioHwinUIvSD0Zs8gQ+Gkq9oROjbu/tZZ56eX1UOVMaudDpTz693NyykT9heRBVNfGseV+eia3n3rz7JB0oNrgwTG3jpTpQtsQPS9oGuYNz8cwfu25BuXOVhfzZue9sj9R+YxAutcGorA+5sX6xEX5zMoPIQlljqYPtzIVeoF+c+eQx6dhyToqqdfLWp/XZctKBdGR73suecmiRpAKRUfPc7OreIpgBmoZxHW5G4KL3A2lRCivpwgDFSF2bQj7CzTnhVsAva9YY04TzWVS13I+wzi/gdjlk+bFWJC9ONm4nUzWSAnZMepxxdOcwIzhEnc/7diJb3Ni7hsVcg42tXVRXvwGDHn9SRPqYFe3b0VZ8dfSNV7+aNFp2PU3vph2DIK9Fl8DyuyF//3Y+6zHVlT6jpemtRTy3LECWB8T7rsZVDT77nvySqkk3/p2n7jEDqNnJiI4wjeqPER77ygs3H42QBEp8bJw6dz4Jw1QBMgER1y5LIh+3Q89cPZiGijKzt4FD/MxpduHU74GHJCbkfyJMqjkBj77ataqoxpSp9IO/qyNSEXskIF4+jniXkTHdgNGcerPiW+Kqf/jW0pw0LVPjhHt2MU80=
 jobs:
   include:
-    - stage: build and publish base image
-      script:
-        - make build_base
-        - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
-        - make publish-base
-        - docker logout
-
-    #- stage: build and test
-    #  script:
-    #    - make compose-file
-    #    - make
-    #    - docker-compose build
-    #    - docker-compose up -d
-    #    - sleep 4m
-    #    - date "+%H:%M:%S"
-    #    - time make integration_test
-    #    - date "+%H:%M:%S"
-    #    - docker-compose kill
-    #    - docker-compose down
-
-    - stage: push latest docker image
-      if: branch = master
-      script:
-        - make
-        - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
-        # rename tags
-        - docker tag  ${USER}/icinga2:latest-master    ${DOCKER_USERNAME}/docker-icinga2:latest-master
-        - docker tag  ${USER}/icinga2:latest-satellite ${DOCKER_USERNAME}/docker-icinga2:latest-satellite
-        # push latest tags to docker
-        - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-master
-        - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-satellite
-        - docker logout
-
-    - stage: push version docker image
-      if: branch = master
-      script:
-        - make
-        - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
-        # rename latest tag to version tag
-        - docker tag  ${USER}/icinga2:latest-master    ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-master
-        - docker tag  ${USER}/icinga2:latest-satellite ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-satellite
-        # push to docker
-        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-master
-        - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-satellite
-        - docker logout
+  - stage: build and publish base image
+    script:
+    - make build_base
+    - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
+    - make publish-base
+    - docker logout
+  - stage: push latest docker image
+    if: branch = master
+    script:
+    - make
+    - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
+    - docker tag  ${USER}/icinga2:latest-master    ${DOCKER_USERNAME}/docker-icinga2:latest-master
+    - docker tag  ${USER}/icinga2:latest-satellite ${DOCKER_USERNAME}/docker-icinga2:latest-satellite
+    - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-master
+    - docker push ${DOCKER_USERNAME}/docker-icinga2:latest-satellite
+    - docker logout
+  - stage: push version docker image
+    if: branch = master
+    script:
+    - make
+    - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
+    - docker tag  ${USER}/icinga2:latest-master    ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-master
+    - docker tag  ${USER}/icinga2:latest-satellite ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-satellite
+    - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-master
+    - docker push ${DOCKER_USERNAME}/docker-icinga2:${ICINGA2_VERSION}-satellite
+    - docker logout
