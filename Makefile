@@ -7,7 +7,7 @@ export BUILD_VERSION        := $(shell date +%y%m)
 export BUILD_TYPE           ?= stable
 export ICINGA2_VERSION      ?= $(shell hooks/latest-version.sh)
 export CERT_SERVICE_TYPE    ?= stable
-export CERT_SERVICE_VERSION ?= 0.19.2
+export CERT_SERVICE_VERSION ?= 0.19.3
 
 export BUILD_IMAGE          ?= ${DOCKER_NAME_SPACE}/icinga2:${DOCKER_VERSION}-base
 
