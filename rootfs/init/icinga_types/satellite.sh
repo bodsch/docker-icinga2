@@ -321,7 +321,7 @@ certificate_with_ticket() {
     --header "X-API-USER: ${CERT_SERVICE_API_USER}" \
     --header "X-API-PASSWORD: ${CERT_SERVICE_API_PASSWORD}" \
     --header "X-API-HOSTNAME: ${HOSTNAME}" \
-    --header "X-API-TICKETSALT": ${TICKET_SALT} \
+    --header "X-API-TICKETSALT: ${TICKET_SALT}" \
     "${CERT_SERVICE_PROTOCOL}://${CERT_SERVICE_SERVER}:${CERT_SERVICE_PORT}${CERT_SERVICE_PATH}/v2/ticket/${HOSTNAME}")
 
   # enable neccessary features
@@ -418,6 +418,8 @@ EOF
     --request GET \
     --header "X-API-USER: ${CERT_SERVICE_API_USER}" \
     --header "X-API-PASSWORD: ${CERT_SERVICE_API_PASSWORD}" \
+    --header "X-API-HOSTNAME: ${HOSTNAME}" \
+    --header "X-API-TICKETSALT: ${TICKET_SALT}" \
     "${CERT_SERVICE_PROTOCOL}://${CERT_SERVICE_SERVER}:${CERT_SERVICE_PORT}${CERT_SERVICE_PATH}/v2/enable_endpoint/${HOSTNAME}")
 
   [[ "${DEBUG}" = "true" ]] && log_debug "code '${code}'"
@@ -439,6 +441,8 @@ get_ca_file() {
     --insecure \
     --header "X-API-USER: ${CERT_SERVICE_API_USER}" \
     --header "X-API-PASSWORD: ${CERT_SERVICE_API_PASSWORD}" \
+    --header "X-API-HOSTNAME: ${HOSTNAME}" \
+    --header "X-API-TICKETSALT: ${TICKET_SALT}" \
     --write-out "%{http_code}\n" \
     --output ${ca_file} \
     ${CERT_SERVICE_PROTOCOL}://${CERT_SERVICE_SERVER}:${CERT_SERVICE_PORT}${CERT_SERVICE_PATH}v2/master-ca)
