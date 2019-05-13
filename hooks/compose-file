@@ -24,7 +24,7 @@ DEVELOPMENT_MODUS=0
 
 # for the icinga-cert-service
 # info, notice, warning, debug
-LOG_LEVEL=DEBUG
+LOG_LEVEL=notice
 
 # notice, debug, warning, critical
 ICINGA2_LOGLEVEL=critical
@@ -53,7 +53,7 @@ INFLUXDB_PASS=w7uK6nfcxR6ZBtZC
 
 # grafana
 URL_PATH=/grafana
-LOG_LEVEL=info
+# LOG_LEVEL=info
 ROUTER_LOGGING=false
 
 GRAFANA_HOST=grafana
@@ -95,11 +95,12 @@ EOF
 
 docker-compose \
   --file compose/head.yml \
-  --file compose/nginx.yml \
   --file compose/database.yml \
-  --file compose/icingaweb2.yml \
-  --file compose/influxdb.yml \
-  --file compose/grafana.yml \
+  --file compose/nginx.yml \
   --file compose/master.yml \
   --file compose/satellite.yml \
   config > docker-compose.yml
+
+#  --file compose/icingaweb2.yml \
+#  --file compose/influxdb.yml \
+#  --file compose/grafana.yml \

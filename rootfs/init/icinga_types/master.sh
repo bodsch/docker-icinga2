@@ -17,8 +17,15 @@ restore_backup() {
 
     if [[ "${DEBUG}" = "true" ]]
     then
-      grep -nrB2 "object Endpoint" ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf
-      grep -nrB2 "object Endpoint" ${ICINGA2_LIB_DIRECTORY}/backup/zones.d/*
+      if [[ -e ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf ]]
+      then
+        grep -nrB2 "object Endpoint" ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf
+      fi
+
+      if [[ -e ${ICINGA2_LIB_DIRECTORY}/backup/zones.d ]]
+      then
+        grep -nrB2 "object Endpoint" ${ICINGA2_LIB_DIRECTORY}/backup/zones.d/*
+      fi
     fi
 
     if [[ -f ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf ]]
@@ -45,6 +52,11 @@ restore_backup() {
 # copy master specific configurations
 #
 copy_master_specific_configurations() {
+
+#  if [[ -f /etc/icinga2/zones.conf ]] && [[ -f /etc/icinga2/zones.conf-docker ]]
+#  then
+#    cp ${cp_opts} /etc/icinga2/zones.conf-docker /etc/icinga2/zones.conf
+#  fi
 
   if [[ -d /etc/icinga2/zones.d/global-templates ]]
   then

@@ -78,17 +78,23 @@ inotifywait \
         log_info "the zone configuration for myself has changed."
         log_info "we must remove the old endpoint configuration from the static zones.conf"
 
-        #sed -i \
-        #  -e '/^object Endpoint NodeName.*/d' \
-        #  /etc/icinga2/zones.conf
-        #
-        #cp /etc/icinga2/zones.conf ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf
+        sed -i \
+          -e "s/^\(object\ Endpoint\ NodeName .*\)/\/\/ \1/" \
+          /etc/icinga2/zones.conf
 
-        log_info "we remove also the static global-templates directory"
-        [[ -d /etc/icinga2/zones.d/global-templates ]] && rm -rf /etc/icinga2/zones.d/global-templates
+        cp /etc/icinga2/zones.conf ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf
 
-        log_info "we remove also the static director-global directory"
-        [[ -d /etc/icinga2/zones.d/director-global ]] && rm -rf /etc/icinga2/zones.d/director-global
+        if [[ -d /etc/icinga2/zones.d/global-templates ]]
+        then
+          log_info "we remove also the static global-templates directory"
+          rm -rf /etc/icinga2/zones.d/global-templates
+        fi
+
+        if [[ -d /etc/icinga2/zones.d/director-global ]]
+        then
+          log_info "we remove also the static director-global directory"
+          rm -rf /etc/icinga2/zones.d/director-global
+        fi
 
         # touch file for later add the satellite to the master over API
         #
@@ -104,7 +110,6 @@ inotifywait \
           [[ "${DEBUG}" = "true" ]] && log_debug " killall --verbose --signal HUP icinga2"
           killall --verbose --signal HUP icinga2 > /dev/null 2> /dev/null
         fi
-#        exit 1
       fi
 
       attrib="false"

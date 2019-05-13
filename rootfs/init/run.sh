@@ -116,7 +116,7 @@ start_icinga2_cert_service() {
     return
   fi
 
-  nohup /usr/local/icinga2-cert-service/bin/icinga2-cert-service.rb > /dev/stdout 2>&1 &
+  nohup /usr/local/icinga2-cert-service/bin/icinga2-cert-service.rb & # > /dev/stdout 2>&1 &
 }
 
 

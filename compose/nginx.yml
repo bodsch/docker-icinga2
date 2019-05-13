@@ -12,10 +12,10 @@ services:
       - 443:443
     depends_on:
       - icinga2-master
-      - icingaweb2
+#      - icingaweb2
     links:
       - icinga2-master
-      - icingaweb2:icingaweb2.matrix.lan
+#      - icingaweb2:icingaweb2.matrix.lan
     volumes:
       - ./ssl/cert.pem:/etc/nginx/secure/localhost/cert.pem:ro
       - ./ssl/key.pem:/etc/nginx/secure/localhost/key.pem:ro
