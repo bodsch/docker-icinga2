@@ -11,10 +11,11 @@ images=$(docker images -q -f dangling=true)
 
 images=$(docker images -q *${DOCKER_IMAGE_NAME}* | uniq)
 
-[[ -z "${images}" ]] && exit 0
-
-docker rmi \
-  --force ${images}
+if [[ ! -z "${images}" ]]
+then
+  docker rmi \
+    --force ${images}
+fi
 
 pushd build > /dev/null
 

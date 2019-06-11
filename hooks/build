@@ -7,14 +7,21 @@ set -e
 
 ICINGA2_TYPE=${1}
 
+# FROM ubuntu:19.04
+# FROM debian:9-slim
+
+BUILD_BASE=${BUILD_BASE:-'ubuntu:19.04'}
 
 echo ""
+echo " BUILD_DATE          : ${BUILD_DATE}"
+echo " BUILD_BASE          : ${BUILD_BASE}"
 echo " ICINGA2_VERSION     : ${ICINGA2_VERSION}"
 [ -n "${ICINGA2_TYPE}" ]         && echo " ICINGA2_TYPE        : ${ICINGA2_TYPE}"
 [ "${ICINGA2_TYPE}" = "master" ] && echo " CERT_SERVICE_VERSION: ${CERT_SERVICE_VERSION}"
-echo " BUILD_DATE          : ${BUILD_DATE}"
 echo " GIT_SHA1            : ${GIT_SHA1}"
 echo ""
+
+exit 1
 
 echo " build debian based"
 
@@ -23,6 +30,7 @@ then
   docker build \
     --file Dockerfile.base \
     --build-arg VCS_REF="${GIT_SHA1}" \
+    --build-arg BUILD_BASE="${BUILD_BASE}" \
     --build-arg BUILD_DATE="${BUILD_DATE}" \
     --build-arg BUILD_VERSION="${BUILD_VERSION}" \
     --build-arg ICINGA2_VERSION="${ICINGA2_VERSION}" \

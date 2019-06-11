@@ -1,5 +1,8 @@
-FROM ubuntu:19.04
-#FROM debian:9-slim
+ARG BUILD_BASE
+# hadolint ignore=DL3006
+FROM $BUILD_BASE
+# FROM ubuntu:19.04
+# FROM debian:9-slim
 
 ARG BUILD_DATE
 ARG BUILD_VERSION
@@ -44,20 +47,16 @@ RUN \
     https://packages.icinga.com/icinga.key | apt-key add - && \
   . /etc/os-release && \
   if [ "${ID}" = "ubuntu" ]; then \
-    if [ ! -z ${UBUNTU_CODENAME+x} ]; then \
+    if [ -n "${UBUNTU_CODENAME+x}" ]; then \
       DIST="${UBUNTU_CODENAME}"; \
     else \
-      DIST="$(lsb_release -c| awk '{print $2}')"; \
+      DIST="$(lsb_release -c | awk '{print $2}')"; \
     fi \
   elif [ "${ID}" = "debian" ]; then \
     DIST=$(awk -F"[)(]+" '/VERSION=/ {print $2}' /etc/os-release) ;\
   fi && \
   echo " => ${ID} - ${DIST}" && \
-  if [ ! -z ${UBUNTU_CODENAME+x} ]; then  \
-    echo "deb http://packages.icinga.com/ubuntu icinga-${DIST} main" > "/etc/apt/sources.list.d/${DIST}-icinga.list" ; \
-  else \
-    echo "deb http://packages.icinga.com/debian icinga-${DIST} main" > "/etc/apt/sources.list.d/${DIST}-icinga.list" ; \
-  fi && \
+  echo "deb http://packages.icinga.com/${ID} icinga-${DIST} main" > "/etc/apt/sources.list.d/${DIST}-icinga.list" && \
   apt-get update && \
   apt-get install \
     --assume-yes \

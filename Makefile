@@ -16,15 +16,15 @@ export BUILD_IMAGE          ?= ${DOCKER_NAME_SPACE}/icinga2:${DOCKER_VERSION}-ba
 
 default: build
 
-build: build_base build_master build_satellite
+build: base-build master-build satellite-build
 
-build_base:
+base-build:
 	@hooks/build
 
-build_master:
+master-build:
 	@hooks/build master
 
-build_satellite:
+satellite-build:
 	@hooks/build satellite
 
 base-shell:
