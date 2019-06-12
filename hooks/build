@@ -21,9 +21,7 @@ echo " ICINGA2_VERSION     : ${ICINGA2_VERSION}"
 echo " GIT_SHA1            : ${GIT_SHA1}"
 echo ""
 
-exit 1
-
-echo " build debian based"
+echo "build debian based"
 
 if [ -z "${ICINGA2_TYPE}" ]
 then
