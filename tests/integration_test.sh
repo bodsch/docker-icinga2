@@ -124,9 +124,7 @@ wait_for_icinga_cert_service() {
       --silent \
       --location \
       --insecure \
-      --request GET \
       --write-out "%{http_code}\n" \
-      --request GET \
       ${CERT_SERVICE_PROTOCOL}://${CERTIFICATE_SERVER}:${CERTIFICATE_PORT}${CERTIFICATE_PATH}/v2/health-check)
 
     if ( [[ $? -eq 0 ]] && [[ "${health}" == "healthy200" ]] )

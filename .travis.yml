@@ -12,7 +12,7 @@ jobs:
   include:
   - stage: build and publish base image
     script:
-    - make build_base
+    - make base-build
     - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
     - make publish-base
     - docker logout
