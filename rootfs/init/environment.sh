@@ -2,7 +2,8 @@
 # read and handle all needed environment variables
 #
 
-HOSTNAME=$(hostname -f)
+HOSTNAMEFQDN=$(hostname -f)
+HOSTNAME=${ICINGA2_MASTER:-${HOSTNAMEFQDN}}
 
 DEBUG=${DEBUG:-0}
 DEVELOPMENT_MODUS=${DEVELOPMENT_MODUS:-0}
