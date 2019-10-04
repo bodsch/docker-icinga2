@@ -121,12 +121,41 @@ prepare() {
   [[ -z ${ICINGA2_RUN_DIRECTORY} ]] && ICINGA2_RUN_DIRECTORY="/var/run"
   [[ -z ${ICINGA2_LOG_DIRECTORY} ]] && ICINGA2_LOG_DIRECTORY="/var/log/icinga2/icinga2.log"
 
-  # change var.os from 'Linux' to 'Docker' to disable ssh-checks
-  #
-  [[ -f /etc/icinga2/conf.d/hosts.conf ]] && sed -i -e "s|^.*\ vars.os\ \=\ .*|  vars.os = \"Docker\"|g" /etc/icinga2/conf.d/hosts.conf
+  if [[ "${MULTI_MASTER}" = true && "${HA_CONFIG_MASTER}" == true ]]
+  then
+    if [[ -f /etc/icinga2/zones.conf ]] && [[ -f /etc/icinga2/zones.conf-master1 ]]
+    then
+      rm /etc/icinga2/zones.conf  && \
+      cp -n ${cp_opts} /etc/icinga2/zones.conf-master1 /etc/icinga2/zones.conf
+    fi
+  fi
 
-  [[ -f /etc/icinga2/conf.d/services.conf ]] && mv /etc/icinga2/conf.d/services.conf /etc/icinga2/conf.d/services.conf-distributed
-  [[ -f /etc/icinga2/conf.d/services.conf.docker ]] && cp /etc/icinga2/conf.d/services.conf.docker /etc/icinga2/conf.d/services.conf
+  if [[ "${MULTI_MASTER}" = true && "${HA_CONFIG_MASTER}" == false ]]
+  then
+    if [[ -f /etc/icinga2/zones.conf ]] && [[ -f /etc/icinga2/zones.conf-master2 ]]
+    then
+      rm /etc/icinga2/zones.conf  && \
+      cp -n ${cp_opts} /etc/icinga2/zones.conf-master2 /etc/icinga2/zones.conf && \
+      rm -rf /etc/icinga2/zones.d
+    fi
+  fi
+
+  if [[ "${MULTI_MASTER}" = true ]]
+  then
+    [[ -f /etc/icinga2/conf.d/hosts.conf ]] && rm /etc/icinga2/conf.d/hosts.conf
+
+    [[ -f /etc/icinga2/conf.d/services.conf ]] && rm /etc/icinga2/conf.d/services.conf
+    [[ -f /etc/icinga2/master.d/services.conf.docker ]] && mv /etc/icinga2/master.d/services.conf.docker /etc/icinga2/master.d/docker-services.conf
+  fi
+
+  if [[ "${MULTI_MASTER}" = false ]]
+  then
+    [[ -f /etc/icinga2/master.d/hosts.conf ]] && sed -i -e "s|^.*\ vars.os\ \=\ .*|  vars.os = \"Docker\"|g" /etc/icinga2/master.d/hosts.conf
+
+    [[ -f /etc/icinga2/conf.d/services.conf ]] && mv /etc/icinga2/conf.d/services.conf /etc/icinga2/conf.d/services.conf-distributed
+    [[ -f /etc/icinga2/conf.d/services.conf.docker ]] && cp /etc/icinga2/conf.d/services.conf.docker /etc/icinga2/conf.d/services.conf
+    [[ -f /etc/icinga2/conf.d/hosts.conf ]] && mv /etc/icinga2/master.d/hosts.conf /etc/icinga2/conf.d/hosts.conf
+  fi
 
   # set NodeName (important for the cert feature!)
   #
@@ -135,6 +164,39 @@ prepare() {
     -e "s|^.*\ ZoneName\ \=\ .*|const\ ZoneName\ \=\ \"${HOSTNAME}\"|g" \
     -e "s|^.*\ TicketSalt\ \=\ .*|const\ TicketSalt\ \=\ \"${TICKET_SALT}\"|g" \
     /etc/icinga2/constants.conf
+
+  if [[ "${MULTI_MASTER}" = true && "${HA_CONFIG_MASTER}" == true ]]
+  then
+    # replace HA_MASTER_* in ha-cluster-hosts.conf
+    sed -i \
+      -e "s|\<HA_MASTER1\>|${HA_MASTER1}|g" \
+      -e "s|\<HA_MASTER2\>|${HA_MASTER2}|g" \
+      -e "s|\<HA_MASTER1_IP\>|${HA_MASTER1_IP}|g" \
+      -e "s|\<HA_MASTER2_IP\>|${HA_MASTER2_IP}|g" \
+      /etc/icinga2/master.d/ha-cluster-hosts.conf
+  fi
+
+  if [[ "${MULTI_MASTER}" = true && "${HA_CONFIG_MASTER}" == true ]]
+  then
+    # replace HA_MASTER_* in ha-cluster-check.conf
+    sed -i \
+      -e "s|\<HA_MASTER1\>|${HA_MASTER1}|g" \
+      -e "s|\<HA_MASTER2\>|${HA_MASTER2}|g" \
+      -e "s|\<HA_MASTER1_IP\>|${HA_MASTER1_IP}|g" \
+      -e "s|\<HA_MASTER2_IP\>|${HA_MASTER2_IP}|g" \
+      /etc/icinga2/master.d/ha-cluster-check.conf
+  fi
+
+  if [[ "${MULTI_MASTER}" = true ]]
+  then
+    # replace HA_MASTER_* in zones.conf
+    sed -i \
+      -e "s|\<HA_MASTER1\>|${HA_MASTER1}|g" \
+      -e "s|\<HA_MASTER2\>|${HA_MASTER2}|g" \
+      -e "s|\<HA_MASTER1_IP\>|${HA_MASTER1_IP}|g" \
+      -e "s|\<HA_MASTER2_IP\>|${HA_MASTER2_IP}|g" \
+      /etc/icinga2/zones.conf
+  fi
 
   # create directory for the logfile and change rights
   #

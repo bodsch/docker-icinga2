@@ -1,0 +1,23 @@
+/*
+ * initial zones.conf multimaster
+ * The requires `NodeName` are defined in constants.conf.
+ */
+
+object Endpoint "HA_MASTER1" {
+}
+
+object Endpoint "HA_MASTER2" {
+  host = "HA_MASTER2_IP"
+}
+
+object Zone "master" {
+  endpoints = [ "HA_MASTER1", "HA_MASTER2" ]
+}
+
+object Zone "global-templates" {
+  global = true
+}
+
+object Zone "director-global" {
+  global = true
+}
