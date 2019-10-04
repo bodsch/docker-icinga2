@@ -1,0 +1,56 @@
+---
+version: '3.6'
+
+services:
+  icinga2:
+    image: icinga2:2.11.0-master
+    hostname: master2.icinga2.lan
+    ports:
+      - target: 5665
+        published: 5665
+        protocol: tcp
+        mode: host
+    environment:
+      ICINGA2_MASTER: master2.icinga2.lan
+      HA_MASTER1: master1.icinga2.lan
+      HA_MASTER2: master2.icinga2.lan
+      MULTI_MASTER: "true"
+      HA_CONFIG_MASTER: "true"
+      ICINGA2_API_USERS: root:icinga,cert:lalelu
+      TICKET_SALT: hAmVX402VGllVDf5DReCsKBvtX8AO7UB3n68gAD1
+      MYSQL_HOST: galera_node
+      MYSQL_ROOT_USER: root
+      MYSQL_ROOT_PASS: 8dze0KfdfJdBgxXXRi2XM1pka15dJmJ5
+      MYSQL_IDO_HA: "true"
+      IDO_DATABASE_NAME: icinga2core
+      IDO_PASSWORD: JagvvTNHDg5Yneyn
+      USE_CERT_SERVICE: "false"
+      DEMO_DATA: "false"
+      DEBUG: 0
+      LOG_LEVEL: warning
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /docker-data/icinga2/var/certs:/var/lib/icinga2/certs
+      - /docker-data/icinga2/var/ca:/var/lib/icinga2/ca
+    networks:
+      - icinga2_backend
+      - proxy
+      - galera_net
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+        - node.hostname == node-5.cluster.cloud
+    healthcheck:
+      test: "curl --user root:AjwjVEvddUrRv6vFUY64qWwd --silent --insecure --header 'Accept: application/json' https://master2.icinga2.lan:5665/v1/status/IcingaApplication || exit 1"
+      interval: 20s
+      timeout: 20s
+      retries: 5
+
+networks:
+    proxy:
+      external: true
+    icinga2_backend:
+        external: true
+    galera_net:
+        external: true
