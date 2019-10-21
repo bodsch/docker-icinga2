@@ -121,7 +121,7 @@ prepare() {
   [[ -z ${ICINGA2_RUN_DIRECTORY} ]] && ICINGA2_RUN_DIRECTORY="/var/run"
   [[ -z ${ICINGA2_LOG_DIRECTORY} ]] && ICINGA2_LOG_DIRECTORY="/var/log/icinga2/icinga2.log"
 
-  if [[ "${MULTI_MASTER}" = true && "${HA_CONFIG_MASTER}" == true ]]
+  if [[ "${MULTI_MASTER}" = true && "${HA_CONFIG_MASTER}" = true ]]
   then
     if [[ -f /etc/icinga2/zones.conf ]] && [[ -f /etc/icinga2/zones.conf-master1 ]]
     then
@@ -130,7 +130,7 @@ prepare() {
     fi
   fi
 
-  if [[ "${MULTI_MASTER}" = true && "${HA_CONFIG_MASTER}" == false ]]
+  if [[ "${MULTI_MASTER}" = true && "${HA_CONFIG_MASTER}" = false ]]
   then
     if [[ -f /etc/icinga2/zones.conf ]] && [[ -f /etc/icinga2/zones.conf-master2 ]]
     then
@@ -140,21 +140,30 @@ prepare() {
     fi
   fi
 
+  if [[ "${MULTI_MASTER}" = false && "${HA_CONFIG_MASTER}" = false ]]
+  then
+    if [[ -f /etc/icinga2/zones.conf ]] && [[ -f /etc/icinga2/zones.conf-docker ]]
+    then
+      rm /etc/icinga2/zones.conf  && \
+      cp -n ${cp_opts} /etc/icinga2/zones.conf-docker /etc/icinga2/zones.conf
+    fi
+  fi
+
   if [[ "${MULTI_MASTER}" = true ]]
   then
+    log_info "Multi Node Preparations"
     [[ -f /etc/icinga2/conf.d/hosts.conf ]] && rm /etc/icinga2/conf.d/hosts.conf
-
     [[ -f /etc/icinga2/conf.d/services.conf ]] && rm /etc/icinga2/conf.d/services.conf
     [[ -f /etc/icinga2/master.d/services.conf.docker ]] && mv /etc/icinga2/master.d/services.conf.docker /etc/icinga2/master.d/docker-services.conf
   fi
 
   if [[ "${MULTI_MASTER}" = false ]]
   then
+    log_info "Single Node Preparations"
     [[ -f /etc/icinga2/master.d/hosts.conf ]] && sed -i -e "s|^.*\ vars.os\ \=\ .*|  vars.os = \"Docker\"|g" /etc/icinga2/master.d/hosts.conf
-
-    [[ -f /etc/icinga2/conf.d/services.conf ]] && mv /etc/icinga2/conf.d/services.conf /etc/icinga2/conf.d/services.conf-distributed
-    [[ -f /etc/icinga2/conf.d/services.conf.docker ]] && cp /etc/icinga2/conf.d/services.conf.docker /etc/icinga2/conf.d/services.conf
-    [[ -f /etc/icinga2/conf.d/hosts.conf ]] && mv /etc/icinga2/master.d/hosts.conf /etc/icinga2/conf.d/hosts.conf
+    [[ -f /etc/icinga2/conf.d/hosts.conf ]] && rm /etc/icinga2/conf.d/hosts.conf
+    [[ -f /etc/icinga2/conf.d/services.conf ]] && rm /etc/icinga2/conf.d/services.conf
+    [[ -f /etc/icinga2/master.d/services.conf.docker ]] && mv /etc/icinga2/master.d/services.conf.docker /etc/icinga2/master.d/docker-services.conf
   fi
 
   # set NodeName (important for the cert feature!)
@@ -165,7 +174,7 @@ prepare() {
     -e "s|^.*\ TicketSalt\ \=\ .*|const\ TicketSalt\ \=\ \"${TICKET_SALT}\"|g" \
     /etc/icinga2/constants.conf
 
-  if [[ "${MULTI_MASTER}" = true && "${HA_CONFIG_MASTER}" == true ]]
+  if [[ "${MULTI_MASTER}" = true && "${HA_CONFIG_MASTER}" = true ]]
   then
     # replace HA_MASTER_* in ha-cluster-hosts.conf
     sed -i \
@@ -176,7 +185,7 @@ prepare() {
       /etc/icinga2/master.d/ha-cluster-hosts.conf
   fi
 
-  if [[ "${MULTI_MASTER}" = true && "${HA_CONFIG_MASTER}" == true ]]
+  if [[ "${MULTI_MASTER}" = true && "${HA_CONFIG_MASTER}" = true ]]
   then
     # replace HA_MASTER_* in ha-cluster-check.conf
     sed -i \
@@ -198,6 +207,33 @@ prepare() {
       /etc/icinga2/zones.conf
   fi
 
+  if [[ "${MULTI_MASTER}" = false ]]
+  then
+    # replace HOSTNAME_* in standalone-host.conf
+    sed -i \
+      -e "s|\<HOSTNAME\>|${HOSTNAME}|g" \
+      -e "s|\<HOSTNAME_IP\>|${HOSTNAME_IP}|g" \
+      /etc/icinga2/master.d/standalone-host.conf
+  fi
+
+  if [[ "${MULTI_MASTER}" = false ]]
+  then
+    # replace HOSTNAME_* in standalone-host.conf
+    sed -i \
+      -e "s|\<HOSTNAME\>|${HOSTNAME}|g" \
+      -e "s|\<HOSTNAME_IP\>|${HOSTNAME_IP}|g" \
+      /etc/icinga2/master.d/standalone-cluster-check.conf
+  fi
+
+  if [[ "${MULTI_MASTER}" = false ]]
+  then
+    # replace HOSTNAME_* in standalone-host.conf
+    sed -i \
+      -e "s|\<HOSTNAME\>|${HOSTNAME}|g" \
+      -e "s|\<HOSTNAME_IP\>|${HOSTNAME_IP}|g" \
+      /etc/icinga2/zones.conf
+  fi
+
   # create directory for the logfile and change rights
   #
   LOGDIR=$(dirname ${ICINGA2_LOG_DIRECTORY})
@@ -210,7 +246,7 @@ prepare() {
 
   # install demo data
   #
-  if [[ "${DEMO_DATA}" = "true" ]]
+  if [[ "${DEMO_DATA}" = true ]]
   then
     cp -fua /init/demo /etc/icinga2/
 
@@ -221,10 +257,19 @@ prepare() {
       /etc/icinga2/icinga2.conf
   fi
 
+  # install demo data
+  #
+  if [[ "${ICINGA2_MAINLOG}" = true ]]
+  then
+    enable_icinga_feature mainlog
+  else
+    disable_icinga_feature mainlog
+  fi
+
   cat << EOF > /etc/icinga2/features-available/mainlog.conf
 #  https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#objecttype-filelogger
 object FileLogger "main-log" {
-  severity = "notice"
+  severity = "${ICINGA2_LOGLEVEL}"
   path = LocalStateDir + "/log/icinga2/icinga2.log"
 }
 EOF
