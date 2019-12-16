@@ -78,14 +78,14 @@ api request are successfull
 endpoints summary:
 totaly: '3' / connected: '3' / not connected: '0'
 
-connected endpoints: 
+connected endpoints:
 [
   "icinga2-satellite-2.matrix.lan",
   "icinga2-satellite-3.matrix.lan",
   "icinga2-satellite-1.matrix.lan"
 ]
 
-not connected endpoints: 
+not connected endpoints:
 []
 
 API zones:
@@ -335,13 +335,16 @@ All around to create the certificate you can see [here](https://github.com/bodsc
 
 | Environmental Variable             | Default Value        | Description                                                     |
 | :--------------------------------- | :-------------       | :-----------                                                    |
-| `ICINGA2_SSMTP_RELAY_SERVER`       | -                    | SMTP Service to send Notifications                              |
-| `ICINGA2_SSMTP_REWRITE_DOMAIN`     | -                    |                                                                 |
-| `ICINGA2_SSMTP_RELAY_USE_STARTTLS` | -                    |                                                                 |
-| `ICINGA2_SSMTP_SENDER_EMAIL`       | -                    |                                                                 |
-| `ICINGA2_SSMTP_SMTPAUTH_USER`      | -                    |                                                                 |
-| `ICINGA2_SSMTP_SMTPAUTH_PASS`      | -                    |                                                                 |
-| `ICINGA2_SSMTP_ALIASES`            | -                    |                                                                 |
+| `ICINGA2_MSMTP_RELAY_SERVER`       | -                    | SMTP Service to send Notifications                              |
+| `ICINGA2_MSMTP_REWRITE_DOMAIN`     | -                    |                                                                 |
+| `ICINGA2_MSMTP_RELAY_USE_STARTTLS` | -                    |                                                                 |
+| `ICINGA2_MSMTP_SENDER_EMAIL`       | -                    |                                                                 |
+| `ICINGA2_MSMTP_SMTPAUTH_USER`      | -                    |                                                                 |
+| `ICINGA2_MSMTP_SMTPAUTH_PASS`      | -                    |                                                                 |
+| `ICINGA2_MSMTP_ALIASES`            | -                    |                                                                 |
+| `ICINGA2_MSMTP_RECV_ROOT`          | -                    |                                                                 |
+| `ICINGA2_MSMTP_ACC_NAME`           | -                    |                                                                 |
+
 
 ## activate some Demodata (taken from the official Icinga-Vagrant repository)
 
@@ -605,6 +608,3 @@ This example can be used as follows: `docker-compose up --build`
 Afterwards you can see Icinga Web2 in your local browser at [http://localhost](http://localhost).
 
 ![master-satellite](doc/assets/master-satellite.jpg)
-
-
-
