@@ -1,10 +1,20 @@
 /*
- * initial zones.conf
+ * initial zones.conf singlemaster
  * The requires `NodeName` are defined in constants.conf.
  */
 
-object Zone "global-templates" { global = true }
-object Zone "director-global" { global = true }
+ object Endpoint "HOSTNAME" {
+   host = "HOSTNAME_IP"
+ }
 
-object Endpoint NodeName { host = NodeName }
-object Zone ZoneName { endpoints = [ NodeName ] }
+ object Zone "master" {
+   endpoints = [ "HOSTNAME" ]
+ }
+
+ object Zone "global-templates" {
+   global = true
+ }
+
+ object Zone "director-global" {
+   global = true
+ }

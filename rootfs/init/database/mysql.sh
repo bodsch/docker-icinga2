@@ -146,11 +146,12 @@ create_config() {
 library "db_ido_mysql"
 
 object IdoMysqlConnection "ido-mysql" {
-  user     = "icinga2"
-  password = "${IDO_PASSWORD}"
-  host     = "${MYSQL_HOST}"
-  database = "${IDO_DATABASE_NAME}"
-  port     = "${MYSQL_PORT}"
+  user      = "icinga2"
+  password  = "${IDO_PASSWORD}"
+  host      = "${MYSQL_HOST}"
+  database  = "${IDO_DATABASE_NAME}"
+  port      = "${MYSQL_PORT}"
+  enable_ha = ${MYSQL_IDO_HA}
 }
 EOF
 

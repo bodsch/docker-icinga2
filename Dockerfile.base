@@ -82,6 +82,7 @@ RUN \
   mkdir -p /etc/icinga2/zones.d/global-templates && \
   mkdir -p /etc/icinga2/zones.d/director-global && \
   cp /etc/icinga2/zones.conf /etc/icinga2/zones.conf-distributed && \
+  mv /etc/icinga2/conf.d/{commands,groups,notifications,templates}.conf /etc/icinga2/zones.d/global-templates && \
   apt-get remove \
     --assume-yes \
     --purge \
@@ -91,6 +92,7 @@ RUN \
     --assume-yes && \
   rm -rf \
     /tmp/* \
+    /etc/icinga2/conf.d/* \
     /var/cache/debconf/* \
     /usr/share/doc/* \
     /root/.gem \

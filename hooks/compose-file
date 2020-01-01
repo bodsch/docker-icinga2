@@ -29,8 +29,28 @@ LOG_LEVEL=notice
 # notice, debug, warning, critical
 ICINGA2_LOGLEVEL=critical
 
-ICINGA2_MASTER=icinga2-master.matrix.lan
-ICINGA2_PARENT=icinga2-master.matrix.lan
+#### Modified !!!!! ####
+# does not work yet with make compose-file
+
+# Master 1
+ICINGA2_MASTER=icinga2-master1.matrix.lan
+ICINGA2_PARENT=icinga2-master1.matrix.lan
+HA_CONFIG_MASTER=true
+HA_MASTER1=icinga2-master1.matrix.lan
+HA_MASTER2=icinga2-master2.matrix.lan
+MULTI_MASTER=true
+MYSQL_IDO_HA=true
+
+# Master 2
+ICINGA2_MASTER=icinga2-master2.matrix.lan
+ICINGA2_PARENT=icinga2-master2.matrix.lan
+HA_CONFIG_MASTER=false
+HA_MASTER1=icinga2-master1.matrix.lan
+HA_MASTER2=icinga2-master2.matrix.lan
+MULTI_MASTER=true
+MYSQL_IDO_HA=true
+
+#### End of modification ####
 
 DEMO_DATA=false
 

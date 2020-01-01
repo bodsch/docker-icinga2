@@ -15,8 +15,7 @@ restore_backup() {
   then
     log_info "restore backup"
 
-    if [[ "${DEBUG}" = "true" ]]
-    then
+    if [[ "${DEBUG}" = "true" ]]; then
       if [[ -e ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf ]]
       then
         grep -nrB2 "object Endpoint" ${ICINGA2_LIB_DIRECTORY}/backup/zones.conf
@@ -48,46 +47,61 @@ restore_backup() {
   fi
 }
 
-
 # copy master specific configurations
 #
 copy_master_specific_configurations() {
 
-#  if [[ -f /etc/icinga2/zones.conf ]] && [[ -f /etc/icinga2/zones.conf-docker ]]
-#  then
-#    cp ${cp_opts} /etc/icinga2/zones.conf-docker /etc/icinga2/zones.conf
-#  fi
-
-  if [[ -d /etc/icinga2/zones.d/global-templates ]]
-  then
+  if [[ -d /etc/icinga2/zones.d/global-templates ]]; then
     [[ "${DEBUG}" = "true" ]] && log_debug "copy global-templates"
 
-    if [[ -f /etc/icinga2/master.d/templates_services.conf ]]
-    then
+    if [[ -f /etc/icinga2/master.d/templates_services.conf ]]; then
       [[ "${DEBUG}" = "true" ]] && log_debug "  - templates_services.conf"
       cp ${cp_opts} /etc/icinga2/master.d/templates_services.conf /etc/icinga2/zones.d/global-templates/
     fi
 
-    if [[ -f /etc/icinga2/satellite.d/services.conf ]]
-    then
-      [[ "${DEBUG}" = "true" ]] && log_debug "  - services.conf"
-      cp ${cp_opts} /etc/icinga2/satellite.d/services.conf        /etc/icinga2/zones.d/global-templates/
+    if [[ ("${MULTI_MASTER}" = true && "${HA_CONFIG_MASTER}" = true) ]]; then
+      [[ "${DEBUG}" = "true" ]] && log_debug "  - moving master.d files to global-templates for multi setup"
+      for file in checkcommands_linux_memory.conf docker-services.conf functions.conf \
+      groups.conf matrix-commands.conf templates_services.conf
+      do
+        [[ -f /etc/icinga2/master.d/${file} ]] && mv /etc/icinga2/master.d/${file} /etc/icinga2/zones.d/global-templates/${file}
+      done
+    fi
+
+    if [[ ("${MULTI_MASTER}" = false && "${HA_CONFIG_MASTER}" = false) ]]; then
+      [[ "${DEBUG}" = "true" ]] && log_debug "  - moving master.d files to global-templatesfor single setup"
+      for file in checkcommands_linux_memory.conf docker-services.conf functions.conf \
+      groups.conf matrix-commands.conf templates_services.conf
+      do
+        [[ -f /etc/icinga2/master.d/${file} ]] && mv /etc/icinga2/master.d/${file} /etc/icinga2/zones.d/global-templates/${file}
+      done
+    fi
+
+    if [[ -f /etc/icinga2/satellite.d/services.conf ]]; then
+      [[ "${DEBUG}" = "true" ]] && log_debug "  - satellite services.conf"
+      [[ -d /etc/icinga2/zones.d/satellite ]] || mkdir -p /etc/icinga2/zones.d/satellite
+      cp ${cp_opts} /etc/icinga2/satellite.d/services.conf /etc/icinga2/zones.d/satellite
     fi
   fi
 
-  if [[ -f /etc/icinga2/master.d/satellite_services.conf ]]
-  then
-    [[ "${DEBUG}" = "true" ]] && log_debug "copy master.d/satellite_services.conf"
-    cp ${cp_opts} /etc/icinga2/master.d/satellite_services.conf /etc/icinga2/conf.d/
+  if [[ ("${MULTI_MASTER}" = true && "${HA_CONFIG_MASTER}" = true) ]] ; then
+    [[ "${DEBUG}" = "true" ]] && log_debug "  - creating master zone directory for multi master"
+    [[ -d /etc/icinga2/zones.d/master/ ]] || mkdir -p /etc/icinga2/zones.d/master/
+    for file in dependencies.conf ha-cluster-check.conf ha-cluster-hosts.conf ha-cluster-service-apply.conf
+    do
+      [[ -f /etc/icinga2/master.d/${file} ]] && mv /etc/icinga2/master.d/${file} /etc/icinga2/zones.d/master/${file}
+    done
   fi
 
-  if [[ -f /etc/icinga2/satellite.d/commands.conf ]]
-  then
-    [[ "${DEBUG}" = "true" ]] && log_debug "copy satellite.d/commands.conf"
-    cp ${cp_opts} /etc/icinga2/satellite.d/commands.conf /etc/icinga2/conf.d/satellite_commands.conf
+  if [[ "${MULTI_MASTER}" = false ]]; then
+    [[ "${DEBUG}" = "true" ]] && log_debug "  - creating master zone directory for single master"
+    [[ -d /etc/icinga2/zones.d/master/ ]] || mkdir -p /etc/icinga2/zones.d/master/
+    for file in dependencies.conf standalone-cluster-check.conf standalone-host.conf standalone-service-apply.conf
+    do
+      [[ -f /etc/icinga2/master.d/${file} ]] && mv /etc/icinga2/master.d/${file} /etc/icinga2/zones.d/master/${file}
+    done
   fi
 }
-
 
 # configure a icinga2 master instance
 #
