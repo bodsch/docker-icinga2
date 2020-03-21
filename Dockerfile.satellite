@@ -15,6 +15,7 @@ EXPOSE 5665
 
 # ---------------------------------------------------------------------------------------
 
+# hadolint ignore=DL3027
 RUN \
   export ICINGA2_TYPE=Satellite && \
   export APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 && \

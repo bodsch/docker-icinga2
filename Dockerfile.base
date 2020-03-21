@@ -19,7 +19,7 @@ ENV \
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# hadolint ignore=DL3008,DL3014,DL3015,DL4005,SC1091,SC2155
+# hadolint ignore=DL3008,DL3014,DL3015,DL3027,DL4005,SC1091,SC2155
 RUN \
   chsh -s /bin/bash && \
   ln -sf /bin/bash /bin/sh && \

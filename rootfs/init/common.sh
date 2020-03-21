@@ -128,6 +128,15 @@ prepare() {
   [[ -f /etc/icinga2/conf.d/services.conf ]] && mv /etc/icinga2/conf.d/services.conf /etc/icinga2/conf.d/services.conf-distributed
   [[ -f /etc/icinga2/conf.d/services.conf.docker ]] && cp /etc/icinga2/conf.d/services.conf.docker /etc/icinga2/conf.d/services.conf
 
+
+  ## BUG?
+  # missing NodeName?
+  # log_debug "--------------------------------------------------"
+  # grep NodeName /etc/icinga2/constants.conf
+  # grep ZoneName /etc/icinga2/constants.conf
+  # grep TicketSalt /etc/icinga2/constants.conf
+  # log_debug "--------------------------------------------------"
+
   # set NodeName (important for the cert feature!)
   #
   sed -i \
@@ -135,6 +144,12 @@ prepare() {
     -e "s|^.*\ ZoneName\ \=\ .*|const\ ZoneName\ \=\ \"${HOSTNAME}\"|g" \
     -e "s|^.*\ TicketSalt\ \=\ .*|const\ TicketSalt\ \=\ \"${TICKET_SALT}\"|g" \
     /etc/icinga2/constants.conf
+
+  # log_debug "--------------------------------------------------"
+  # grep NodeName /etc/icinga2/constants.conf
+  # grep ZoneName /etc/icinga2/constants.conf
+  # grep TicketSalt /etc/icinga2/constants.conf
+  # log_debug "--------------------------------------------------"
 
   # create directory for the logfile and change rights
   #
@@ -167,6 +182,7 @@ object FileLogger "main-log" {
 }
 EOF
 
+  correct_rights
 }
 
 

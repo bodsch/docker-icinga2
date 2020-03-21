@@ -21,7 +21,7 @@ COPY build/ruby-icinga-cert-service      /tmp/ruby-icinga-cert-service
 
 WORKDIR /tmp
 
-# hadolint ignore=DL3003,DL3008,DL3014
+# hadolint ignore=DL3003,DL3008,DL3014,DL3027,DL3028
 RUN \
   export ICINGA2_TYPE=Master && \
   apt-get install \
@@ -39,6 +39,7 @@ RUN \
       nagios-nrpe-server \
       openssl \
       ruby \
+      bundler \
       ssmtp && \
   echo 'gem: --no-document' >> /etc/gemrc && \
   gem install --quiet --no-rdoc --no-ri \

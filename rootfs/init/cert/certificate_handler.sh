@@ -10,6 +10,8 @@ create_ca() {
   then
     log_info "create new CA for '${HOSTNAME}'"
 
+    # ls -ltha /var/lib/icinga2
+
     [[ -f ${PKI_KEY_FILE} ]] && rm -rf ${ICINGA2_CERT_DIRECTORY}/${HOSTNAME}*
 
     /usr/sbin/icinga2 \

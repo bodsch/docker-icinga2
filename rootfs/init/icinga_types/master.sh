@@ -97,6 +97,12 @@ configure_icinga2_master() {
 
   create_ca
 
+  [[ -d /etc/icinga2/satellites.d ]] || mkdir /etc/icinga2/satellites.d
+
+  sed -i \
+    -e 's|// include_recursive "satellites.d"|include_recursive "satellites.d"|' \
+    /etc/icinga2/icinga2.conf
+
   restore_backup
 
   copy_master_specific_configurations

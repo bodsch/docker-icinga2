@@ -683,6 +683,8 @@ configure_icinga2_satellite() {
   #
   [[ -e /etc/icinga2/features-enabled/notification.conf ]] && disable_icinga_feature notification
 
+  [[ -d /etc/icinga2/satellites.d ]] || mkdir /etc/icinga2/satellites.d
+
   # rename the hosts.conf and service.conf
   # this both comes now from the master
   # yeah ... distributed monitoring rocks!
