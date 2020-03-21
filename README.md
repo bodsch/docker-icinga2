@@ -6,6 +6,10 @@ creates several containers with different icinga2 characteristics:
 - icinga2 as master with a certificats service
 - icinga2 as satellite
 
+**I will not continue to develop this project in the foreseeable future and will therefore archive it.**
+
+**In my opinion a monitoring tool has no right to exist in a Docker Container or a Kubernetes Cluster.**
+
 ---
 
 # Status
